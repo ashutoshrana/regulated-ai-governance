@@ -5,9 +5,9 @@
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![PyPI](https://img.shields.io/pypi/v/regulated-ai-governance.svg)
 
-Governance patterns for AI agents operating in regulated environments — FERPA, HIPAA, and GLBA.
+Governance patterns for AI agents operating in regulated environments — FERPA, HIPAA, GLBA, GDPR, CCPA, and SOC 2.
 
-Policy enforcement, escalation routing, and compliance audit for enterprise AI systems.
+Policy enforcement, escalation routing, PII detection, consent management, data lineage, and compliance audit for enterprise AI systems.
 
 ---
 
@@ -23,7 +23,11 @@ This library provides those answers as composable Python primitives.
 
 ---
 
-## Three regulations, one pattern
+## Ecosystem
+
+See [ECOSYSTEM.md](./ECOSYSTEM.md) for full regulation and framework coverage matrix.
+
+## Six regulations, one pattern
 
 ```
 ActionPolicy
@@ -48,14 +52,14 @@ The same three-step pattern — allow/deny, escalate, audit — applies to FERPA
 pip install regulated-ai-governance
 ```
 
-With CrewAI integration:
+With framework integrations:
 ```bash
 pip install "regulated-ai-governance[crewai]"
-```
-
-With LangChain integration:
-```bash
 pip install "regulated-ai-governance[langchain]"
+pip install "regulated-ai-governance[autogen]"
+pip install "regulated-ai-governance[llama-index]"
+pip install "regulated-ai-governance[semantic-kernel]"
+pip install "regulated-ai-governance[haystack]"
 ```
 
 ---
@@ -192,7 +196,7 @@ JSON-serializable, suitable for direct insert into a compliance database or disc
 | Library | Focus | Regulation |
 |---------|-------|-----------|
 | [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | FERPA identity-scoped RAG |
-| **regulated-ai-governance** | What agents may do | FERPA, HIPAA, GLBA policy enforcement |
+| **regulated-ai-governance** | What agents may do | FERPA, HIPAA, GLBA, GDPR, CCPA, SOC2 |
 | [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | Event-driven enterprise integration |
 
 ---

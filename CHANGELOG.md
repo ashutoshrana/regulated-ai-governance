@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-04-11
+
+### Added
+
+**Regulation modules:**
+- `regulations.gdpr` — GDPR (EU 2016/679) policy helpers:
+  - `make_gdpr_processing_policy()` — policy factory with DPO escalation rules
+  - `GDPRSubjectRequest` — Art. 15/17 subject access/erasure requests with 30-day deadline
+  - `GDPRProcessingRecord` — Art. 30 Record of Processing Activities (RoPA)
+- `regulations.ccpa` — CCPA/CPRA (Cal. Civil Code §§ 1798.100–1798.199) policy helpers:
+  - `make_ccpa_processing_policy()` — policy factory for California consumer data
+  - `CCPAConsumerRequest` — know/delete/opt-out/correct requests with 45-day deadline
+  - `CCPADataInventoryRecord` — data category inventory for § 1798.110 disclosures
+- `regulations.soc2` — SOC 2 Trust Services Criteria policy helpers:
+  - `make_soc2_agent_policy()` — policy factory enforcing CC6 logical access controls
+  - `SOC2ControlTestResult` — structured evidence record for SOC 2 audit packages
+  - `SOC2TrustCategory` — Security, Availability, Processing Integrity, Confidentiality, Privacy
+
+**Framework integrations:**
+- `integrations.autogen.GovernedAutoGenAgent` — wraps any AutoGen ConversableAgent;
+  `.guarded_tool()` and `.guard_action()` enforce policy on every tool call
+- `integrations.llama_index.GovernedQueryEngine` — wraps any LlamaIndex QueryEngine;
+  `.query()` and `.aquery()` evaluated against policy before execution
+- `integrations.semantic_kernel.GovernedKernelPlugin` — wraps Semantic Kernel functions;
+  `.from_object()` auto-registers all public methods with policy enforcement;
+  `.add_function()` for manual registration with fluent chaining
+- `integrations.haystack.GovernedHaystackComponent` — Haystack-compatible component
+  wrapping document processing steps; `.run()` and `.guard_callable()` interfaces
+
+**Cross-cutting compliance primitives:**
+- `pii_detector.PIIDetector` — zero-dependency regex PII pre-flight scanner:
+  - Detects SSN, EMAIL, PHONE, CREDIT_CARD, IP_ADDRESS, DATE_OF_BIRTH, MRN, BANK_ACCOUNT
+  - `.scan()` returns `PIIScanResult` with `PIIFinding` list and category set
+  - `.redact()` replaces matches with `[REDACTED-<CATEGORY>]`
+  - Category filtering for targeted detection
+- `consent.ConsentStore` — in-memory consent registry with pluggable database backend:
+  - `ConsentRecord.grant()` / `.revoke()` factories
+  - `.is_consented()`, `.latest()`, `.history()` lookups
+  - Expiry support (GDPR Art. 7(3) revocation)
+- `lineage.LineageTracker` — data lineage trail for regulated pipeline runs:
+  - `LineageEventType` — RETRIEVAL, COMPLIANCE_FILTER, CONTEXT_ASSEMBLY, LLM_INPUT, LLM_OUTPUT, TOOL_CALL, DISCLOSURE
+  - `.record_retrieval()` and `.record_compliance_filter()` typed helpers
+  - `.to_audit_trail()` — JSON-serialisable audit trail per pipeline execution
+
+**OSS infrastructure:**
+- `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1
+- `ECOSYSTEM.md` — regulation and framework coverage matrix
+- Issue templates: new-regulation, new-framework-integration
+
+### Changed
+- `pyproject.toml` → version `0.2.0`; added `autogen`, `llama-index`, `semantic-kernel`,
+  `haystack` optional dependency groups; expanded keywords
+
+---
+
 ## [0.1.0] - 2026-04-11
 
 ### Added
