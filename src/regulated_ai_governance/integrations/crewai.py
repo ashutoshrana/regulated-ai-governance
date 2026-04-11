@@ -121,8 +121,6 @@ class EnterpriseActionGuard(BaseTool):
         ctx = {**self._context, "args": str(args)[:200], "kwargs_keys": list(kwargs.keys())}
         return self._guard.guard(
             action_name=self.name,
-            execute_fn=self._wrapped_tool._run,
+            execute_fn=lambda: self._wrapped_tool._run(*args, **kwargs),
             context=ctx,
-            *args,
-            **kwargs,
         )
