@@ -3,6 +3,7 @@
 ![CI](https://github.com/ashutoshrana/regulated-ai-governance/actions/workflows/ci.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+![PyPI](https://img.shields.io/pypi/v/regulated-ai-governance.svg)
 
 Governance patterns for AI agents operating in regulated environments — FERPA, HIPAA, and GLBA.
 
