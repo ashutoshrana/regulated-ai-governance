@@ -60,7 +60,7 @@ Changelog = "https://github.com/ashutoshrana/regulated-ai-governance/blob/main/C
 where = ["src"]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py310"
 
 [tool.ruff.lint]

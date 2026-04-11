@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from regulated_ai_governance.policy import ActionPolicy, EscalationRule, PolicyDecision
 
 

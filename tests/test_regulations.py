@@ -18,7 +18,6 @@ from regulated_ai_governance.regulations.hipaa import (
     make_hipaa_treating_provider_policy,
 )
 
-
 # ---------------------------------------------------------------------------
 # FERPA
 # ---------------------------------------------------------------------------

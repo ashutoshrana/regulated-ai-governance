@@ -61,7 +61,8 @@ Usage
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from regulated_ai_governance.audit import GovernanceAuditRecord
 from regulated_ai_governance.policy import ActionPolicy, PolicyDecision

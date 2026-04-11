@@ -41,7 +41,8 @@ Usage:
 from __future__ import annotations
 
 import uuid
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 try:
     from langchain_core.callbacks import BaseCallbackHandler
