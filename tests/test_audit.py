@@ -22,19 +22,13 @@ class TestGovernanceAuditRecord:
         assert record.permitted is True
 
     def test_record_id_is_auto_generated_uuid(self):
-        r1 = GovernanceAuditRecord(
-            regulation="FERPA", actor_id="a", action_name="x", permitted=True
-        )
-        r2 = GovernanceAuditRecord(
-            regulation="FERPA", actor_id="a", action_name="x", permitted=True
-        )
+        r1 = GovernanceAuditRecord(regulation="FERPA", actor_id="a", action_name="x", permitted=True)
+        r2 = GovernanceAuditRecord(regulation="FERPA", actor_id="a", action_name="x", permitted=True)
         assert r1.record_id != r2.record_id
         assert len(r1.record_id) == 36  # UUID4 format
 
     def test_timestamp_is_utc(self):
-        record = GovernanceAuditRecord(
-            regulation="HIPAA", actor_id="emp-001", action_name="read_phi", permitted=False
-        )
+        record = GovernanceAuditRecord(regulation="HIPAA", actor_id="emp-001", action_name="read_phi", permitted=False)
         assert record.timestamp.tzinfo == timezone.utc
 
     def test_to_log_entry_is_json_serializable(self):

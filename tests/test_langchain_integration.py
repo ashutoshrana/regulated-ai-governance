@@ -13,15 +13,14 @@ import sys
 import types
 import uuid
 from typing import Any
-from unittest.mock import MagicMock
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Mock langchain_core before the module under test is imported.
 # We do this at module level so the import at the top of langchain.py works.
 # ---------------------------------------------------------------------------
+
 
 def _install_langchain_core_mock() -> None:
     """Inject minimal langchain_core stubs into sys.modules."""
@@ -64,10 +63,10 @@ from regulated_ai_governance.integrations.langchain import (  # noqa: E402
 )
 from regulated_ai_governance.policy import ActionPolicy, EscalationRule  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Stubs
 # ---------------------------------------------------------------------------
+
 
 class _FakeDocument:
     """Duck-typed Document stub with .metadata dict."""
@@ -107,7 +106,11 @@ class TestFERPAComplianceCallbackHandler:
 
     def test_allows_authorized_document(self) -> None:
         handler = self._make_handler()
-        docs = [_FakeDocument("Transcript", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "academic_record"})]
+        docs = [
+            _FakeDocument(
+                "Transcript", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "academic_record"}
+            )
+        ]
         result = handler.on_retriever_end(docs, run_id=_run_id())
         assert len(result) == 1
 
@@ -134,8 +137,12 @@ class TestFERPAComplianceCallbackHandler:
     def test_category_filter_blocks_unauthorized(self) -> None:
         handler = self._make_handler(allowed_categories={"academic_record"})
         docs = [
-            _FakeDocument("Transcript", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "academic_record"}),
-            _FakeDocument("Health", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "health_record"}),
+            _FakeDocument(
+                "Transcript", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "academic_record"}
+            ),
+            _FakeDocument(
+                "Health", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "health_record"}
+            ),
         ]
         result = handler.on_retriever_end(docs, run_id=_run_id())
         assert len(result) == 1
@@ -144,7 +151,9 @@ class TestFERPAComplianceCallbackHandler:
     def test_no_category_filter_when_none(self) -> None:
         handler = self._make_handler(allowed_categories=None)
         docs = [
-            _FakeDocument("Health", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "health_record"}),
+            _FakeDocument(
+                "Health", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "health_record"}
+            ),
         ]
         result = handler.on_retriever_end(docs, run_id=_run_id())
         assert len(result) == 1
@@ -207,15 +216,17 @@ class TestFERPAComplianceCallbackHandler:
             audit_sink=audit_log.append,
         )
         docs = [
-            _FakeDocument("T", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "academic_record"}),
+            _FakeDocument(
+                "T", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "academic_record"}
+            ),
             _FakeDocument("B", {"student_id": "stu_bob", "institution_id": "univ_east", "category": "academic_record"}),
             _FakeDocument("H", {"student_id": "stu_alice", "institution_id": "univ_east", "category": "health_record"}),
         ]
         handler.on_retriever_end(docs, run_id=_run_id())
         ctx = audit_log[0].context
         assert ctx["documents_in_store"] == 3
-        assert ctx["after_identity_filter"] == 2   # alice's docs
-        assert ctx["after_category_filter"] == 1   # only academic_record
+        assert ctx["after_identity_filter"] == 2  # alice's docs
+        assert ctx["after_category_filter"] == 1  # only academic_record
 
     def test_custom_field_names(self) -> None:
         handler = FERPAComplianceCallbackHandler(
