@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-04-12
+
+### Added
+- Enhanced CI: coverage reporting (Codecov), ruff format check, build-check job, pip cache, concurrency cancellation
+- Automation: PR auto-labeler, stale bot, Conventional Commits PR title check, first-contributor welcome bot
+- Dependabot; CODEOWNERS; SECURITY.md; pre-commit config
+- `adapters/crewai.py`: `EnterpriseActionGuard` — CrewAI tool wrapper with `ActionPolicy` enforcement + `PolicyViolationError`
+- `adapters/autogen.py`: `PolicyEnforcingAgent` — AutoGen `ConversableAgent` duck-typing with policy-gated `generate_reply`
+- `adapters/semantic_kernel.py`: `PolicyKernelPlugin` — SK-callable `check_action_permitted()` and `get_permitted_actions()`
+- `integrations/langchain.py`: `GovernanceCallbackHandler` — `on_tool_start` enforcement with escalation support
+- ADRs: `docs/adr/003-adapter-over-inheritance.md`, `004-framework-agnostic-core.md`
+- README: badges, governance flow diagram, 30-second CrewAI example, framework/regulations tables, BibTeX citation
+- GitHub Discussions; 22 standardized labels; milestones v0.3.0 + v1.0.0
+
+---
+
 ## [0.2.0] - 2026-04-11
 
 ### Added
