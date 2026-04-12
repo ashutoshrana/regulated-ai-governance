@@ -93,9 +93,7 @@ class TestHIPAATreatingProviderPolicy:
         assert permitted is False
 
     def test_escalates_external_share(self):
-        policy = make_hipaa_treating_provider_policy(
-            escalate_external_share_to="hipaa_privacy_officer"
-        )
+        policy = make_hipaa_treating_provider_policy(escalate_external_share_to="hipaa_privacy_officer")
         result = policy.escalation_for("share_records_externally", {})
         assert result is not None
         assert result.escalate_to == "hipaa_privacy_officer"
@@ -126,16 +124,12 @@ class TestHIPAAResearcherPolicy:
         assert permitted is True
 
     def test_denies_phi_export(self):
-        policy = make_hipaa_researcher_policy(
-            irb_approved_categories={"read_lab_results"}
-        )
+        policy = make_hipaa_researcher_policy(irb_approved_categories={"read_lab_results"})
         permitted, _ = policy.permits("export_phi")
         assert permitted is False
 
     def test_denies_clinical_note_creation(self):
-        policy = make_hipaa_researcher_policy(
-            irb_approved_categories={"read_lab_results"}
-        )
+        policy = make_hipaa_researcher_policy(irb_approved_categories={"read_lab_results"})
         permitted, _ = policy.permits("create_clinical_note")
         assert permitted is False
 

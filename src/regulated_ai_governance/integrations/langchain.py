@@ -111,7 +111,8 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
     def _apply_identity_filter(self, documents: list[Document]) -> list[Document]:
         """Layer 1: filter by student_id + institution_id."""
         return [
-            doc for doc in documents
+            doc
+            for doc in documents
             if (
                 doc.metadata.get(self.student_id_field) == self.student_id
                 and doc.metadata.get(self.institution_id_field) == self.institution_id
@@ -122,10 +123,7 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
         """Layer 2: filter by allowed_categories."""
         if not self.allowed_categories:
             return documents
-        return [
-            doc for doc in documents
-            if doc.metadata.get(self.category_field) in self.allowed_categories
-        ]
+        return [doc for doc in documents if doc.metadata.get(self.category_field) in self.allowed_categories]
 
     def on_retriever_end(
         self,
@@ -170,11 +168,7 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
                     "parent_run_id": str(parent_run_id) if parent_run_id else None,
                     "student_id": self.student_id,
                     "institution_id": self.institution_id,
-                    "allowed_categories": (
-                        sorted(self.allowed_categories)
-                        if self.allowed_categories
-                        else None
-                    ),
+                    "allowed_categories": (sorted(self.allowed_categories) if self.allowed_categories else None),
                 },
             )
             self.audit_sink(record)

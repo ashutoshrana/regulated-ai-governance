@@ -155,9 +155,7 @@ class GovernedActionGuard:
             action_name=action_name,
             permitted=decision.permitted,
             denial_reason=decision.denial_reason,
-            escalation_target=(
-                decision.escalation.escalate_to if decision.escalation else None
-            ),
+            escalation_target=(decision.escalation.escalate_to if decision.escalation else None),
             context=context or {},
             policy_version=self._policy_version,
         )
@@ -190,13 +188,9 @@ class GovernedActionGuard:
         self._emit_audit(action_name, decision, context)
 
         if not decision.permitted:
-            message = (
-                f"[regulated-ai-governance] Action BLOCKED — {decision.denial_reason}"
-            )
+            message = f"[regulated-ai-governance] Action BLOCKED — {decision.denial_reason}"
             if decision.escalation:
-                message += (
-                    f" | Escalation target: {decision.escalation.escalate_to}"
-                )
+                message += f" | Escalation target: {decision.escalation.escalate_to}"
             if self._raise_on_deny:
                 raise PermissionError(message)
             return message

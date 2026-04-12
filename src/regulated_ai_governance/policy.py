@@ -90,15 +90,12 @@ class ActionPolicy:
         if self.allowed_actions and self.require_all_allowed:
             if action_name not in self.allowed_actions:
                 return False, (
-                    f"Action '{action_name}' is not in the allowed actions set. "
-                    f"Allowed: {sorted(self.allowed_actions)}"
+                    f"Action '{action_name}' is not in the allowed actions set. Allowed: {sorted(self.allowed_actions)}"
                 )
 
         return True, ""
 
-    def escalation_for(
-        self, action_name: str, context: dict | None = None
-    ) -> EscalationRule | None:
+    def escalation_for(self, action_name: str, context: dict | None = None) -> EscalationRule | None:
         """
         Return the first ``EscalationRule`` that matches *action_name*, or None.
 

@@ -43,8 +43,7 @@ try:
     from pydantic import PrivateAttr
 except ImportError as exc:
     raise ImportError(
-        "crewai is required for this integration. "
-        "Install it with: pip install regulated-ai-governance[crewai]"
+        "crewai is required for this integration. Install it with: pip install regulated-ai-governance[crewai]"
     ) from exc
 
 from regulated_ai_governance.agent_guard import GovernedActionGuard
