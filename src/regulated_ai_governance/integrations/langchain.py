@@ -1,26 +1,28 @@
 """
-LangChain integration — ``FERPAComplianceCallbackHandler``.
+LangChain integration — ``FERPAComplianceCallbackHandler`` and
+``GovernanceCallbackHandler``.
 
-Intercepts retrieval results in a LangChain chain and applies identity-scoped
-FERPA filtering before retrieved documents reach the LLM context window.
-Produces a ``GovernanceAuditRecord`` for each retrieval event.
+Provides two LangChain callback handler classes for regulated AI environments:
 
-This integration enforces the two-layer FERPA boundary described in the
-enterprise-rag-patterns library:
+1. ``FERPAComplianceCallbackHandler``
+   Intercepts retrieval results and applies identity-scoped FERPA filtering
+   before retrieved documents reach the LLM context window.  Produces a
+   ``GovernanceAuditRecord`` for each retrieval event (34 CFR § 99.32).
 
-- Layer 1 (identity pre-filter): only documents with matching ``student_id``
-  and ``institution_id`` metadata pass.
-- Layer 2 (category authorization): only documents whose ``category`` field
-  is in ``allowed_categories`` pass.
-
-The ``GovernanceAuditRecord`` emitted per retrieval satisfies the disclosure
-logging requirement at 34 CFR § 99.32.
+2. ``GovernanceCallbackHandler``
+   Intercepts ``on_tool_start`` events and evaluates each tool invocation
+   against an ``ActionPolicy`` before execution proceeds.  This implements
+   the "policy-before-execution" principle from ADR-0001: the governance
+   check runs synchronously inside the callback so the LangChain chain
+   cannot proceed to tool execution without a valid policy decision.
+   Produces a ``GovernanceAuditRecord`` for every tool invocation event,
+   whether permitted or denied.
 
 Installation:
     pip install regulated-ai-governance[langchain]
 
-Usage:
-    from langchain_community.vectorstores import FAISS
+Usage — FERPA retrieval filter::
+
     from regulated_ai_governance.integrations.langchain import (
         FERPAComplianceCallbackHandler,
     )
@@ -32,14 +34,30 @@ Usage:
         allowed_categories={"academic_record", "financial_record"},
         audit_sink=audit_log.append,
     )
-
     retriever = vector_store.as_retriever(callbacks=[handler])
     docs = retriever.invoke("What is my enrollment status?")
-    # docs contains only Alice's authorized records at univ-east
+
+Usage — tool-level governance::
+
+    from regulated_ai_governance.integrations.langchain import (
+        GovernanceCallbackHandler,
+    )
+    from regulated_ai_governance.policy import ActionPolicy
+
+    policy = ActionPolicy(allowed_actions={"search_catalog", "read_transcript"})
+    gov_handler = GovernanceCallbackHandler(
+        policy=policy,
+        regulation="FERPA",
+        actor_id="stu-alice",
+        audit_sink=audit_log.append,
+    )
+    # Pass gov_handler to a LangChain agent or chain via callbacks=[gov_handler]
+    # The handler raises PermissionError before any denied tool executes.
 """
 
 from __future__ import annotations
 
+import logging
 import uuid
 from collections.abc import Callable
 from typing import Any
@@ -53,7 +71,11 @@ except ImportError as exc:
         "Install it with: pip install regulated-ai-governance[langchain]"
     ) from exc
 
+from regulated_ai_governance.agent_guard import GovernedActionGuard
 from regulated_ai_governance.audit import GovernanceAuditRecord
+from regulated_ai_governance.policy import ActionPolicy
+
+logger = logging.getLogger(__name__)
 
 
 class FERPAComplianceCallbackHandler(BaseCallbackHandler):
@@ -188,3 +210,131 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
             )
 
         return authorized
+
+
+class GovernanceCallbackHandler(BaseCallbackHandler):
+    """
+    LangChain callback handler that enforces ``ActionPolicy`` governance on
+    every tool invocation before execution proceeds.
+
+    Implements the "policy-before-execution" principle from ADR-0001:
+    ``on_tool_start`` is called synchronously by LangChain before the tool
+    function runs, so raising ``PermissionError`` here prevents execution.
+
+    For every tool invocation event, a ``GovernanceAuditRecord`` is emitted
+    to the ``audit_sink`` whether the action is permitted or denied.
+
+    Regulation citations for common frameworks:
+    - FERPA § 99.31(a)(1): access control for school official tools
+    - HIPAA § 164.312(a)(1): access controls for PHI-touching tools
+    - GLBA § 314.4(c): access controls for customer financial data tools
+    - SOC 2 CC6.1: logical access controls for agent-invoked operations
+
+    :param policy: ``ActionPolicy`` defining which tool names are permitted.
+        Tool names are matched against ``allowed_actions`` and ``denied_actions``.
+    :param regulation: Regulation name written to each ``GovernanceAuditRecord``
+        (e.g. ``"FERPA"``, ``"HIPAA"``, ``"GLBA"``).
+    :param actor_id: Authenticated principal identifier. Must originate from
+        the verified session, not user input.
+    :param audit_sink: Optional callable receiving each ``GovernanceAuditRecord``.
+        Wire to a durable compliance log store.
+    :param tool_name_field: Key in the serialised tool dict whose value is
+        used as the action name for policy evaluation. Default: ``"name"``.
+    :param block_on_escalation: If ``True`` (default), escalated tools are
+        blocked even if the policy would otherwise permit them.
+    """
+
+    def __init__(
+        self,
+        policy: ActionPolicy,
+        regulation: str = "FERPA",
+        actor_id: str = "unknown",
+        audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
+        tool_name_field: str = "name",
+        block_on_escalation: bool = True,
+    ) -> None:
+        super().__init__()
+        self.regulation = regulation
+        self.actor_id = actor_id
+        self._audit_sink = audit_sink
+        self._guard = GovernedActionGuard(
+            policy=policy,
+            regulation=regulation,
+            actor_id=actor_id,
+            audit_sink=audit_sink,
+            block_on_escalation=block_on_escalation,
+        )
+        self.tool_name_field = tool_name_field
+
+    def on_tool_start(
+        self,
+        serialized: dict[str, Any],
+        input_str: str,
+        *,
+        run_id: uuid.UUID,
+        parent_run_id: uuid.UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """
+        Intercept tool invocations and evaluate against ``ActionPolicy``.
+
+        Called by the LangChain callback system synchronously before the tool
+        function executes.  Raising ``PermissionError`` here prevents execution.
+
+        :param serialized: LangChain serialised tool description dict.  The
+            tool name is read from ``serialized[self.tool_name_field]``.
+        :param input_str: Raw string input to the tool (for audit context).
+        :param run_id: LangChain run identifier for this tool invocation.
+        :param parent_run_id: Parent run identifier.
+        :raises PermissionError: If the tool name is not permitted by the policy.
+        """
+        tool_name = serialized.get(self.tool_name_field, "unknown_tool")
+        decision = self._guard.evaluate(tool_name)
+
+        # Emit audit record for every tool invocation (permitted or denied)
+        if self._audit_sink is not None:
+            record = GovernanceAuditRecord(
+                regulation=self.regulation,
+                actor_id=self.actor_id,
+                action_name=tool_name,
+                permitted=decision.permitted,
+                denial_reason=decision.denial_reason,
+                escalation_target=(
+                    decision.escalation.escalate_to if decision.escalation else None
+                ),
+                context={
+                    "run_id": str(run_id),
+                    "parent_run_id": str(parent_run_id) if parent_run_id else None,
+                    "input": input_str,
+                },
+            )
+            self._audit_sink(record)
+
+        if not decision.permitted:
+            logger.warning(
+                "[GOVERNANCE] Tool blocked: tool=%r actor=%r regulation=%r reason=%r",
+                tool_name,
+                self.actor_id,
+                self.regulation,
+                decision.denial_reason,
+            )
+            raise PermissionError(
+                f"GovernanceCallbackHandler: tool '{tool_name}' is not permitted "
+                f"for actor '{self.actor_id}' under {self.regulation} policy. "
+                f"Reason: {decision.denial_reason}"
+            )
+
+        logger.debug(
+            "[GOVERNANCE] Tool permitted: tool=%r actor=%r regulation=%r",
+            tool_name,
+            self.actor_id,
+            self.regulation,
+        )
+
+    def on_tool_end(self, output: str, *, run_id: uuid.UUID, **kwargs: Any) -> None:
+        """No-op: tool end event."""
+
+    def on_tool_error(
+        self, error: BaseException | KeyboardInterrupt, *, run_id: uuid.UUID, **kwargs: Any
+    ) -> None:
+        """No-op: tool error event."""
