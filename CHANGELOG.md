@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-04-12
+
+### Added
+- `integrations/maf.py`: `PolicyMiddleware` — Microsoft Agent Framework (MAF) middleware intercepting agent messages, evaluating `ActionPolicy`, emitting `GovernanceAuditRecord` per call, and blocking escalated actions. MAF is the enterprise successor to AutoGen and Semantic Kernel (2026).
+- `[maf]` optional dependency: `microsoft-agent-framework>=1.0.0`
+- `[all]` extra combining all framework integrations (crewai, langchain, llama-index, semantic-kernel, haystack, maf)
+
+### Changed
+- Bumped ecosystem compatibility pins:
+  - `crewai`: `>=1.0.0` → `>=1.14.0` (CrewAI 1.14.1 current; tool-search support, Anthropic contextvars propagation)
+  - `semantic-kernel`: `>=1.0.0` → `>=1.41.0` (Semantic Kernel 1.41.1 current)
+  - `haystack-ai`: `>=2.0.0` → `>=2.20.0` (Haystack 2.27.0 current)
+- `integrations/__init__.py`: added MAF deprecation notice for AutoGen and Semantic Kernel; exports updated
+- `pyproject.toml`: version bumped to 0.4.0
+
+### Deprecation Notice
+AutoGen (`pyautogen`) is in maintenance mode as of 2026 — Microsoft has moved to Microsoft Agent Framework (MAF). The `autogen.py` integration remains functional for backward compatibility. **New projects should use `integrations/maf.py`** (`PolicyMiddleware`). The `autogen` optional dependency will be removed in v1.0.0.
+
+Similarly, Semantic Kernel (`semantic-kernel`) projects are recommended to migrate to MAF per Microsoft guidance.
+
+---
+
 ## [0.3.0] — 2026-04-12
 
 ### Added
