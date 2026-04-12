@@ -9,6 +9,7 @@ Regulatory basis: FERPA 34 CFR § 99.3, HIPAA 45 CFR § 164.514
 Usage:
     from regulated_ai_governance.adapters.autogen import PolicyEnforcingAgent
 """
+
 from __future__ import annotations
 
 import logging

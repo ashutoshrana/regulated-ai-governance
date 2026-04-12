@@ -4,6 +4,7 @@ Tests for framework adapters — CrewAI, AutoGen, Semantic Kernel.
 All tests use duck-typed stubs; no real crewai/autogen/semantic-kernel
 imports are required to run the suite.
 """
+
 from __future__ import annotations
 
 import logging
@@ -16,7 +17,6 @@ from regulated_ai_governance.adapters.autogen import PolicyEnforcingAgent
 from regulated_ai_governance.adapters.crewai import EnterpriseActionGuard, PolicyViolationError
 from regulated_ai_governance.adapters.semantic_kernel import PolicyKernelPlugin
 from regulated_ai_governance.policy import ActionPolicy
-
 
 # ---------------------------------------------------------------------------
 # Shared stubs

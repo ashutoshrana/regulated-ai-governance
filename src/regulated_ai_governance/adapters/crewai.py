@@ -12,6 +12,7 @@ Usage:
     # Wrap any CrewAI tool
     guarded = EnterpriseActionGuard(tool=my_tool, policy=action_policy)
 """
+
 from __future__ import annotations
 
 import logging
@@ -47,8 +48,7 @@ def _import_crewai() -> Any:
         return crewai
     except ImportError as exc:
         raise ImportError(
-            "crewai is required for this integration. "
-            "Install with: pip install 'regulated-ai-governance[crewai]'"
+            "crewai is required for this integration. Install with: pip install 'regulated-ai-governance[crewai]'"
         ) from exc
 
 
