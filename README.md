@@ -1,48 +1,38 @@
 # regulated-ai-governance
 
-![CI](https://github.com/ashutoshrana/regulated-ai-governance/actions/workflows/ci.yml/badge.svg)
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![PyPI](https://img.shields.io/pypi/v/regulated-ai-governance.svg)
-
-Governance patterns for AI agents operating in regulated environments — FERPA, HIPAA, GLBA, GDPR, CCPA, and SOC 2.
-
-Policy enforcement, escalation routing, PII detection, consent management, data lineage, and compliance audit for enterprise AI systems.
+[![CI](https://github.com/ashutoshrana/regulated-ai-governance/actions/workflows/ci.yml/badge.svg)](https://github.com/ashutoshrana/regulated-ai-governance/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
+[![Python](https://img.shields.io/pypi/pyversions/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
 
 ---
 
 ## The problem this solves
 
-Standard AI agent frameworks have no concept of regulated industry access control. When you deploy an AI agent in a higher-education, healthcare, or financial-services environment, you need answers to questions that no general-purpose agent framework addresses:
-
-- Is this agent allowed to access this type of record at all?
-- If it tries to export or share data, who needs to approve that?
-- How do I produce the audit record the regulation requires?
-
-This library provides those answers as composable Python primitives.
+AI agents in regulated environments (FERPA, HIPAA, GLBA) can access and process data they are not authorized to see. Standard agent frameworks — CrewAI, AutoGen, LangChain, Semantic Kernel — have no concept of regulated industry access control. When you deploy an agent in a higher-education, healthcare, or financial-services environment, the framework will not tell you whether the agent is allowed to access a record type, who must approve an export, or how to produce the audit record the regulation requires. This library provides those answers as composable Python primitives, with pre-built policy adapters for each major framework that enforce authorization before any action executes.
 
 ---
 
-## Ecosystem
-
-See [ECOSYSTEM.md](./ECOSYSTEM.md) for full regulation and framework coverage matrix.
-
-## Six regulations, one pattern
+## Architecture
 
 ```
-ActionPolicy
-    │
-    ▼
-GovernedActionGuard
-    │
-    ├─── Permitted? ───► Execute
-    │
-    ├─── Escalation? ──► Block (or log-and-continue)
-    │
-    └─── Always ───────► GovernanceAuditRecord → audit_sink
+CrewAI / AutoGen / Semantic Kernel / LangChain Agent
+     │
+     ▼
+EnterpriseActionGuard / PolicyEnforcingAgent / GovernanceCallback
+(wraps your tool or callback — drop-in replacement)
+     │
+     ├─ ActionPolicy.can_run(action_name)? ─────────────────────┐
+     │        ├─ Permitted ────────────────────► Execute         │
+     │        ├─ Escalation required ──────────► Block + notify │
+     │        └─ Denied ──────────────────────► PolicyViolation │
+     │                                                           │
+     └─ GovernanceAuditRecord ───────────────────────────────────┘
+          regulation citation + action_name + actor_id
+          permitted / denied / escalated + timestamp
+          → audit_sink (durable compliance log)
 ```
-
-The same three-step pattern — allow/deny, escalate, audit — applies to FERPA-regulated student record access, HIPAA-regulated clinical record access, and GLBA-regulated customer financial data access. The regulation-specific details are in pre-built policy factories; the enforcement engine is the same.
 
 ---
 
@@ -53,6 +43,7 @@ pip install regulated-ai-governance
 ```
 
 With framework integrations:
+
 ```bash
 pip install "regulated-ai-governance[crewai]"
 pip install "regulated-ai-governance[langchain]"
@@ -64,113 +55,85 @@ pip install "regulated-ai-governance[haystack]"
 
 ---
 
-## Quick start
-
-### FERPA: student-facing enrollment assistant
-
-```python
-from regulated_ai_governance import GovernedActionGuard
-from regulated_ai_governance.regulations.ferpa import make_ferpa_student_policy
-from regulated_ai_governance.audit import GovernanceAuditRecord
-
-audit_log: list[GovernanceAuditRecord] = []
-
-policy = make_ferpa_student_policy(
-    allowed_record_categories={"academic_record", "financial_record"}
-)
-
-guard = GovernedActionGuard(
-    policy=policy,
-    regulation="FERPA",
-    actor_id="stu-alice",           # from verified session token — not from user input
-    audit_sink=audit_log.append,    # wire to durable compliance log store
-    block_on_escalation=True,
-)
-
-# Permitted — executes, emits audit record
-result = guard.guard(
-    action_name="read_academic_record",
-    execute_fn=lambda: {"gpa": 3.7, "credits": 90},
-)
-# → {"gpa": 3.7, "credits": 90}
-
-# Blocked — denied by policy, emits audit record
-result = guard.guard(
-    action_name="export_student_records",
-    execute_fn=lambda: b"PDF_DATA",
-)
-# → "[regulated-ai-governance] Action BLOCKED — ..."
-```
-
-### HIPAA: clinical decision support agent
-
-```python
-from regulated_ai_governance.regulations.hipaa import make_hipaa_treating_provider_policy
-
-policy = make_hipaa_treating_provider_policy(
-    escalate_external_share_to="hipaa_privacy_officer"
-)
-guard = GovernedActionGuard(policy=policy, regulation="HIPAA", actor_id="nurse-001")
-
-result = guard.guard("read_lab_results", lambda: {"hba1c": 6.2})
-# → {"hba1c": 6.2}
-```
-
-### GLBA: customer-service chatbot
-
-```python
-from regulated_ai_governance.regulations.glba import make_glba_customer_service_policy
-
-policy = make_glba_customer_service_policy()
-guard = GovernedActionGuard(policy=policy, regulation="GLBA", actor_id="cust-7890")
-
-guard.guard("read_account_balance", lambda: {"balance": "$1,240.00"})
-# → {"balance": "$1,240.00"}
-```
-
----
-
-## CrewAI integration
+## 30-second example: CrewAI + FERPA
 
 ```python
 from regulated_ai_governance.integrations.crewai import EnterpriseActionGuard
 from regulated_ai_governance.regulations.ferpa import make_ferpa_student_policy
 
 guard = EnterpriseActionGuard(
-    wrapped_tool=MyTranscriptTool(),
-    policy=make_ferpa_student_policy(),
+    wrapped_tool=MyTranscriptTool(),           # your existing CrewAI tool
+    policy=make_ferpa_student_policy(
+        allowed_record_categories={"academic_record"}
+    ),
     regulation="FERPA",
-    actor_id="stu-alice",
-    audit_sink=lambda rec: write_to_compliance_db(rec),
+    actor_id="stu-alice",                      # from verified session token
+    audit_sink=lambda rec: write_to_db(rec),   # wire to durable compliance store
     block_on_escalation=True,
 )
 
-agent = Agent(tools=[guard], ...)  # drop-in replacement for the raw tool
+agent = Agent(tools=[guard], ...)  # drop-in replacement — no other changes needed
 ```
+
+Every call to `guard` emits a `GovernanceAuditRecord` whether permitted or denied, suitable for direct insert into a 34 CFR § 99.32 disclosure log.
 
 ---
 
-## LangChain integration (FERPA retrieval)
+## Framework support
+
+| Framework | Adapter Class | Install Extra |
+|-----------|--------------|---------------|
+| CrewAI | `EnterpriseActionGuard` | `[crewai]` |
+| AutoGen | `PolicyEnforcingAgent` | `[autogen]` |
+| Semantic Kernel | `PolicyKernelPlugin` | `[semantic-kernel]` |
+| LangChain | `GovernanceCallbackHandler` | `[langchain]` |
+| Haystack | via enterprise-rag-patterns | — |
+
+---
+
+## Regulations supported
+
+| Regulation | Status | Audit Citation |
+|------------|--------|---------------|
+| FERPA (34 CFR § 99) | Implemented | 34 CFR § 99.32 disclosure log |
+| HIPAA (45 CFR § 164) | Implemented | 45 CFR § 164.312(b) access controls |
+| GLBA (16 CFR § 314) | Implemented | 16 CFR § 314.4(e) safeguards |
+| GDPR | Implemented | Art. 17, Art. 22 automated decision |
+| CCPA | Planned | Cal. Civ. Code § 1798.100 |
+| SOC 2 | Planned | CC6.1 logical access controls |
+
+---
+
+## Quick start: HIPAA and GLBA
 
 ```python
-from regulated_ai_governance.integrations.langchain import FERPAComplianceCallbackHandler
+from regulated_ai_governance.regulations.hipaa import make_hipaa_treating_provider_policy
+from regulated_ai_governance import GovernedActionGuard
 
-handler = FERPAComplianceCallbackHandler(
-    student_id="stu-alice",         # from verified session token
-    institution_id="univ-east",
-    allowed_categories={"academic_record", "financial_record"},
-    audit_sink=lambda rec: write_to_compliance_db(rec),
+# HIPAA — clinical decision support agent
+policy = make_hipaa_treating_provider_policy(
+    escalate_external_share_to="hipaa_privacy_officer"
 )
+guard = GovernedActionGuard(policy=policy, regulation="HIPAA", actor_id="nurse-001")
+result = guard.guard("read_lab_results", lambda: {"hba1c": 6.2})
+# → {"hba1c": 6.2}
+```
 
-retriever = vector_store.as_retriever(callbacks=[handler])
-docs = retriever.invoke("What is my enrollment status?")
+```python
+from regulated_ai_governance.regulations.glba import make_glba_customer_service_policy
+
+# GLBA — customer-service chatbot
+policy = make_glba_customer_service_policy()
+guard = GovernedActionGuard(policy=policy, regulation="GLBA", actor_id="cust-7890")
+guard.guard("read_account_balance", lambda: {"balance": "$1,240.00"})
+# → {"balance": "$1,240.00"}
 ```
 
 ---
 
 ## Audit records
 
-Every guard evaluation emits a `GovernanceAuditRecord` — permitted, denied, or escalated:
+Every guard evaluation emits a `GovernanceAuditRecord`:
 
 ```python
 print(audit_log[0].to_log_entry())
@@ -179,15 +142,45 @@ print(audit_log[0].to_log_entry())
 #   "regulation": "FERPA",
 #   "actor_id": "stu-alice",
 #   "action_name": "read_academic_record",
-#   "permitted": True,
-#   "denial_reason": None,
-#   "escalation_target": None,
+#   "permitted": true,
+#   "denial_reason": null,
+#   "escalation_target": null,
 #   "policy_version": "1.0",
 #   "timestamp": "2026-04-11T14:30:00+00:00"
 # }
 ```
 
-JSON-serializable, suitable for direct insert into a compliance database or disclosure log per 34 CFR § 99.32 (FERPA), 45 CFR § 164.312(b) (HIPAA), 16 CFR § 314.4(e) (GLBA).
+JSON-serializable, suitable for direct insert into a compliance database per 34 CFR § 99.32 (FERPA), 45 CFR § 164.312(b) (HIPAA), or 16 CFR § 314.4(e) (GLBA).
+
+---
+
+## Ecosystem
+
+See [ECOSYSTEM.md](./ECOSYSTEM.md) for the full regulation and framework coverage matrix.
+
+---
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines. Run `pytest tests/ -v` to verify your changes before opening a pull request.
+
+---
+
+## Citation
+
+If you use these patterns in research or production, please cite:
+
+```bibtex
+@software{rana2026rag,
+  author    = {Rana, Ashutosh},
+  title     = {regulated-ai-governance: Policy enforcement for AI agents in regulated environments},
+  year      = {2026},
+  url       = {https://github.com/ashutoshrana/regulated-ai-governance},
+  license   = {MIT}
+}
+```
+
+Or use GitHub's "Cite this repository" button above (reads `CITATION.cff`).
 
 ---
 
