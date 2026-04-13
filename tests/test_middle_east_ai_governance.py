@@ -12,9 +12,6 @@ import os
 import sys
 import types
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # Module loader
 # ---------------------------------------------------------------------------
@@ -711,9 +708,7 @@ class TestOrchestrator:
         doc = _base_doc()
         orchestrator = mod.MiddleEastAIGovernanceOrchestrator()
         results = orchestrator.evaluate(ctx, doc)
-        report = mod.MiddleEastAIGovernanceReport(
-            context=ctx, document=doc, filter_results=results
-        )
+        report = mod.MiddleEastAIGovernanceReport(context=ctx, document=doc, filter_results=results)
         assert report.overall_decision == "DENIED"
 
 
@@ -732,9 +727,7 @@ class TestReport:
             doc = _base_doc()
         orchestrator = mod.MiddleEastAIGovernanceOrchestrator()
         results = orchestrator.evaluate(ctx, doc)
-        return mod.MiddleEastAIGovernanceReport(
-            context=ctx, document=doc, filter_results=results
-        )
+        return mod.MiddleEastAIGovernanceReport(context=ctx, document=doc, filter_results=results)
 
     def test_overall_decision_approved_when_all_pass(self):
         """Fully compliant context → overall_decision is 'APPROVED'."""
@@ -874,9 +867,7 @@ class TestEdgeCases:
                 regulation_citation="w",
             ),
         ]
-        report = mod.MiddleEastAIGovernanceReport(
-            context=ctx, document=doc, filter_results=fake_results
-        )
+        report = mod.MiddleEastAIGovernanceReport(context=ctx, document=doc, filter_results=fake_results)
         assert report.overall_decision == "DENIED"
         assert report.is_compliant is False
 
@@ -910,9 +901,7 @@ class TestEdgeCases:
                 regulation_citation="w",
             ),
         ]
-        report = mod.MiddleEastAIGovernanceReport(
-            context=ctx, document=doc, filter_results=fake_results
-        )
+        report = mod.MiddleEastAIGovernanceReport(context=ctx, document=doc, filter_results=fake_results)
         assert report.overall_decision == "REQUIRES_HUMAN_REVIEW"
         assert report.is_compliant is False
 

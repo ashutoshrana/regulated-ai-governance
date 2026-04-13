@@ -19,9 +19,7 @@ import pytest
 # ---------------------------------------------------------------------------
 
 _MODULE_NAME = "automotive_ai_governance"
-_MODULE_PATH = (
-    Path(__file__).parent.parent / "examples" / "11_automotive_ai_governance.py"
-)
+_MODULE_PATH = Path(__file__).parent.parent / "examples" / "11_automotive_ai_governance.py"
 
 
 def _load_module() -> Any:
@@ -52,6 +50,7 @@ AutomotiveAIOrchestrator = _mod.AutomotiveAIOrchestrator
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture()
 def compliant_cybersec_ctx() -> CybersecurityContext:
@@ -88,7 +87,7 @@ def compliant_nhtsa_ctx_l2() -> NHTSAAVContext:
         cybersecurity_compliance=True,
         crash_avoidance_validated=True,
         sgo_reporting_enabled=True,
-        fallback_minimal_risk_condition=False,   # L2: driver in control
+        fallback_minimal_risk_condition=False,  # L2: driver in control
         human_machine_interface_tested=True,
         data_recording_capability=True,
     )
@@ -113,8 +112,8 @@ def compliant_nhtsa_ctx_l4() -> NHTSAAVContext:
 # SafetyClassifier
 # ---------------------------------------------------------------------------
 
-class TestSafetyClassifier:
 
+class TestSafetyClassifier:
     def test_emergency_braking_is_asil_d(self) -> None:
         sc = SafetyClassifier()
         assert sc.classify(AISystemFunction.EMERGENCY_BRAKING) == ASILLevel.D
@@ -159,8 +158,12 @@ class TestSafetyClassifier:
         sc = SafetyClassifier()
         # Provide all but formal_verification
         activities = [
-            "unit_testing", "code_review", "fmea_complete", "hara_complete",
-            "independent_safety_assessment", "safety_case_documented",
+            "unit_testing",
+            "code_review",
+            "fmea_complete",
+            "hara_complete",
+            "independent_safety_assessment",
+            "safety_case_documented",
             "safety_element_out_of_context",
         ]
         met, missing = sc.verify_requirements_met(AISystemFunction.EMERGENCY_BRAKING, activities)
@@ -178,52 +181,36 @@ class TestSafetyClassifier:
 # R155CybersecFilter
 # ---------------------------------------------------------------------------
 
-class TestR155CybersecFilter:
 
+class TestR155CybersecFilter:
     def _filter(self) -> R155CybersecFilter:
         return R155CybersecFilter()
 
-    def test_fully_compliant_returns_allow(
-        self, compliant_cybersec_ctx: CybersecurityContext
-    ) -> None:
+    def test_fully_compliant_returns_allow(self, compliant_cybersec_ctx: CybersecurityContext) -> None:
         outcome, violations = self._filter().evaluate(compliant_cybersec_ctx)
         assert outcome == GovernanceOutcome.ALLOW
         assert violations == []
 
     def test_no_csms_cert_denies(self, compliant_cybersec_ctx: CybersecurityContext) -> None:
-        ctx = CybersecurityContext(
-            **{**compliant_cybersec_ctx.__dict__, "csms_certified": False}
-        )
+        ctx = CybersecurityContext(**{**compliant_cybersec_ctx.__dict__, "csms_certified": False})
         outcome, violations = self._filter().evaluate(ctx)
         assert outcome == GovernanceOutcome.DENY
         assert any("§7.3.1" in v for v in violations)
 
-    def test_unmitigated_vulnerabilities_denies(
-        self, compliant_cybersec_ctx: CybersecurityContext
-    ) -> None:
-        ctx = CybersecurityContext(
-            **{**compliant_cybersec_ctx.__dict__, "known_vulnerabilities_mitigated": False}
-        )
+    def test_unmitigated_vulnerabilities_denies(self, compliant_cybersec_ctx: CybersecurityContext) -> None:
+        ctx = CybersecurityContext(**{**compliant_cybersec_ctx.__dict__, "known_vulnerabilities_mitigated": False})
         outcome, violations = self._filter().evaluate(ctx)
         assert outcome == GovernanceOutcome.DENY
         assert any("§7.3.3" in v for v in violations)
 
-    def test_missing_ids_allows_with_conditions(
-        self, compliant_cybersec_ctx: CybersecurityContext
-    ) -> None:
-        ctx = CybersecurityContext(
-            **{**compliant_cybersec_ctx.__dict__, "intrusion_detection_active": False}
-        )
+    def test_missing_ids_allows_with_conditions(self, compliant_cybersec_ctx: CybersecurityContext) -> None:
+        ctx = CybersecurityContext(**{**compliant_cybersec_ctx.__dict__, "intrusion_detection_active": False})
         outcome, violations = self._filter().evaluate(ctx)
         assert outcome == GovernanceOutcome.ALLOW_WITH_CONDITIONS
         assert any("§7.3.5" in v for v in violations)
 
-    def test_missing_logging_allows_with_conditions(
-        self, compliant_cybersec_ctx: CybersecurityContext
-    ) -> None:
-        ctx = CybersecurityContext(
-            **{**compliant_cybersec_ctx.__dict__, "security_logging_enabled": False}
-        )
+    def test_missing_logging_allows_with_conditions(self, compliant_cybersec_ctx: CybersecurityContext) -> None:
+        ctx = CybersecurityContext(**{**compliant_cybersec_ctx.__dict__, "security_logging_enabled": False})
         outcome, violations = self._filter().evaluate(ctx)
         assert outcome == GovernanceOutcome.ALLOW_WITH_CONDITIONS
         assert any("§7.3.7" in v for v in violations)
@@ -233,44 +220,32 @@ class TestR155CybersecFilter:
 # R156SUMSFilter
 # ---------------------------------------------------------------------------
 
-class TestR156SUMSFilter:
 
+class TestR156SUMSFilter:
     def _filter(self) -> R156SUMSFilter:
         return R156SUMSFilter()
 
-    def test_fully_compliant_returns_allow(
-        self, compliant_sums_ctx: SoftwareUpdateContext
-    ) -> None:
+    def test_fully_compliant_returns_allow(self, compliant_sums_ctx: SoftwareUpdateContext) -> None:
         outcome, violations = self._filter().evaluate(compliant_sums_ctx, ASILLevel.B)
         assert outcome == GovernanceOutcome.ALLOW
         assert violations == []
 
-    def test_unsigned_update_denies(
-        self, compliant_sums_ctx: SoftwareUpdateContext
-    ) -> None:
-        ctx = SoftwareUpdateContext(
-            **{**compliant_sums_ctx.__dict__, "update_cryptographically_signed": False}
-        )
+    def test_unsigned_update_denies(self, compliant_sums_ctx: SoftwareUpdateContext) -> None:
+        ctx = SoftwareUpdateContext(**{**compliant_sums_ctx.__dict__, "update_cryptographically_signed": False})
         outcome, violations = self._filter().evaluate(ctx, ASILLevel.B)
         assert outcome == GovernanceOutcome.DENY
         assert any("§7.2.2" in v for v in violations)
 
     def test_no_rollback_denies(self, compliant_sums_ctx: SoftwareUpdateContext) -> None:
-        ctx = SoftwareUpdateContext(
-            **{**compliant_sums_ctx.__dict__, "rollback_capability_present": False}
-        )
+        ctx = SoftwareUpdateContext(**{**compliant_sums_ctx.__dict__, "rollback_capability_present": False})
         outcome, violations = self._filter().evaluate(ctx, ASILLevel.B)
         assert outcome == GovernanceOutcome.DENY
         assert any("§7.2.4" in v for v in violations)
 
-    def test_asil_d_any_violation_denies(
-        self, compliant_sums_ctx: SoftwareUpdateContext
-    ) -> None:
+    def test_asil_d_any_violation_denies(self, compliant_sums_ctx: SoftwareUpdateContext) -> None:
         """For ASIL D, even conditions become DENY."""
         ctx = SoftwareUpdateContext(
-            **{**compliant_sums_ctx.__dict__,
-               "over_the_air": True,
-               "driver_consent_obtained": False}
+            **{**compliant_sums_ctx.__dict__, "over_the_air": True, "driver_consent_obtained": False}
         )
         outcome, violations = self._filter().evaluate(ctx, ASILLevel.D)
         assert outcome == GovernanceOutcome.DENY
@@ -279,30 +254,20 @@ class TestR156SUMSFilter:
         self, compliant_sums_ctx: SoftwareUpdateContext
     ) -> None:
         ctx = SoftwareUpdateContext(
-            **{**compliant_sums_ctx.__dict__,
-               "over_the_air": True,
-               "driver_consent_obtained": False}
+            **{**compliant_sums_ctx.__dict__, "over_the_air": True, "driver_consent_obtained": False}
         )
         outcome, violations = self._filter().evaluate(ctx, ASILLevel.B)
         assert outcome == GovernanceOutcome.ALLOW_WITH_CONDITIONS
         assert any("§7.2.6" in v for v in violations)
 
-    def test_asil_change_requires_reapproval_flagged(
-        self, compliant_sums_ctx: SoftwareUpdateContext
-    ) -> None:
-        ctx = SoftwareUpdateContext(
-            **{**compliant_sums_ctx.__dict__, "asil_change_requires_reapproval": True}
-        )
+    def test_asil_change_requires_reapproval_flagged(self, compliant_sums_ctx: SoftwareUpdateContext) -> None:
+        ctx = SoftwareUpdateContext(**{**compliant_sums_ctx.__dict__, "asil_change_requires_reapproval": True})
         outcome, violations = self._filter().evaluate(ctx, ASILLevel.B)
         assert outcome == GovernanceOutcome.ALLOW_WITH_CONDITIONS
         assert any("re-evaluation" in v for v in violations)
 
-    def test_no_sums_documented_denies(
-        self, compliant_sums_ctx: SoftwareUpdateContext
-    ) -> None:
-        ctx = SoftwareUpdateContext(
-            **{**compliant_sums_ctx.__dict__, "sums_documented": False}
-        )
+    def test_no_sums_documented_denies(self, compliant_sums_ctx: SoftwareUpdateContext) -> None:
+        ctx = SoftwareUpdateContext(**{**compliant_sums_ctx.__dict__, "sums_documented": False})
         outcome, violations = self._filter().evaluate(ctx, ASILLevel.B)
         assert outcome == GovernanceOutcome.DENY
         assert any("§7.1.1" in v for v in violations)
@@ -312,21 +277,17 @@ class TestR156SUMSFilter:
 # NHTSAAVFilter
 # ---------------------------------------------------------------------------
 
-class TestNHTSAAVFilter:
 
+class TestNHTSAAVFilter:
     def _filter(self) -> NHTSAAVFilter:
         return NHTSAAVFilter()
 
-    def test_l2_fully_compliant_returns_allow(
-        self, compliant_nhtsa_ctx_l2: NHTSAAVContext
-    ) -> None:
+    def test_l2_fully_compliant_returns_allow(self, compliant_nhtsa_ctx_l2: NHTSAAVContext) -> None:
         outcome, findings = self._filter().evaluate(compliant_nhtsa_ctx_l2)
         assert outcome == GovernanceOutcome.ALLOW
         assert findings == []
 
-    def test_l4_fully_compliant_returns_allow(
-        self, compliant_nhtsa_ctx_l4: NHTSAAVContext
-    ) -> None:
+    def test_l4_fully_compliant_returns_allow(self, compliant_nhtsa_ctx_l4: NHTSAAVContext) -> None:
         outcome, findings = self._filter().evaluate(compliant_nhtsa_ctx_l4)
         assert outcome == GovernanceOutcome.ALLOW
         assert findings == []
@@ -340,9 +301,7 @@ class TestNHTSAAVFilter:
     def test_l3_without_mrc_denies(self, compliant_nhtsa_ctx_l4: NHTSAAVContext) -> None:
         """L3 requires MRC; L4 also requires it."""
         ctx = NHTSAAVContext(
-            **{**compliant_nhtsa_ctx_l4.__dict__,
-               "sae_level": SAELevel.L3,
-               "fallback_minimal_risk_condition": False}
+            **{**compliant_nhtsa_ctx_l4.__dict__, "sae_level": SAELevel.L3, "fallback_minimal_risk_condition": False}
         )
         outcome, findings = self._filter().evaluate(ctx)
         assert outcome == GovernanceOutcome.DENY
@@ -350,18 +309,12 @@ class TestNHTSAAVFilter:
 
     def test_l2_without_mrc_allowed(self, compliant_nhtsa_ctx_l2: NHTSAAVContext) -> None:
         """L2: driver still in control; MRC is not required."""
-        ctx = NHTSAAVContext(
-            **{**compliant_nhtsa_ctx_l2.__dict__, "fallback_minimal_risk_condition": False}
-        )
+        ctx = NHTSAAVContext(**{**compliant_nhtsa_ctx_l2.__dict__, "fallback_minimal_risk_condition": False})
         outcome, findings = self._filter().evaluate(ctx)
         assert outcome == GovernanceOutcome.ALLOW
 
-    def test_l4_without_sgo_reporting_allows_with_conditions(
-        self, compliant_nhtsa_ctx_l4: NHTSAAVContext
-    ) -> None:
-        ctx = NHTSAAVContext(
-            **{**compliant_nhtsa_ctx_l4.__dict__, "sgo_reporting_enabled": False}
-        )
+    def test_l4_without_sgo_reporting_allows_with_conditions(self, compliant_nhtsa_ctx_l4: NHTSAAVContext) -> None:
+        ctx = NHTSAAVContext(**{**compliant_nhtsa_ctx_l4.__dict__, "sgo_reporting_enabled": False})
         outcome, findings = self._filter().evaluate(ctx)
         assert outcome == GovernanceOutcome.ALLOW_WITH_CONDITIONS
         assert any("SGO" in f for f in findings)
@@ -387,8 +340,8 @@ class TestNHTSAAVFilter:
 # AutomotiveAIOrchestrator — integration tests
 # ---------------------------------------------------------------------------
 
-class TestAutomotiveAIOrchestrator:
 
+class TestAutomotiveAIOrchestrator:
     def _orch(self) -> AutomotiveAIOrchestrator:
         return AutomotiveAIOrchestrator()
 
@@ -397,9 +350,14 @@ class TestAutomotiveAIOrchestrator:
 
     def _asil_d_activities(self) -> list[str]:
         return [
-            "unit_testing", "code_review", "fmea_complete", "hara_complete",
-            "independent_safety_assessment", "safety_case_documented",
-            "formal_verification", "safety_element_out_of_context",
+            "unit_testing",
+            "code_review",
+            "fmea_complete",
+            "hara_complete",
+            "independent_safety_assessment",
+            "safety_case_documented",
+            "formal_verification",
+            "safety_element_out_of_context",
         ]
 
     def test_scenario_a_adas_fully_compliant(

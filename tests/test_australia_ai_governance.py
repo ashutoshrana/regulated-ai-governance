@@ -13,9 +13,7 @@ from pathlib import Path
 
 import pytest
 
-_MOD_PATH = (
-    Path(__file__).parent.parent / "examples" / "19_australia_ai_governance.py"
-)
+_MOD_PATH = Path(__file__).parent.parent / "examples" / "19_australia_ai_governance.py"
 
 
 def _load_module():
@@ -206,12 +204,7 @@ class TestPrivacyActAPPsFilter:
         f = m.PrivacyActAPPsFilter()
         result = f.evaluate(ctx)
         combined = " ".join(result.conditions).lower()
-        assert (
-            "app 12" in combined
-            or "app 13" in combined
-            or "ndb" in combined
-            or "breach" in combined
-        )
+        assert "app 12" in combined or "app 13" in combined or "ndb" in combined or "breach" in combined
 
 
 # ===========================================================================
@@ -301,7 +294,7 @@ class TestAHRCAIGuidelinesFilter:
         assert "discrimination" in combined or "ahrc" in combined
 
     def test_high_risk_missing_accessible_design_denied(self, m):
-        """risk_level=HIGH_RISK, accessible_design_verified=False → is_denied, finding mentions accessible, Disability, or AHRC."""
+        """risk_level=HIGH_RISK, accessible_design_verified=False → is_denied, finding mentions accessible, Disability, or AHRC."""  # noqa: E501
         ctx = _ctx(
             m,
             risk_level=m.AustralianAIRiskLevel.HIGH_RISK,
@@ -330,11 +323,7 @@ class TestAHRCAIGuidelinesFilter:
         f = m.AHRCAIGuidelinesFilter()
         result = f.evaluate(ctx)
         combined = " ".join(result.conditions).lower()
-        assert (
-            "first nations" in combined
-            or "communities" in combined
-            or "intersectional" in combined
-        )
+        assert "first nations" in combined or "communities" in combined or "intersectional" in combined
 
     def test_layer_name_correct(self, m):
         """result.layer == 'AHRC_AI_HUMAN_RIGHTS'."""

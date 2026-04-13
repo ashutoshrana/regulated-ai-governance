@@ -19,9 +19,7 @@ import pytest
 # Module loading
 # ---------------------------------------------------------------------------
 
-_MOD_PATH = (
-    Path(__file__).parent.parent / "examples" / "15_public_sector_ai_governance.py"
-)
+_MOD_PATH = Path(__file__).parent.parent / "examples" / "15_public_sector_ai_governance.py"
 
 
 def _load_module():
@@ -113,7 +111,6 @@ def _min_ctx(m, **kwargs):
 
 
 class TestOMBM2410Filter:
-
     def test_compliant_rights_impacting_approved_with_conditions(self, m):
         f = m.OMBM2410Filter()
         ctx = _ctx(m)
@@ -203,7 +200,6 @@ class TestOMBM2410Filter:
 
 
 class TestEO14110Filter:
-
     def test_standard_approved_with_conditions(self, m):
         f = m.EO14110Filter()
         ctx = _ctx(m, eo14110_risk_tier=m.EO14110RiskTier.STANDARD)
@@ -234,15 +230,24 @@ class TestEO14110Filter:
 
     def test_dual_use_no_tevv_denied(self, m):
         f = m.EO14110Filter()
-        ctx = _ctx(m, eo14110_risk_tier=m.EO14110RiskTier.DUAL_USE_FOUNDATION, red_team_assessment_completed=True, tevv_framework_applied=False)
+        ctx = _ctx(
+            m,
+            eo14110_risk_tier=m.EO14110RiskTier.DUAL_USE_FOUNDATION,
+            red_team_assessment_completed=True,
+            tevv_framework_applied=False,
+        )  # noqa: E501
         result = f.evaluate(ctx)
         assert result.decision == m.PublicSectorGovernanceDecision.DENIED
         assert any("TEVV" in finding for finding in result.findings)
 
     def test_dual_use_fully_compliant_approved(self, m):
         f = m.EO14110Filter()
-        ctx = _ctx(m, eo14110_risk_tier=m.EO14110RiskTier.DUAL_USE_FOUNDATION,
-                   red_team_assessment_completed=True, tevv_framework_applied=True)
+        ctx = _ctx(
+            m,
+            eo14110_risk_tier=m.EO14110RiskTier.DUAL_USE_FOUNDATION,
+            red_team_assessment_completed=True,
+            tevv_framework_applied=True,
+        )
         result = f.evaluate(ctx)
         assert result.decision == m.PublicSectorGovernanceDecision.APPROVED
 
@@ -260,8 +265,12 @@ class TestEO14110Filter:
 
     def test_safety_critical_fully_compliant_approved(self, m):
         f = m.EO14110Filter()
-        ctx = _ctx(m, eo14110_risk_tier=m.EO14110RiskTier.SAFETY_CRITICAL,
-                   tevv_framework_applied=True, pre_deployment_safety_testing_done=True)
+        ctx = _ctx(
+            m,
+            eo14110_risk_tier=m.EO14110RiskTier.SAFETY_CRITICAL,
+            tevv_framework_applied=True,
+            pre_deployment_safety_testing_done=True,
+        )
         result = f.evaluate(ctx)
         assert result.decision == m.PublicSectorGovernanceDecision.APPROVED
 
@@ -272,7 +281,6 @@ class TestEO14110Filter:
 
 
 class TestNISTAIRMFFilter:
-
     def test_full_maturity_approved_with_conditions(self, m):
         f = m.NISTAIRMFFilter()
         ctx = _ctx(m, nist_rmf_level=m.NISTRMFLevel.FULL)
@@ -295,7 +303,9 @@ class TestNISTAIRMFFilter:
 
     def test_partial_with_missing_functions_approved_with_conditions(self, m):
         f = m.NISTAIRMFFilter()
-        ctx = _ctx(m, nist_rmf_level=m.NISTRMFLevel.PARTIAL, nist_measure_quantified=False, nist_manage_plan_exists=False)
+        ctx = _ctx(
+            m, nist_rmf_level=m.NISTRMFLevel.PARTIAL, nist_measure_quantified=False, nist_manage_plan_exists=False
+        )  # noqa: E501
         result = f.evaluate(ctx)
         assert result.decision == m.PublicSectorGovernanceDecision.APPROVED_WITH_CONDITIONS
         assert any("MEASURE" in c and "MANAGE" in c for c in result.conditions)
@@ -334,7 +344,6 @@ class TestNISTAIRMFFilter:
 
 
 class TestSection508Filter:
-
     def test_compliant_rights_impacting_approved_with_conditions(self, m):
         f = m.Section508Filter()
         ctx = _ctx(m)
@@ -407,7 +416,6 @@ class TestSection508Filter:
 
 
 class TestPublicSectorGovernanceOrchestrator:
-
     def test_all_layers_approved_with_conditions_when_compliant(self, m):
         orch = m.PublicSectorGovernanceOrchestrator()
         ctx = _ctx(m)

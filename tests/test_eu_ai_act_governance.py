@@ -19,9 +19,7 @@ import pytest
 # Module loading
 # ---------------------------------------------------------------------------
 
-_MOD_PATH = (
-    Path(__file__).parent.parent / "examples" / "16_eu_ai_act_governance.py"
-)
+_MOD_PATH = Path(__file__).parent.parent / "examples" / "16_eu_ai_act_governance.py"
 
 
 def _load_module():
@@ -141,7 +139,6 @@ def _minimal_ctx(m, **kwargs):
 
 
 class TestEURiskClassificationFilter:
-
     def test_prohibited_practice_denied(self, m):
         f = m.EURiskClassificationFilter()
         ctx = _ctx(m, risk_level=m.EUAIActRiskLevel.PROHIBITED, is_prohibited_practice=True)
@@ -197,7 +194,6 @@ class TestEURiskClassificationFilter:
 
 
 class TestEUConformityAssessmentFilter:
-
     def test_compliant_high_risk_approved_with_conditions(self, m):
         f = m.EUConformityAssessmentFilter()
         ctx = _ctx(m)
@@ -259,7 +255,6 @@ class TestEUConformityAssessmentFilter:
 
 
 class TestEUDataGovernanceFilter:
-
     def test_compliant_high_risk_approved_with_conditions(self, m):
         f = m.EUDataGovernanceFilter()
         ctx = _ctx(m)
@@ -313,7 +308,6 @@ class TestEUDataGovernanceFilter:
 
 
 class TestEUTransparencyHumanOversightFilter:
-
     def test_compliant_high_risk_approved_with_conditions(self, m):
         f = m.EUTransparencyHumanOversightFilter()
         ctx = _ctx(m)
@@ -383,7 +377,6 @@ class TestEUTransparencyHumanOversightFilter:
 
 
 class TestEUAIActGovernanceOrchestrator:
-
     def test_fully_compliant_high_risk_approved_with_conditions(self, m):
         orch = m.EUAIActGovernanceOrchestrator()
         ctx = _ctx(m)

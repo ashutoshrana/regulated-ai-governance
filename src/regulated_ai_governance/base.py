@@ -4,10 +4,12 @@ Base types and pipeline for regulated-ai-governance.
 Provides the GovernanceFilter protocol, FilterResult dataclass, and
 GovernancePipeline for chaining multiple governance filters.
 """
+
 from __future__ import annotations
+
+import logging
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,7 @@ class FilterResult:
     regulation_citation should follow the pattern:
       "Regulation Name Article/Section — plain-English description"
     """
+
     decision: str
     reason: str
     regulation_citation: str
@@ -53,6 +56,7 @@ class GovernanceFilter(Protocol):
     Any class with a `filter(doc: dict) -> FilterResult` method is a valid
     GovernanceFilter — no subclassing required.
     """
+
     def filter(self, doc: dict) -> FilterResult: ...
 
 

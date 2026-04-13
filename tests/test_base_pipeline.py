@@ -5,30 +5,35 @@ and the GovernanceFilter protocol.
 Run:
     python3 -m pytest tests/test_base_pipeline.py -v
 """
-import sys
+
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
-from regulated_ai_governance.base import FilterResult, GovernanceFilter, GovernancePipeline
 
+from regulated_ai_governance.base import FilterResult, GovernanceFilter, GovernancePipeline
 
 # ---------------------------------------------------------------------------
 # Helpers — minimal filter stubs
 # ---------------------------------------------------------------------------
 
+
 class _ApproveAll:
     def filter(self, doc: dict) -> FilterResult:
         return FilterResult(decision="APPROVED", reason="ok", regulation_citation="Test §1")
+
 
 class _DenyAll:
     def filter(self, doc: dict) -> FilterResult:
         return FilterResult(decision="DENIED", reason="blocked", regulation_citation="Test §2")
 
+
 class _RedactAll:
     def filter(self, doc: dict) -> FilterResult:
         return FilterResult(decision="REDACTED", reason="pii found", regulation_citation="Test §3")
+
 
 class _ReviewAll:
     def filter(self, doc: dict) -> FilterResult:
@@ -38,8 +43,10 @@ class _ReviewAll:
             regulation_citation="Test §4",
         )
 
+
 class _CallCounter:
     """Filter that tracks how many times it has been called."""
+
     def __init__(self, decision: str = "APPROVED"):
         self.calls = 0
         self._decision = decision
@@ -56,6 +63,7 @@ class _CallCounter:
 # ---------------------------------------------------------------------------
 # FilterResult properties
 # ---------------------------------------------------------------------------
+
 
 class TestFilterResultProperties:
     def test_denied_decision_is_denied(self):
@@ -103,16 +111,14 @@ class TestFilterResultProperties:
         assert r.requires_logging is True
 
     def test_requires_logging_can_be_false(self):
-        r = FilterResult(
-            decision="APPROVED", reason="x", regulation_citation="A §1",
-            requires_logging=False
-        )
+        r = FilterResult(decision="APPROVED", reason="x", regulation_citation="A §1", requires_logging=False)
         assert r.requires_logging is False
 
 
 # ---------------------------------------------------------------------------
 # GovernancePipeline — single-filter scenarios
 # ---------------------------------------------------------------------------
+
 
 class TestPipelineSingleFilter:
     def test_single_approve_returns_approved(self):
@@ -148,6 +154,7 @@ class TestPipelineSingleFilter:
 # GovernancePipeline — two-filter short-circuit and ordering
 # ---------------------------------------------------------------------------
 
+
 class TestPipelineOrdering:
     def test_first_denied_second_never_called(self):
         second = _CallCounter("APPROVED")
@@ -170,6 +177,7 @@ class TestPipelineOrdering:
 # ---------------------------------------------------------------------------
 # GovernancePipeline — REQUIRES_HUMAN_REVIEW behaviour
 # ---------------------------------------------------------------------------
+
 
 class TestPipelineHumanReview:
     def test_review_without_stop_on_review_continues(self):
@@ -212,6 +220,7 @@ class TestPipelineHumanReview:
 # ---------------------------------------------------------------------------
 # GovernancePipeline — batch operations
 # ---------------------------------------------------------------------------
+
 
 class TestPipelineBatch:
     def test_filter_batch_one_result_per_doc(self):
@@ -263,6 +272,7 @@ class TestPipelineBatch:
 # GovernancePipeline — dunder methods
 # ---------------------------------------------------------------------------
 
+
 class TestPipelineDunders:
     def test_len_single_filter(self):
         p = GovernancePipeline([_ApproveAll()])
@@ -283,6 +293,7 @@ class TestPipelineDunders:
 # ---------------------------------------------------------------------------
 # GovernanceFilter protocol
 # ---------------------------------------------------------------------------
+
 
 class TestGovernanceFilterProtocol:
     def test_object_with_filter_method_satisfies_protocol(self):

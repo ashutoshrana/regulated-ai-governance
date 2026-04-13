@@ -19,9 +19,7 @@ import pytest
 # Module loading
 # ---------------------------------------------------------------------------
 
-_MOD_PATH = (
-    Path(__file__).parent.parent / "examples" / "14_insurance_ai_governance.py"
-)
+_MOD_PATH = Path(__file__).parent.parent / "examples" / "14_insurance_ai_governance.py"
 
 
 def _load_module():
@@ -78,6 +76,7 @@ def _ctx(m, **kwargs):
 # Layer 1 — NAIC filter
 # ---------------------------------------------------------------------------
 
+
 class TestNAICFilter:
     def test_high_risk_all_compliant_approved_with_conditions(self, m):
         f = m.NAICFilter()
@@ -129,7 +128,7 @@ class TestNAICFilter:
         ctx = _ctx(
             m,
             risk_level=m.InsuranceModelRiskLevel.LOW,
-            is_model_validated=False,    # Not required for LOW
+            is_model_validated=False,  # Not required for LOW
             is_monitoring_active=False,  # Not required for LOW
             is_explainability_available=False,
         )
@@ -167,6 +166,7 @@ class TestNAICFilter:
 # Layer 2 — FCRA filter
 # ---------------------------------------------------------------------------
 
+
 class TestFCRAFilter:
     def test_prohibited_factor_always_denied(self, m):
         f = m.FCRAFilter()
@@ -186,8 +186,7 @@ class TestFCRAFilter:
         )
         result = f.evaluate(ctx)
         assert result.decision == m.InsuranceGovernanceDecision.APPROVED_WITH_CONDITIONS
-        assert any("adverse action notice" in c.lower() or "fcra" in c.lower()
-                   for c in result.conditions)
+        assert any("adverse action notice" in c.lower() or "fcra" in c.lower() for c in result.conditions)
 
     def test_cbis_without_specific_reasons_denied(self, m):
         f = m.FCRAFilter()
@@ -252,6 +251,7 @@ class TestFCRAFilter:
 # Layer 3 — NY DFS filter
 # ---------------------------------------------------------------------------
 
+
 class TestNYDFSFilter:
     def test_non_ny_state_approved(self, m):
         f = m.NYDFSFilter()
@@ -274,8 +274,7 @@ class TestNYDFSFilter:
         result = f.evaluate(ctx)
         assert result.decision == m.InsuranceGovernanceDecision.DENIED
         # Finding text references proxies for protected characteristics
-        assert any("prox" in finding.lower() or "validated" in finding.lower()
-                   for finding in result.findings)
+        assert any("prox" in finding.lower() or "validated" in finding.lower() for finding in result.findings)
 
     def test_ny_state_both_missing_denied_with_two_findings(self, m):
         f = m.NYDFSFilter()
@@ -326,6 +325,7 @@ class TestNYDFSFilter:
 # Layer 4 — ECOA Disparate Impact filter
 # ---------------------------------------------------------------------------
 
+
 class TestECOAFilter:
     def test_ratio_above_threshold_approved_with_conditions(self, m):
         f = m.ECOADisparateImpactFilter()
@@ -351,8 +351,7 @@ class TestECOAFilter:
 
     def test_insufficient_sample_size_denied(self, m):
         f = m.ECOADisparateImpactFilter()
-        ctx = _ctx(m, disparate_impact_ratio=0.95, protected_class_sample_size=50,
-                   min_sample_size_for_di_test=100)
+        ctx = _ctx(m, disparate_impact_ratio=0.95, protected_class_sample_size=50, min_sample_size_for_di_test=100)
         result = f.evaluate(ctx)
         assert result.decision == m.InsuranceGovernanceDecision.DENIED
         assert any("insufficient" in finding.lower() for finding in result.findings)
@@ -368,7 +367,7 @@ class TestECOAFilter:
         ctx = _ctx(
             m,
             use_case=m.InsuranceAIUseCase.OPERATIONAL_ANALYTICS,
-            disparate_impact_ratio=0.50,   # Would fail if applied
+            disparate_impact_ratio=0.50,  # Would fail if applied
             protected_class_sample_size=200,
         )
         result = f.evaluate(ctx)
@@ -410,6 +409,7 @@ class TestECOAFilter:
 # ---------------------------------------------------------------------------
 # Orchestrator integration tests
 # ---------------------------------------------------------------------------
+
 
 class TestInsuranceGovernanceOrchestrator:
     def test_all_layers_pass_returns_approved_with_conditions(self, m):
@@ -493,10 +493,10 @@ class TestInsuranceGovernanceOrchestrator:
         orch = m.InsuranceGovernanceOrchestrator()
         ctx = _ctx(
             m,
-            is_model_validated=False,       # NAIC denies
-            uses_prohibited_factor=True,    # FCRA denies
-            ecdis_sources_documented=False, # NY DFS denies
-            disparate_impact_ratio=0.50,    # ECOA denies
+            is_model_validated=False,  # NAIC denies
+            uses_prohibited_factor=True,  # FCRA denies
+            ecdis_sources_documented=False,  # NY DFS denies
+            disparate_impact_ratio=0.50,  # ECOA denies
         )
         report = orch.evaluate(ctx)
         assert report.final_decision == m.InsuranceGovernanceDecision.DENIED
@@ -509,7 +509,7 @@ class TestInsuranceGovernanceOrchestrator:
             m,
             use_case=m.InsuranceAIUseCase.MARKETING_SEGMENTATION,
             risk_level=m.InsuranceModelRiskLevel.MEDIUM,
-            disparate_impact_ratio=0.50,   # Would fail if applied
+            disparate_impact_ratio=0.50,  # Would fail if applied
             protected_class_sample_size=200,
             uses_consumer_report=False,
             uses_credit_based_insurance_score=False,

@@ -11,9 +11,6 @@ import os
 import sys
 import types
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # Module loader
 # ---------------------------------------------------------------------------
@@ -620,9 +617,7 @@ class TestOrchestrator:
         doc = _base_doc()
         orchestrator = mod.KoreaAIGovernanceOrchestrator()
         results = orchestrator.evaluate(ctx, doc)
-        report = mod.KoreaAIGovernanceReport(
-            context=ctx, document=doc, filter_results=results
-        )
+        report = mod.KoreaAIGovernanceReport(context=ctx, document=doc, filter_results=results)
         assert report.overall_decision == "DENIED"
 
 
@@ -641,9 +636,7 @@ class TestReport:
             doc = _base_doc()
         orchestrator = mod.KoreaAIGovernanceOrchestrator()
         results = orchestrator.evaluate(ctx, doc)
-        return mod.KoreaAIGovernanceReport(
-            context=ctx, document=doc, filter_results=results
-        )
+        return mod.KoreaAIGovernanceReport(context=ctx, document=doc, filter_results=results)
 
     def test_overall_decision_approved_when_all_pass(self):
         """Fully compliant context → overall_decision is 'APPROVED'."""
@@ -746,12 +739,12 @@ class TestEdgeCases:
         fake_results = [
             mod.FilterResult(filter_name="F1", decision="APPROVED", reason="ok", regulation_citation="x"),
             mod.FilterResult(filter_name="F2", decision="DENIED", reason="fail", regulation_citation="y"),
-            mod.FilterResult(filter_name="F3", decision="REQUIRES_HUMAN_REVIEW", reason="review", regulation_citation="z"),
+            mod.FilterResult(
+                filter_name="F3", decision="REQUIRES_HUMAN_REVIEW", reason="review", regulation_citation="z"
+            ),  # noqa: E501
             mod.FilterResult(filter_name="F4", decision="APPROVED", reason="ok", regulation_citation="w"),
         ]
-        report = mod.KoreaAIGovernanceReport(
-            context=ctx, document=doc, filter_results=fake_results
-        )
+        report = mod.KoreaAIGovernanceReport(context=ctx, document=doc, filter_results=fake_results)
         assert report.overall_decision == "DENIED"
         assert report.is_compliant is False
 
@@ -761,13 +754,13 @@ class TestEdgeCases:
         doc = _base_doc()
         fake_results = [
             mod.FilterResult(filter_name="F1", decision="APPROVED", reason="ok", regulation_citation="x"),
-            mod.FilterResult(filter_name="F2", decision="REQUIRES_HUMAN_REVIEW", reason="review", regulation_citation="y"),
+            mod.FilterResult(
+                filter_name="F2", decision="REQUIRES_HUMAN_REVIEW", reason="review", regulation_citation="y"
+            ),  # noqa: E501
             mod.FilterResult(filter_name="F3", decision="APPROVED", reason="ok", regulation_citation="z"),
             mod.FilterResult(filter_name="F4", decision="APPROVED", reason="ok", regulation_citation="w"),
         ]
-        report = mod.KoreaAIGovernanceReport(
-            context=ctx, document=doc, filter_results=fake_results
-        )
+        report = mod.KoreaAIGovernanceReport(context=ctx, document=doc, filter_results=fake_results)
         assert report.overall_decision == "REQUIRES_HUMAN_REVIEW"
         assert report.is_compliant is False
 

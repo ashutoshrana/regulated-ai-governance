@@ -10,9 +10,6 @@ import os
 import sys
 import types
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # Module loader
 # ---------------------------------------------------------------------------
@@ -437,9 +434,7 @@ class TestSingaporeAIGovernanceReport:
             doc = _base_doc()
         orchestrator = mod.SingaporeAIGovernanceOrchestrator()
         results = orchestrator.evaluate(ctx, doc)
-        return mod.SingaporeAIGovernanceReport(
-            context=ctx, document=doc, filter_results=results
-        )
+        return mod.SingaporeAIGovernanceReport(context=ctx, document=doc, filter_results=results)
 
     def test_any_filter_denied_overall_denied(self):
         """If any filter returns DENIED, overall_decision is DENIED."""

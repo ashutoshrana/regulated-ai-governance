@@ -11,9 +11,6 @@ import os
 import sys
 import types
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # Module loader
 # ---------------------------------------------------------------------------
@@ -23,9 +20,7 @@ def _load():
     _name = "brazil_ai_governance_22"
     spec = importlib.util.spec_from_file_location(
         _name,
-        os.path.join(
-            os.path.dirname(__file__), "..", "examples", "22_brazil_ai_governance.py"
-        ),
+        os.path.join(os.path.dirname(__file__), "..", "examples", "22_brazil_ai_governance.py"),
     )
     mod = types.ModuleType(_name)
     sys.modules[_name] = mod
@@ -504,9 +499,7 @@ class TestFullPipeline:
             doc = _base_doc()
         orchestrator = mod.BrazilAIGovernanceOrchestrator()
         results = orchestrator.evaluate(ctx, doc)
-        return mod.BrazilAIGovernanceReport(
-            context=ctx, document=doc, filter_results=results
-        )
+        return mod.BrazilAIGovernanceReport(context=ctx, document=doc, filter_results=results)
 
     def test_fully_compliant_approved_path(self):
         """All filters pass for a fully compliant HIGH-risk healthcare AI → APPROVED."""
@@ -578,9 +571,7 @@ class TestBrazilAIGovernanceReport:
             doc = _base_doc()
         orchestrator = mod.BrazilAIGovernanceOrchestrator()
         results = orchestrator.evaluate(ctx, doc)
-        return mod.BrazilAIGovernanceReport(
-            context=ctx, document=doc, filter_results=results
-        )
+        return mod.BrazilAIGovernanceReport(context=ctx, document=doc, filter_results=results)
 
     def test_overall_decision_denied_when_any_filter_denied(self):
         """If any filter returns DENIED, overall_decision is DENIED."""
@@ -651,11 +642,11 @@ class TestEdgeCases:
         """GENERAL sector skips all sectoral-specific checks → APPROVED in Layer 4."""
         ctx = _base_ctx(
             sector=mod.BrazilSector.GENERAL,
-            is_clinical_ai=True,           # would trigger denial in HEALTHCARE
+            is_clinical_ai=True,  # would trigger denial in HEALTHCARE
             physician_oversight_available=False,
-            is_credit_scoring_ai=True,      # would trigger review in FINANCIAL
+            is_credit_scoring_ai=True,  # would trigger review in FINANCIAL
             explainability_available=False,
-            is_employment_decision_ai=True, # would trigger review in EMPLOYMENT
+            is_employment_decision_ai=True,  # would trigger review in EMPLOYMENT
             bias_audit_completed=False,
         )
         result = mod.BrazilSectoralFilter().evaluate(ctx, _base_doc())

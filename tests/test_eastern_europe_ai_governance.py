@@ -15,7 +15,6 @@ import types
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Module loader
 # ---------------------------------------------------------------------------
@@ -989,9 +988,7 @@ class TestEasternEuropeAIGovernanceReport:
     def test_filter_result_is_denied_true_only_for_denied(self):
         """is_denied is True only when decision is 'DENIED'."""
         result_denied = mod.FilterResult(filter_name="test", decision="DENIED")
-        result_review = mod.FilterResult(
-            filter_name="test", decision="REQUIRES_HUMAN_REVIEW"
-        )
+        result_review = mod.FilterResult(filter_name="test", decision="REQUIRES_HUMAN_REVIEW")
         result_approved = mod.FilterResult(filter_name="test", decision="APPROVED")
         assert result_denied.is_denied is True
         assert result_review.is_denied is False

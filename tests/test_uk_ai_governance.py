@@ -19,9 +19,7 @@ import pytest
 # Module loading
 # ---------------------------------------------------------------------------
 
-_MOD_PATH = (
-    Path(__file__).parent.parent / "examples" / "17_uk_ai_governance.py"
-)
+_MOD_PATH = Path(__file__).parent.parent / "examples" / "17_uk_ai_governance.py"
 
 
 def _load_module():
@@ -113,7 +111,6 @@ def _non_auto_ctx(m, **kwargs):
 
 
 class TestUKGDPRAutomatedDecisionFilter:
-
     def test_not_solely_automated_approved_with_conditions(self, m):
         f = m.UKGDPRAutomatedDecisionFilter()
         ctx = _ctx(m, is_solely_automated=False)
@@ -157,8 +154,7 @@ class TestUKGDPRAutomatedDecisionFilter:
         ctx = _ctx(m, processes_sensitive_categories=True, explicit_consent_obtained=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("special category" in finding.lower() or "Article 22(4)" in finding
-                   for finding in result.findings)
+        assert any("special category" in finding.lower() or "Article 22(4)" in finding for finding in result.findings)
 
 
 # ---------------------------------------------------------------------------
@@ -167,7 +163,6 @@ class TestUKGDPRAutomatedDecisionFilter:
 
 
 class TestICOAIAuditingFilter:
-
     def test_all_compliant_approved_with_conditions(self, m):
         f = m.ICOAIAuditingFilter()
         ctx = _ctx(m)
@@ -186,8 +181,7 @@ class TestICOAIAuditingFilter:
         ctx = _ctx(m, explainability_mechanism_in_place=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("explainab" in finding.lower() or "Article 13" in finding
-                   for finding in result.findings)
+        assert any("explainab" in finding.lower() or "Article 13" in finding for finding in result.findings)
 
     def test_no_accuracy_validation_denied(self, m):
         f = m.ICOAIAuditingFilter()
@@ -209,7 +203,6 @@ class TestICOAIAuditingFilter:
 
 
 class TestUKEqualityActFilter:
-
     def test_all_compliant_approved_with_conditions(self, m):
         f = m.UKEqualityActFilter()
         ctx = _ctx(m)
@@ -221,24 +214,24 @@ class TestUKEqualityActFilter:
         ctx = _ctx(m, disparate_impact_assessment_done=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("s.19" in finding or "disparate" in finding.lower()
-                   for finding in result.findings)
+        assert any("s.19" in finding or "disparate" in finding.lower() for finding in result.findings)
 
     def test_no_reasonable_adjustments_denied(self, m):
         f = m.UKEqualityActFilter()
         ctx = _ctx(m, reasonable_adjustments_supported=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("s.20" in finding or "adjustment" in finding.lower()
-                   for finding in result.findings)
+        assert any("s.20" in finding or "adjustment" in finding.lower() for finding in result.findings)
 
     def test_public_sector_no_eia_denied(self, m):
         f = m.UKEqualityActFilter()
         ctx = _ctx(m, public_sector_equality_duty=True, equality_impact_documented=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("s.149" in finding or "PSED" in finding or "equality impact" in finding.lower()
-                   for finding in result.findings)
+        assert any(
+            "s.149" in finding or "PSED" in finding or "equality impact" in finding.lower()
+            for finding in result.findings
+        )
 
     def test_non_public_sector_no_eia_still_passes(self, m):
         f = m.UKEqualityActFilter()
@@ -261,7 +254,6 @@ class TestUKEqualityActFilter:
 
 
 class TestDSITAISafetyPrinciplesFilter:
-
     def test_all_compliant_approved_with_conditions(self, m):
         f = m.DSITAISafetyPrinciplesFilter()
         ctx = _ctx(m)
@@ -273,40 +265,38 @@ class TestDSITAISafetyPrinciplesFilter:
         ctx = _ctx(m, safety_testing_completed=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("safety" in finding.lower() or "Safety" in finding
-                   for finding in result.findings)
+        assert any("safety" in finding.lower() or "Safety" in finding for finding in result.findings)
 
     def test_no_adversarial_testing_denied(self, m):
         f = m.DSITAISafetyPrinciplesFilter()
         ctx = _ctx(m, adversarial_testing_done=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("security" in finding.lower() or "adversarial" in finding.lower()
-                   for finding in result.findings)
+        assert any("security" in finding.lower() or "adversarial" in finding.lower() for finding in result.findings)
 
     def test_no_responsible_officer_denied(self, m):
         f = m.DSITAISafetyPrinciplesFilter()
         ctx = _ctx(m, responsible_officer_designated=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("accountability" in finding.lower() or "responsible officer" in finding.lower()
-                   for finding in result.findings)
+        assert any(
+            "accountability" in finding.lower() or "responsible officer" in finding.lower()
+            for finding in result.findings
+        )
 
     def test_no_stakeholder_disclosure_denied(self, m):
         f = m.DSITAISafetyPrinciplesFilter()
         ctx = _ctx(m, stakeholder_disclosure_made=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("transparency" in finding.lower() or "disclosure" in finding.lower()
-                   for finding in result.findings)
+        assert any("transparency" in finding.lower() or "disclosure" in finding.lower() for finding in result.findings)
 
     def test_no_contestability_denied(self, m):
         f = m.DSITAISafetyPrinciplesFilter()
         ctx = _ctx(m, contestability_mechanism_provided=False)
         result = f.evaluate(ctx)
         assert result.is_denied
-        assert any("contestab" in finding.lower() or "challenge" in finding.lower()
-                   for finding in result.findings)
+        assert any("contestab" in finding.lower() or "challenge" in finding.lower() for finding in result.findings)
 
     def test_conditions_reference_dsit_principles(self, m):
         f = m.DSITAISafetyPrinciplesFilter()
@@ -323,7 +313,6 @@ class TestDSITAISafetyPrinciplesFilter:
 
 
 class TestUKAIGovernanceOrchestrator:
-
     def test_fully_compliant_approved_with_conditions(self, m):
         orch = m.UKAIGovernanceOrchestrator()
         ctx = _ctx(m)

@@ -11,9 +11,6 @@ import os
 import sys
 import types
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # Module loader
 # ---------------------------------------------------------------------------
@@ -425,9 +422,7 @@ class TestJapanAIGovernanceReport:
             doc = _doc()
         orchestrator = mod.JapanAIGovernanceOrchestrator()
         results = orchestrator.evaluate(ctx, doc)
-        return mod.JapanAIGovernanceReport(
-            context=ctx, document=doc, filter_results=results
-        )
+        return mod.JapanAIGovernanceReport(context=ctx, document=doc, filter_results=results)
 
     def test_any_filter_denied_overall_denied(self):
         """If any filter returns DENIED, overall_decision is DENIED."""

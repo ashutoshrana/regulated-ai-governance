@@ -11,9 +11,6 @@ import os
 import sys
 import types
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # Module loader
 # ---------------------------------------------------------------------------
@@ -23,9 +20,7 @@ def _load():
     _name = "india_ai_governance_23"
     spec = importlib.util.spec_from_file_location(
         _name,
-        os.path.join(
-            os.path.dirname(__file__), "..", "examples", "23_india_ai_governance.py"
-        ),
+        os.path.join(os.path.dirname(__file__), "..", "examples", "23_india_ai_governance.py"),
     )
     mod = types.ModuleType(_name)
     sys.modules[_name] = mod
@@ -559,9 +554,7 @@ class TestIndiaAIGovernanceReport:
             doc = _base_doc()
         orchestrator = mod.IndiaAIGovernanceOrchestrator()
         results = orchestrator.evaluate(ctx, doc)
-        return mod.IndiaAIGovernanceReport(
-            context=ctx, document=doc, filter_results=results
-        )
+        return mod.IndiaAIGovernanceReport(context=ctx, document=doc, filter_results=results)
 
     def test_overall_decision_approved_when_all_pass(self):
         """Fully compliant context → overall_decision is APPROVED."""
