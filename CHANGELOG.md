@@ -5,6 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] — 2026-04-13
+
+### Added — Medical Device AI Governance (FDA SaMD + IEC 62304 + ISO 14971 + EU MDR/MDCG 2021-1)
+
+**`examples/12_medtech_ai_governance.py`** — four-layer governance framework for AI systems
+embedded in or used alongside medical devices, enforcing FDA Software as a Medical Device
+guidance (2019) + 21 CFR Part 820, IEC 62304:2006+AMD1:2015 software lifecycle requirements,
+ISO 14971:2019 risk management, and EU MDR 2017/745 + MDCG 2021-1 AI/ML guidance.
+
+New classes (self-contained in the example):
+- `IEC62304SafetyClass` — CLASS_A (no injury possible), CLASS_B (non-serious injury possible),
+  CLASS_C (death or serious injury possible); drives required lifecycle rigor
+- `FDASaMDClass` — CLASS_I (general controls), CLASS_II (510(k) + special controls),
+  CLASS_III (PMA required)
+- `FDAClearancePathway` — EXEMPT, K510_CLEARED, PMA_APPROVED, DE_NOVO, NOT_CLEARED
+- `EUMDRClass` — CLASS_I (self-certification), CLASS_IIA (NB QMS), CLASS_IIB (NB technical file),
+  CLASS_III (NB + clinical evaluation)
+- `ISO14971RiskLevel` — ACCEPTABLE (deploy), ALARP (deploy with PMS conditions), UNACCEPTABLE (block)
+- `SaMDChangeType` — PERFORMANCE_IMPROVEMENT (within PCCP), INTENDED_USE_CHANGE (new 510(k)),
+  OUTPUT_TYPE_CHANGE (new 510(k)), MINOR_BUG_FIX (no submission required)
+- `DeploymentDecision` — APPROVED, APPROVED_WITH_CONDITIONS, DENIED
+- `MedicalAIRequestContext` — frozen dataclass: system_id, system_name, safety class, FDA class,
+  clearance pathway, EU MDR class, residual risk level, intended use, has_notified_body_certificate,
+  has_pccp, lifecycle_documentation_complete, formal_verification_complete,
+  risk_management_file_complete, clinical_validation_study_complete, change_type, intended_markets
+- `FilterResult` — single-layer result: layer name, decision, violations, conditions, notes;
+  `is_denied` property
+- `IEC62304SafetyFilter` — Layer 1: Class A → lightweight lifecycle permitted (no block);
+  Class B → lifecycle docs required; Class C → lifecycle docs + formal verification required
+  (IEC 62304 §5.5.3); conditions for change management on Class B/C deployments
+- `ISO14971RiskFilter` — Layer 2: UNACCEPTABLE residual risk → DENY (§8 risk controls insufficient);
+  incomplete risk management file → DENY (§9); ALARP → APPROVED_WITH_CONDITIONS with PMS note
+  (§10); ACCEPTABLE → APPROVED; all paths check risk_management_file_complete
+- `FDASaMDFilter` — Layer 3 (US market only): Class I exempt → APPROVED_WITH_CONDITIONS (general
+  controls); Class II → K510_CLEARED or DE_NOVO required + clinical study complete; no-PCCP →
+  condition added (PCCP required for adaptive algorithms per FDA AI/ML Action Plan 2021);
+  INTENDED_USE_CHANGE/OUTPUT_TYPE_CHANGE → new 510(k) required even with current clearance;
+  Class III → PMA_APPROVED required; non-US markets → pass-through
+- `MDCGEUFilter` — Layer 4 (EU market only): Class I → self-certification + MDCG 2021-1 IFU
+  transparency; Class IIa → Notified Body required; Class IIb/III → NB + clinical validation;
+  Class III → formal verification + EU AI Act Annex I §5 high-risk note; EU AI Act registration
+  required for Class III; PMS/PSUR conditions for Class IIa+; non-EU markets → pass-through
+- `MedicalDeviceGovernanceResult` — aggregated result: final_decision, layer_results list,
+  all_violations, all_conditions, all_notes; `summary()` method for human-readable report
+- `MedicalDeviceAIOrchestrator` — four-layer orchestrator; any DENIED layer → overall DENIED;
+  any APPROVED_WITH_CONDITIONS → overall APPROVED_WITH_CONDITIONS; violations and conditions
+  aggregated across all layers
+
+4 end-to-end scenarios: (A) Class IIb diagnostic imaging assistant (ALARP → approved with PCCP/PMS
+conditions), (B) Class I administrative scheduling optimizer (exempt, fully approved), (C) Class III
+autonomous chemotherapy dosing with unacceptable residual risk and no PMA (denied by ISO 14971 + FDA),
+(D) Class II/IIa sepsis monitoring AI with valid NB cert but incomplete clinical study (denied by FDA).
+
+Tests: 43 new tests in `tests/test_medtech_ai_governance.py` — TestIEC62304SafetyFilter (9),
+TestISO14971RiskFilter (7), TestFDASaMDFilter (9), TestMDCGEUFilter (7),
+TestMedicalDeviceAIOrchestrator (7), TestScenarios (4)
+
+---
+
 ## [0.13.0] — 2026-04-13
 
 ### Added — Automotive / Transportation AI Governance (UNECE WP.29 R155/R156 + ISO 26262 + NHTSA AV)
