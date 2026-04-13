@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] — 2026-04-13
+
+### Added — Australian AI Governance (AI Ethics Framework + Privacy Act APPs + DTA ADM + AHRC Guidelines)
+
+**`examples/19_australia_ai_governance.py`** — four-layer Australian AI governance orchestrator
+covering the Australian AI Ethics Framework (DIIS 8 principles), Privacy Act 1988 Australian
+Privacy Principles (APPs), Digital Transformation Agency (DTA) Automated Decision-Making
+(ADM) Framework for Commonwealth government agencies, and Australian Human Rights Commission
+(AHRC) AI and Human Rights guidelines.
+
+**New classes:**
+- `AustralianAIRiskLevel` — HIGH_RISK / MEDIUM_RISK / LOW_RISK / EXEMPT
+- `AustralianAIDecision` — APPROVED / APPROVED_WITH_CONDITIONS / DENIED
+- `AustralianSector` — GOVERNMENT / PRIVATE_SECTOR / HEALTH / FINANCIAL_SERVICES / EDUCATION
+- `AustraliaAIContext` (frozen) — 20-field context: system identity, risk level, sector,
+  AI Ethics Framework fields (7 principles: wellbeing, human-centred, privacy, reliability,
+  transparency, contestability, accountability), Privacy Act APPs fields (APP 1/3/6/11),
+  DTA ADM fields (human review right, explanation obligation, record-keeping — government only),
+  AHRC fields (non-discrimination assessment, accessible design)
+- `AustraliaAIGovernanceResult` — per-layer result with is_denied / has_conditions properties
+- `AustralianAIEthicsFilter` — DIIS 8 principles: Principles 1–7 individually enforced;
+  EXEMPT systems approved with monitoring note; Principle 8 (Fairness) in conditions
+- `PrivacyActAPPsFilter` — Privacy Act 1988: APP 1 (transparency), APP 3 (collection),
+  APP 6 (use/disclosure), APP 11 (security); NDB scheme and APP 12/13 rights in conditions
+- `DTAADMFilter` — DTA ADM Framework: applies to GOVERNMENT sector only; human review right,
+  explanation obligation, FOI-compatible record-keeping; non-government → pass with note
+- `AHRCAIGuidelinesFilter` — AHRC guidelines: non-discrimination and equality assessment;
+  accessibility (Disability Discrimination Act 1992) for medium/high-risk only; First Nations
+  consultation referenced in conditions
+- `AustraliaAIGovernanceOrchestrator` — sequential four-layer evaluation
+- `AustraliaAIGovernanceReport` — `summary()` with system metadata, sector, and per-layer results
+
+**Tests:** 32 tests in `tests/test_australia_ai_governance.py`
+
+---
+
 ## [0.20.0] — 2026-04-13
 
 ### Added — Canadian AI Governance (AIDA Bill C-27 + CPPA + OPC AI Guidelines + Québec Law 25)
