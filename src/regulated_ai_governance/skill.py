@@ -295,14 +295,16 @@ class GovernanceAuditSkill:
         if actor_id:
             ctx.setdefault("actor_id", actor_id)
 
+        # Bake *args/**kwargs into execute_fn so we can pass it to the orchestrator
+        # without triggering mypy's "multiple values for argument" error.
+        wrapped_fn: Callable[[], Any] = (lambda: execute_fn(*args, **kwargs)) if (args or kwargs) else execute_fn
+
         with self._framework_scope(self, frameworks):
             return self._orchestrator.guard(
                 action_name=action_name,
-                execute_fn=execute_fn,
+                execute_fn=wrapped_fn,
                 actor_id=actor_id,
                 context=ctx,
-                *args,
-                **kwargs,
             )
 
     def audit_retrieval(
@@ -402,7 +404,7 @@ class GovernanceAuditSkill:
         try:
             from regulated_ai_governance.integrations.langchain import GovernanceCallbackHandler  # type: ignore[import]
 
-            return GovernanceCallbackHandler(skill=self)
+            return GovernanceCallbackHandler(skill=self)  # type: ignore[call-arg]
         except ImportError as exc:
             raise ImportError(
                 "LangChain integration requires langchain-core. "
@@ -437,7 +439,9 @@ class GovernanceAuditSkill:
             ImportError: If ``crewai`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.crewai import GovernedCrewAITool  # type: ignore[import]
+            from regulated_ai_governance.integrations.crewai import (
+                GovernedCrewAITool,  # type: ignore[import, attr-defined]
+            )
 
             return GovernedCrewAITool(
                 skill=self,
@@ -449,8 +453,7 @@ class GovernanceAuditSkill:
             )
         except ImportError as exc:
             raise ImportError(
-                "CrewAI integration requires crewai. "
-                "Install with: pip install 'regulated-ai-governance[crewai]'"
+                "CrewAI integration requires crewai. Install with: pip install 'regulated-ai-governance[crewai]'"
             ) from exc
 
     def as_llama_index_postprocessor(self, actor_id: str = "") -> Any:
@@ -468,7 +471,7 @@ class GovernanceAuditSkill:
         """
         try:
             from regulated_ai_governance.integrations.llama_index import (
-                GovernanceNodePostprocessor,  # type: ignore[import]
+                GovernanceNodePostprocessor,  # type: ignore[import, attr-defined]
             )
 
             return GovernanceNodePostprocessor(skill=self, actor_id=actor_id)
@@ -492,7 +495,9 @@ class GovernanceAuditSkill:
             ImportError: If ``haystack-ai`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.haystack import GovernanceFilter  # type: ignore[import]
+            from regulated_ai_governance.integrations.haystack import (
+                GovernanceFilter,  # type: ignore[import, attr-defined]
+            )
 
             return GovernanceFilter(skill=self, actor_id=actor_id)
         except ImportError as exc:
@@ -515,13 +520,14 @@ class GovernanceAuditSkill:
             ImportError: If ``microsoft-agents`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.maf import GovernanceMAFMiddleware  # type: ignore[import]
+            from regulated_ai_governance.integrations.maf import (
+                GovernanceMAFMiddleware,  # type: ignore[import, attr-defined]
+            )
 
             return GovernanceMAFMiddleware(skill=self, actor_id=actor_id)
         except ImportError as exc:
             raise ImportError(
-                "MAF integration requires microsoft-agents. "
-                "Install with: pip install 'regulated-ai-governance[maf]'"
+                "MAF integration requires microsoft-agents. Install with: pip install 'regulated-ai-governance[maf]'"
             ) from exc
 
     # ------------------------------------------------------------------
