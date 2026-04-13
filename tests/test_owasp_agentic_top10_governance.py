@@ -20,9 +20,9 @@ Covers:
 from __future__ import annotations
 
 import importlib.util
-from pathlib import Path
 import sys
 import types
+from pathlib import Path
 
 import pytest
 

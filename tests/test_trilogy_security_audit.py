@@ -1,11 +1,10 @@
 """Tests for 41_trilogy_security_audit.py — TrilogyAuditOrchestrator."""
+
 from __future__ import annotations
 
 import importlib.util
 import sys
 from pathlib import Path
-
-import pytest
 
 # ---------------------------------------------------------------------------
 # Load the module under test
@@ -27,6 +26,7 @@ TrilogyAuditOrchestrator = mod.TrilogyAuditOrchestrator
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _audit(profile: TrilogySystemProfile) -> TrilogyAuditResult:
     return TrilogyAuditOrchestrator().audit(profile)
@@ -77,6 +77,7 @@ def _all_enabled() -> TrilogySystemProfile:
 # TrilogySystemProfile
 # ---------------------------------------------------------------------------
 
+
 class TestTrilogySystemProfile:
     def test_defaults_system_id(self):
         p = TrilogySystemProfile()
@@ -103,6 +104,7 @@ class TestTrilogySystemProfile:
 # TrilogyCrossGap
 # ---------------------------------------------------------------------------
 
+
 class TestTrilogyCrossGap:
     def test_fields(self):
         gap = TrilogyCrossGap(
@@ -122,6 +124,7 @@ class TestTrilogyCrossGap:
 # All-defaults audit (Sandbox)
 # ---------------------------------------------------------------------------
 
+
 class TestAllDefaultsAudit:
     def setup_method(self):
         self.result = _audit(TrilogySystemProfile())
@@ -139,11 +142,7 @@ class TestAllDefaultsAudit:
         assert self.result.governance_score < 50
 
     def test_combined_score_formula(self):
-        expected = (
-            self.result.rag_score * 0.35
-            + self.result.agent_score * 0.35
-            + self.result.governance_score * 0.30
-        )
+        expected = self.result.rag_score * 0.35 + self.result.agent_score * 0.35 + self.result.governance_score * 0.30
         assert abs(self.result.combined_score - expected) < 0.01
 
     def test_cross_gaps_present(self):
@@ -164,6 +163,7 @@ class TestAllDefaultsAudit:
 # ---------------------------------------------------------------------------
 # All-enabled audit (Autonomous)
 # ---------------------------------------------------------------------------
+
 
 class TestAllEnabledAudit:
     def setup_method(self):
@@ -201,6 +201,7 @@ class TestAllEnabledAudit:
 # Combined score formula
 # ---------------------------------------------------------------------------
 
+
 class TestCombinedScoreFormula:
     def test_combined_score_is_weighted_average(self):
         result = _audit(_all_enabled())
@@ -223,6 +224,7 @@ class TestCombinedScoreFormula:
 # ---------------------------------------------------------------------------
 # Cross-gap XG-001: injection policy mismatch
 # ---------------------------------------------------------------------------
+
 
 class TestXG001InjectionMismatch:
     def test_xg_001_triggered_when_governance_has_control_but_rag_does_not(self):
@@ -249,6 +251,7 @@ class TestXG001InjectionMismatch:
 # Cross-gap XG-004: audit trail
 # ---------------------------------------------------------------------------
 
+
 class TestXG004AuditTrail:
     def test_xg_004_triggered_when_no_logging(self):
         profile = TrilogySystemProfile(
@@ -270,6 +273,7 @@ class TestXG004AuditTrail:
 # Cross-gap XG-007: HITL gap
 # ---------------------------------------------------------------------------
 
+
 class TestXG007HITLGap:
     def test_xg_007_triggered_when_no_hitl_no_action_gating(self):
         profile = TrilogySystemProfile(
@@ -290,6 +294,7 @@ class TestXG007HITLGap:
 # ---------------------------------------------------------------------------
 # TrilogyAuditResult.summary()
 # ---------------------------------------------------------------------------
+
 
 class TestTrilogyAuditResultSummary:
     def test_summary_returns_string(self):
@@ -318,6 +323,7 @@ class TestTrilogyAuditResultSummary:
 # ---------------------------------------------------------------------------
 # Score bounds
 # ---------------------------------------------------------------------------
+
 
 class TestScoreBounds:
     def test_combined_score_not_negative(self):

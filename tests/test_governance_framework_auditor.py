@@ -19,9 +19,7 @@ import types
 # ---------------------------------------------------------------------------
 
 _MOD_NAME = "governance_framework_auditor_40"
-_EXAMPLE_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "examples", "40_governance_framework_auditor.py"
-)
+_EXAMPLE_PATH = os.path.join(os.path.dirname(__file__), "..", "examples", "40_governance_framework_auditor.py")
 
 spec = importlib.util.spec_from_file_location(_MOD_NAME, _EXAMPLE_PATH)
 mod = types.ModuleType(_MOD_NAME)
@@ -369,12 +367,8 @@ class TestFrameworkRefs:
     def test_framework_refs_nonempty_for_all_findings(self):
         report = _audit(_all_off_config())
         for f in report.findings:
-            assert isinstance(f.framework_refs, list), (
-                f"{f.control_id}: framework_refs must be a list"
-            )
-            assert len(f.framework_refs) > 0, (
-                f"{f.control_id}: framework_refs must not be empty"
-            )
+            assert isinstance(f.framework_refs, list), f"{f.control_id}: framework_refs must be a list"
+            assert len(f.framework_refs) > 0, f"{f.control_id}: framework_refs must not be empty"
             for ref in f.framework_refs:
                 assert isinstance(ref, str) and len(ref) > 0, (
                     f"{f.control_id}: framework ref must be a non-empty string, got {ref!r}"
@@ -408,6 +402,4 @@ class TestScoreAndCountConsistency:
         report = _audit(_all_off_config())
         for f in report.findings:
             if f.status == "FAIL":
-                assert f.score_deduction > 0, (
-                    f"{f.control_id}: FAIL finding should have positive score_deduction"
-                )
+                assert f.score_deduction > 0, f"{f.control_id}: FAIL finding should have positive score_deduction"
