@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] — 2026-04-13
+
+### Added — Insurance AI Governance (NAIC 2023 + FCRA + NY DFS + ECOA Disparate Impact)
+
+**`examples/14_insurance_ai_governance.py`** — four-layer governance framework for AI/ML models
+used in insurance underwriting, claims adjudication, and credit-based insurance scoring, enforcing
+NAIC Model AI Governance Bulletin 2023 (documentation/validation/monitoring/explainability by risk
+level), FCRA 15 U.S.C. §1681m adverse action notice requirements for credit-based insurance scores
+(specific principal reasons, not generic "AI decision"), NY DFS Circular Letter 2019-1 ECDIS source
+inventory and proxy discrimination validation for NY operations, and ECOA Regulation B 4/5 rule
+disparate impact analysis with insufficient-data blocking.
+
+**New classes:**
+- `InsuranceAIUseCase` — UNDERWRITING_DECISION, CLAIMS_ADJUDICATION, CREDIT_SCORED_PRICING,
+  FRAUD_DETECTION, MARKETING_SEGMENTATION, OPERATIONAL_ANALYTICS
+- `InsuranceModelRiskLevel` — HIGH / MEDIUM / LOW (NAIC Bulletin 2023 classification)
+- `FCRAAdverseActionStatus` — REQUIRED / NOT_REQUIRED / USES_PROHIBITED_FACTOR
+- `DisparateImpactStatus` — PASS / FAIL / INSUFFICIENT_DATA
+- `InsuranceGovernanceDecision` — APPROVED / APPROVED_WITH_CONDITIONS / DENIED
+- `InsuranceModelContext` (frozen dataclass) — model_id, risk_level, use_case, intended_states,
+  is_model_documented, is_model_validated, is_monitoring_active, is_explainability_available,
+  uses_consumer_report, uses_credit_based_insurance_score, adverse_action_reasons_specific,
+  uses_prohibited_factor, ecdis_sources_documented, non_discrimination_validated,
+  disparate_impact_ratio, protected_class_sample_size, min_sample_size_for_di_test
+- `InsuranceGovernanceResult` (dataclass) — layer, decision, findings, conditions; `is_denied` and
+  `has_conditions` properties
+- `NAICFilter` — Layer 1: documentation required all risk levels; HIGH/MEDIUM require independent
+  validation + monitoring + explainability; HIGH adds annual review condition
+- `FCRAFilter` — Layer 2: prohibited factor check (blocks regardless of other compliance);
+  CBIS/consumer report in adverse action use cases requires specific reasons and explainability;
+  APPROVED_WITH_CONDITIONS with notice requirement when compliant
+- `NYDFSFilter` — Layer 3: NY-only ("NY" not in intended_states → pass-through APPROVED);
+  requires ECDIS source inventory and proxy-discrimination validation
+- `ECOADisparateImpactFilter` — Layer 4: 4/5 rule (ratio < 0.80 → DENIED); insufficient sample
+  size blocks deployment; None ratio with sufficient sample → DENIED; non-adverse-action use
+  cases pass through
+- `InsuranceGovernanceReport` (dataclass) — model_id, final_decision, layer_results list,
+  `summary()` dict
+- `InsuranceGovernanceOrchestrator` — NAIC → FCRA → NY DFS → ECOA; all layers evaluated
+  regardless of earlier failures; any DENIED → DENIED; else conditions → APPROVED_WITH_CONDITIONS
+
+**Tests:** 45 new tests in `tests/test_insurance_ai_governance.py`
+
+---
+
 ## [0.15.0] — 2026-04-13
 
 ### Added — Financial Model Risk Governance (FRB SR 11-7 + Basel III/IV + EU DORA + OCC 2011-12)
