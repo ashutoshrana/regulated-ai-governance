@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.35.0] — 2026-04-13
+
+### Added — GDPR AI Accountability Governance Framework (`32_gdpr_ai_accountability.py`)
+
+Four-layer governance filter for GDPR (Regulation 2016/679) automated decision-making, transparency, DPIA, and data minimisation requirements; 8 ecosystem wrappers:
+
+- `GDPRAutomatedDecisionFilter` — Art. 22(1) automated decisions without legal basis → DENIED; Art. 22(3) + Recital 71 right to explanation absent → DENIED; Art. 22(4) + Art. 9 special category automated decisions without explicit consent → DENIED; Art. 21(2) direct marketing profiling without objection mechanism → REQUIRES_HUMAN_REVIEW
+- `GDPRTransparencyFilter` — Art. 13(1) privacy notice absent at collection → DENIED; Art. 13(2)(f) + Recital 60 logic disclosure absent → DENIED; Art. 13(1)(f) third-country transfer safeguards absent → DENIED; Art. 13(2)(a) retention period absent → REQUIRES_HUMAN_REVIEW
+- `GDPRDPIAFilter` — Art. 35(1) high-risk processing without DPIA → DENIED; Art. 35(3)(c) systematic public area monitoring without DPIA → DENIED; Art. 35(3)(b) large-scale special category processing without DPIA → DENIED; Art. 36(1) unacceptable residual risks without SA consultation → REQUIRES_HUMAN_REVIEW
+- `GDPRDataMinimisationFilter` — Art. 5(1)(c) excess data collection → DENIED; Art. 5(1)(b) + Art. 89 purpose incompatibility → DENIED; Art. 25(1) privacy by design absent → DENIED; Art. 5(1)(e) storage limitation exceeded → REQUIRES_HUMAN_REVIEW
+- 8 ecosystem wrappers: `GDPRLangChainPolicyGuard`, `GDPRCrewAIGovernanceGuard`, `GDPRAutoGenGovernedAgent`, `GDPRSemanticKernelPlugin`, `GDPRLlamaIndexWorkflowGuard`, `GDPRHaystackGovernanceComponent`, `GDPRDSPyGovernanceModule`, `GDPRMAFPolicyMiddleware`
+
+88 new tests. Total: **1804 passed**.
 
 ---
 
