@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.36.0] — 2026-04-13
+
+### Added — Singapore AI Governance Framework (`33_singapore_ai_governance.py`)
+
+Four-layer governance filter for Singapore PDPA, MAS FEAT Principles, AI Verify Framework, and cross-border financial/data controls; 8 ecosystem wrappers:
+
+- `SingaporePDPAFilter` — §13 consent obligation → DENIED; §15A sensitive data (NRIC/FIN/health/financial/biometric) without enhanced consent → DENIED; §26 cross-border to non-adequate country → DENIED (approved: AU/CA/DE/JP/NZ/UK/EU); AI Advisory §4.2 automated decision without human review option → REQUIRES_HUMAN_REVIEW
+- `MASFEATFilter` — Fairness §2.1 without assessment docs → DENIED; Accountability §4.1 without human accountability + audit trail → DENIED; Transparency §5.2 without explainability docs → DENIED; Ethics §3.3 without robustness testing → REQUIRES_HUMAN_REVIEW
+- `AIVerifySingaporeFilter` — §3.1 high-impact AI without self-assessment → DENIED; §4.2 without explainability testing (LIME/SHAP) → DENIED; IMDA GenAI §5.1 without GenAI compliance → DENIED; §4.1 unmitigated bias in protected characteristics → REQUIRES_HUMAN_REVIEW
+- `SingaporeCrossBorderFilter` — MAS TRM §4.1 financial AI data without contractual safeguards → DENIED; PDPC TIA for CN/RU/KP → DENIED; MAS Cloud outside AWS/GCP/Azure Singapore whitelist → DENIED; FATF non-compliant jurisdiction → REQUIRES_HUMAN_REVIEW
+- 8 ecosystem wrappers: `SingaporeLangChainPolicyGuard`, `SingaporeCrewAIGovernanceGuard`, `SingaporeAutoGenGovernedAgent`, `SingaporeSemanticKernelPlugin`, `SingaporeLlamaIndexWorkflowGuard`, `SingaporeHaystackGovernanceComponent`, `SingaporeDSPyGovernanceModule`, `SingaporeMAFPolicyMiddleware`
+
+112 new tests. Total: **1884 passed**.
+
+---
+
 ## [0.35.0] — 2026-04-13
 
 ### Added — GDPR AI Accountability Governance Framework (`32_gdpr_ai_accountability.py`)

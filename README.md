@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Downloads](https://img.shields.io/pypi/dm/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
 
-**Governance framework for AI agents and RAG systems in regulated environments — 32 examples, 18 jurisdictions, 9 AI frameworks, 1804 tests.**
+**Governance framework for AI agents and RAG systems in regulated environments — 33 examples, 19 jurisdictions, 9 AI frameworks, 1884 tests.**
 
 Policy enforcement, audit logging, and compliance orchestration for AI systems that must satisfy FERPA, HIPAA, GDPR, EU AI Act, APPI, MAS FEAT, and 15+ additional regulatory frameworks.
 
@@ -121,7 +121,7 @@ print(report.compliance_summary)  # human-readable for audit file
 
 ---
 
-## Example catalog — 32 governance examples
+## Example catalog — 33 governance examples
 
 | # | File | Jurisdiction / Domain | Frameworks Enforced |
 |---|------|----------------------|---------------------|
@@ -157,6 +157,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | 30 | `30_us_state_ai_laws.py` | US State AI Laws (Colorado, Illinois, Virginia) | Colorado AI Act 2024 SB 24-205 §6-1-1702 (high-risk AI impact assessment + human oversight + bias testing), Illinois BIPA 740 ILCS 14/15 (biometric written consent + video interview AI + third-party sharing), Virginia CDPA AI provisions Va. Code §59.1-577/578/579/581 (sensitive data + automated profiling + high-risk AI), USStateAICrossBorderFilter (IL biometric / CO high-risk / CA CPRA / VA-TX-CT opt-out matrix) |
 | 31 | `31_eu_ai_act_high_risk.py` | EU AI Act 2024 High-Risk Systems | EUAIActHighRiskCategoryFilter (Art. 5 prohibited + Annex III §1-8 conformity assessment + Art. 27 FRIA + Art. 49/71 database registration), EUAIActTechnicalRequirementsFilter (Arts. 9-15 risk mgmt/data governance/technical docs/human oversight/accuracy), EUAIActTransparencyFilter (Arts. 50/13 AI disclosure/deepfake labeling/emotion recognition/instructions), EUAIActCrossBorderFilter (Art. 2 export + Arts. 51-55 GPAI technical docs/systemic risk/copyright), 8 ecosystem wrappers |
 | 32 | `32_gdpr_ai_accountability.py` | GDPR AI Accountability (EU/EEA) | GDPRAutomatedDecisionFilter (Art. 22(1) legal basis + Art. 22(3) explanation right + Art. 22(4) special category data + Art. 21(2) direct marketing objection), GDPRTransparencyFilter (Art. 13(1) privacy notice + Art. 13(2)(f) logic disclosure + Art. 13(1)(f) transfer safeguards + Art. 13(2)(a) retention period), GDPRDPIAFilter (Art. 35(1) high-risk DPIA + Art. 35(3)(c) systematic monitoring + Art. 35(3)(b) special category scale + Art. 36(1) SA prior consultation), GDPRDataMinimisationFilter (Art. 5(1)(c) minimisation + Art. 5(1)(b)/89 purpose limitation + Art. 25(1) privacy by design + Art. 5(1)(e) storage limitation), 8 ecosystem wrappers |
+| 33 | `33_singapore_ai_governance.py` | Singapore (PDPA + MAS FEAT + AI Verify) | SingaporePDPAFilter (§13 consent + §15A sensitive data NRIC/FIN/health/biometric + §26 cross-border adequacy AU/CA/DE/JP/NZ/UK/EU + AI Advisory §4.2 automated decision), MASFEATFilter (Fairness §2.1 + Accountability §4.1 + Transparency §5.2 + Ethics §3.3), AIVerifySingaporeFilter (§3.1 self-assessment 11 principles + §4.2 explainability LIME/SHAP + IMDA GenAI §5.1 + §4.1 fairness testing), SingaporeCrossBorderFilter (MAS TRM §4.1 financial safeguards + PDPC TIA for CN/RU/KP + MAS Cloud AWS/GCP/Azure SG whitelist + FAA-N18 FATF), 8 ecosystem wrappers |
 
 ---
 
@@ -285,9 +286,9 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 
 | Library | Focus | Coverage |
 |---------|-------|---------|
-| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 41 sectors · 46 regulations · 1386 tests |
-| **regulated-ai-governance** | What agents may do | 32 governance examples · 18 jurisdictions · 1804 tests |
-| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 34 patterns · schema registry · GraphQL · 1288 tests |
+| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 42 sectors · 50 regulations · 1438 tests |
+| **regulated-ai-governance** | What agents may do | 33 governance examples · 19 jurisdictions · 1884 tests |
+| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 35 patterns · schema registry · GraphQL · 1359 tests |
 
 ---
 
