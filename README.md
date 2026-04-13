@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Downloads](https://img.shields.io/pypi/dm/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
 
-**Governance framework for AI agents and RAG systems in regulated environments — 23 examples, 11 jurisdictions, 9 AI frameworks, 1027 tests.**
+**Governance framework for AI agents and RAG systems in regulated environments — 24 examples, 12 jurisdictions, 9 AI frameworks, 1088 tests.**
 
 Policy enforcement, audit logging, and compliance orchestration for AI systems that must satisfy FERPA, HIPAA, GDPR, EU AI Act, APPI, MAS FEAT, and 15+ additional regulatory frameworks.
 
@@ -121,7 +121,7 @@ print(report.compliance_summary)  # human-readable for audit file
 
 ---
 
-## Example catalog — 23 governance examples
+## Example catalog — 24 governance examples
 
 | # | File | Jurisdiction / Domain | Frameworks Enforced |
 |---|------|----------------------|---------------------|
@@ -148,6 +148,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | 21 | `21_japan_ai_governance.py` | Japan | APPI 2022, METI AI Principles v1.1, MHLW, Cabinet Office |
 | 22 | `22_brazil_ai_governance.py` | Brazil | LGPD Law 13.709/2018 (Art. 7/11/33/37), Brazilian AI Bill PL 2338/2023 (Art. 3/14/16/22), ANPD Guidelines 2023, CFM 2299/2021, BCB Circular 3.978/2020, CLT + MPT |
 | 23 | `23_india_ai_governance.py` | India | DPDP Act 2023 (§4/6/9/12/16), MEITY AI Advisory 2024 (synthetic media + election safeguards + bias testing), IT Act §43A + IT Rules 2011, RBI/IRDAI/CDSCO sectoral AI guidance |
+| 24 | `24_south_korea_ai_governance.py` | South Korea | Korea AI Framework Act 2024 (Art. 6/10 high-impact + prohibited AI), PIPA (Art. 15/23/28-2/28-3/39-3 automated decisions + profiling + cross-border), Credit Information Act Art. 20, MFDS SaMD approval |
 
 ---
 
@@ -166,6 +167,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | **MedTech / Healthcare** | EU MDR, FDA 510(k), IEC 62304, HIPAA, FDA AI/ML Action Plan | 05, 12 |
 | **Brazil** | LGPD Law 13.709/2018, Brazilian AI Bill PL 2338/2023, ANPD Guidelines 2023, CFM Resolution 2299/2021, BCB Circular 3.978/2020 | 22 |
 | **India** | DPDP Act 2023, MEITY AI Advisory 2024, IT Act 2000 §43A + IT Rules 2011, RBI AI Guidance, IRDAI Guidelines, CDSCO SaMD Guidance | 23 |
+| **South Korea** | Korea AI Framework Act 2024, PIPA 2020/2023 amendments, Credit Information Use and Protection Act, Korean Medical Devices Act (MFDS SaMD) | 24 |
 
 ---
 
@@ -205,7 +207,7 @@ src/regulated_ai_governance/
     ├── haystack.py           # FERPAMetadataFilter
     ├── dspy.py               # ComplianceModule
     └── maf.py                # GovernanceMAFMiddleware
-examples/                     # 23 runnable governance examples (see catalog above)
+examples/                     # 24 runnable governance examples (see catalog above)
 tests/                        # 983 passing tests
 docs/
 └── ECOSYSTEM.md              # Full regulation and framework coverage matrix
@@ -239,8 +241,8 @@ JSON-serializable; suitable for compliance databases, SIEM ingestion, and regula
 
 ## Near-term roadmap
 
-- `24_south_korea_ai_governance.py` — AI Basic Act + PIPA
-- `25_middle_east_ai_governance.py` — UAE AI Strategy 2031 + Saudi NDS + Qatar NDCS
+- `25_middle_east_ai_governance.py` — UAE AI Strategy 2031 + Saudi NDMO + Qatar PDPL
+- `26_iso42001_compliance.py` — ISO 42001:2023 AI Management System (standalone)
 - ISO 42001:2023 AI Management System compliance layer (standalone)
 - Async filter support for FastAPI/asyncio environments
 
@@ -272,8 +274,8 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 | Library | Focus | Coverage |
 |---------|-------|---------|
 | [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 30 sectors · 29 regulations · 924 tests |
-| **regulated-ai-governance** | What agents may do | 23 governance examples · 11 jurisdictions · 1027 tests |
-| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 24 patterns · distributed tracing · event sourcing · 657 tests |
+| **regulated-ai-governance** | What agents may do | 24 governance examples · 12 jurisdictions · 1088 tests |
+| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 25 patterns · schema registry · distributed tracing · 695 tests |
 
 ---
 

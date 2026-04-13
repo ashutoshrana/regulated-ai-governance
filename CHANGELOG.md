@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.0] — 2026-04-13
+
+### Added — South Korea AI Governance (`24_south_korea_ai_governance.py`)
+
+Four-layer South Korea AI governance orchestrator covering the full Korean regulatory stack:
+
+- `KoreaAIFrameworkActFilter` (Korea AI Framework Act, Jan 23 2024) — prohibited AI practices (Art. 10 social scoring/subliminal manipulation → DENIED), high-impact AI without transparency (Art. 6 → REQUIRES_HUMAN_REVIEW)
+- `KoreaPIPAFilter` (PIPA 2020/2023) — lawful basis (Art. 15), sensitive data consent (Art. 23), automated decision right to contest (Art. 28-2), profiling consent (Art. 28-3), cross-border adequacy (Art. 39-3; adequate: KR/EU/UK/CH/JP/NZ/CA)
+- `KoreaSectoralAIFilter` — Credit Information Act Art. 20 (financial credit explainability), employment hiring human review, Korean Medical Devices Act MFDS SaMD approval, physician oversight, public sector impact assessment (Art. 7)
+- `KoreaDataGovernanceFilter` — significant/high-impact AI audit trail, automated decision contest mechanism
+
+`KoreaAIGovernanceOrchestrator` + `KoreaAIGovernanceReport` with `overall_decision`/`is_compliant`/`compliance_summary`.
+
+61 new tests. Total: **1088 passed**.
+
+---
+
 ## [0.25.0] — 2026-04-13
 
 ### Added — India AI Governance (`23_india_ai_governance.py`)
