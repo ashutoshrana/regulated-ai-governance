@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.23.0] — 2026-04-13
+## [0.25.0] — 2026-04-13
+
+### Added — India AI Governance (`23_india_ai_governance.py`)
+
+Four-layer India AI governance orchestrator covering the full regulatory stack:
+
+- `DPDPDataProtectionFilter` (DPDP Act 2023 §4/6/9/12/16) — lawful basis, consent validity, children's data/parental consent, data principal access (immediate APPROVED), cross-border to restricted countries (CN/RU/PK → DENIED)
+- `MEITYAIAdvisoryFilter` (MEITY AI Advisory March 2024) — synthetic media labelling (REQUIRES_HUMAN_REVIEW), election AI without safeguards (DENIED), generative AI bias/hallucination testing for MEDIUM/HIGH risk (REQUIRES_HUMAN_REVIEW)
+- `IndiaITActFilter` (IT Act §43A + IT Rules 2011) — body corporate SPDI without security practices, written consent for sensitive data, third-party disclosure consent
+- `IndiaSectoralFilter` — RBI AI Guidance 2024 (banking credit AI → model risk management), IRDAI Guidelines (insurance automated underwriting → human review), CDSCO SaMD Guidance (healthcare clinical AI → CDSCO approval required)
+
+`IndiaAIGovernanceOrchestrator` + `IndiaAIGovernanceReport` with `overall_decision`/`is_compliant`/`compliance_summary`.
+
+44 new tests. Total: **1027 passed**.
+
+---
+
+## [0.24.0] — 2026-04-13
 
 ### Added — Japan AI Governance (APPI + METI AI Principles + MHLW Medical AI + Cabinet Office)
 

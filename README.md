@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Downloads](https://img.shields.io/pypi/dm/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
 
-**Governance framework for AI agents and RAG systems in regulated environments — 22 examples, 10 jurisdictions, 9 AI frameworks, 983 tests.**
+**Governance framework for AI agents and RAG systems in regulated environments — 23 examples, 11 jurisdictions, 9 AI frameworks, 1027 tests.**
 
 Policy enforcement, audit logging, and compliance orchestration for AI systems that must satisfy FERPA, HIPAA, GDPR, EU AI Act, APPI, MAS FEAT, and 15+ additional regulatory frameworks.
 
@@ -121,7 +121,7 @@ print(report.compliance_summary)  # human-readable for audit file
 
 ---
 
-## Example catalog — 22 governance examples
+## Example catalog — 23 governance examples
 
 | # | File | Jurisdiction / Domain | Frameworks Enforced |
 |---|------|----------------------|---------------------|
@@ -147,6 +147,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | 20 | `20_singapore_ai_governance.py` | Singapore | PDPC Model AI Framework v2, PDPA, MAS FEAT, IMDA |
 | 21 | `21_japan_ai_governance.py` | Japan | APPI 2022, METI AI Principles v1.1, MHLW, Cabinet Office |
 | 22 | `22_brazil_ai_governance.py` | Brazil | LGPD Law 13.709/2018 (Art. 7/11/33/37), Brazilian AI Bill PL 2338/2023 (Art. 3/14/16/22), ANPD Guidelines 2023, CFM 2299/2021, BCB Circular 3.978/2020, CLT + MPT |
+| 23 | `23_india_ai_governance.py` | India | DPDP Act 2023 (§4/6/9/12/16), MEITY AI Advisory 2024 (synthetic media + election safeguards + bias testing), IT Act §43A + IT Rules 2011, RBI/IRDAI/CDSCO sectoral AI guidance |
 
 ---
 
@@ -164,6 +165,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | **Manufacturing / OT** | IEC 62443, ISA-95, IEC 61508 SIL, ISO 26262 (automotive), UN-R155 | 06, 11 |
 | **MedTech / Healthcare** | EU MDR, FDA 510(k), IEC 62304, HIPAA, FDA AI/ML Action Plan | 05, 12 |
 | **Brazil** | LGPD Law 13.709/2018, Brazilian AI Bill PL 2338/2023, ANPD Guidelines 2023, CFM Resolution 2299/2021, BCB Circular 3.978/2020 | 22 |
+| **India** | DPDP Act 2023, MEITY AI Advisory 2024, IT Act 2000 §43A + IT Rules 2011, RBI AI Guidance, IRDAI Guidelines, CDSCO SaMD Guidance | 23 |
 
 ---
 
@@ -203,7 +205,7 @@ src/regulated_ai_governance/
     ├── haystack.py           # FERPAMetadataFilter
     ├── dspy.py               # ComplianceModule
     └── maf.py                # GovernanceMAFMiddleware
-examples/                     # 22 runnable governance examples (see catalog above)
+examples/                     # 23 runnable governance examples (see catalog above)
 tests/                        # 983 passing tests
 docs/
 └── ECOSYSTEM.md              # Full regulation and framework coverage matrix
@@ -270,8 +272,8 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 | Library | Focus | Coverage |
 |---------|-------|---------|
 | [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 30 sectors · 29 regulations · 924 tests |
-| **regulated-ai-governance** | What agents may do | 22 governance examples · 10 jurisdictions · 983 tests |
-| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 23 patterns · service mesh · event sourcing · 614 tests |
+| **regulated-ai-governance** | What agents may do | 23 governance examples · 11 jurisdictions · 1027 tests |
+| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 24 patterns · distributed tracing · event sourcing · 657 tests |
 
 ---
 
