@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.34.0] — 2026-04-13
+
+### Added — EU AI Act High-Risk Systems Governance Filter (`31_eu_ai_act_high_risk.py`)
+
+Four-layer governance filter for EU AI Act 2024/1689 high-risk AI system requirements:
+
+- `EUAIActHighRiskCategoryFilter` — Art. 5 prohibited practices (social scoring, real-time biometric surveillance) → DENIED; Annex III §1-4 (biometric/infrastructure/education) → Art. 43 conformity assessment DENIED; §5-6 (employment/law enforcement) → Art. 43(1) third-party conformity DENIED; §7-8 (migration/justice) → Art. 27 FRIA DENIED; Art. 49/71 EU database registration → REQUIRES_HUMAN_REVIEW
+- `EUAIActTechnicalRequirementsFilter` — Arts. 9-14 risk management/data governance/technical docs/human oversight → DENIED; Art. 15 accuracy and robustness → REQUIRES_HUMAN_REVIEW
+- `EUAIActTransparencyFilter` — Art. 50(1) AI interaction disclosure → DENIED; Art. 50(4) deepfake labeling → DENIED; Art. 50(3) emotion recognition disclosure → DENIED; Art. 13 instructions for use → REQUIRES_HUMAN_REVIEW
+- `EUAIActCrossBorderFilter` — Art. 2(1)(c) export to CN/RU high-risk AI → DENIED; Art. 53 GPAI technical docs → DENIED; Art. 55 systemic risk adversarial testing → DENIED; Art. 53(1)(c) copyright compliance → REQUIRES_HUMAN_REVIEW; 8 ecosystem wrappers (LangChain/CrewAI/AutoGen/SK/LlamaIndex/Haystack/DSPy/MAF)
+
+92 new tests. Total: **1716 passed**.
+
+---
+
 ## [0.33.0] — 2026-04-13
 
 ### Added — US State AI Laws Governance Filter (`30_us_state_ai_laws.py`)

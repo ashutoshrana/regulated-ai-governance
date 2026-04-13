@@ -121,7 +121,7 @@ print(report.compliance_summary)  # human-readable for audit file
 
 ---
 
-## Example catalog — 30 governance examples
+## Example catalog — 31 governance examples
 
 | # | File | Jurisdiction / Domain | Frameworks Enforced |
 |---|------|----------------------|---------------------|
@@ -155,6 +155,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | 28 | `28_nordic_ai_governance.py` | Nordic/Scandinavia (Sweden, Denmark, Finland) | Sweden IMY AI Guidelines 2023 + SFS 2018:218, Denmark Datatilsynet AI Guidance 2023 + Act No. 502/2018, Finland TSV AI Guidelines 2023 + Data Protection Act 1050/2018, NordicCrossBorderFilter (intra-EEA adequate; non-EEA jurisdiction-specific GDPR Art. 46 denials) |
 | 29 | `29_eastern_europe_ai_governance.py` | Eastern Europe (Poland, Czech Republic, Hungary) | Poland UODO AI Guidelines 2023 + GDPR Act Dz.U. 2018, Czech ÚOOÚ AI Guidance 2023 + Act 110/2019, Hungary NAIH AI Guidelines 2023 + Privacy Act CXII/2011, EasternEuropeCrossBorderFilter (30-jurisdiction EEA adequate set + SCC/BCR fallback) |
 | 30 | `30_us_state_ai_laws.py` | US State AI Laws (Colorado, Illinois, Virginia) | Colorado AI Act 2024 SB 24-205 §6-1-1702 (high-risk AI impact assessment + human oversight + bias testing), Illinois BIPA 740 ILCS 14/15 (biometric written consent + video interview AI + third-party sharing), Virginia CDPA AI provisions Va. Code §59.1-577/578/579/581 (sensitive data + automated profiling + high-risk AI), USStateAICrossBorderFilter (IL biometric / CO high-risk / CA CPRA / VA-TX-CT opt-out matrix) |
+| 31 | `31_eu_ai_act_high_risk.py` | EU AI Act 2024 High-Risk Systems | EUAIActHighRiskCategoryFilter (Art. 5 prohibited + Annex III §1-8 conformity assessment + Art. 27 FRIA + Art. 49/71 database registration), EUAIActTechnicalRequirementsFilter (Arts. 9-15 risk mgmt/data governance/technical docs/human oversight/accuracy), EUAIActTransparencyFilter (Arts. 50/13 AI disclosure/deepfake labeling/emotion recognition/instructions), EUAIActCrossBorderFilter (Art. 2 export + Arts. 51-55 GPAI technical docs/systemic risk/copyright), 8 ecosystem wrappers |
 
 ---
 
@@ -179,6 +180,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | **Nordic / Scandinavia** | Sweden IMY AI Guidelines 2023 + SFS 2018:218, Denmark Datatilsynet AI Guidance 2023 + Act No. 502/2018, Finland TSV AI Guidelines 2023 + Data Protection Act 1050/2018, EEA intra-transfer adequacy | 28 |
 | **Eastern Europe (Poland, Czech Republic, Hungary)** | Poland UODO AI Guidelines 2023 + GDPR Act Dz.U. 2018 poz. 1000, Czech ÚOOÚ AI Guidance 2023 + Act 110/2019 Coll., Hungary NAIH AI Guidelines 2023 + Privacy Act CXII/2011, 30-jurisdiction EEA adequate set + SCC/BCR fallback | 29 |
 | **US State AI Laws (Colorado, Illinois, Virginia)** | Colorado AI Act 2024 SB 24-205 (impact assessment, human oversight, bias testing), Illinois BIPA 740 ILCS 14 (biometric consent, video interview AI), Virginia CDPA AI provisions §59.1-577/578/579 (sensitive data, automated profiling, high-risk AI), multi-state cross-border applicability matrix | 30 |
+| **EU AI Act — High-Risk Systems** | EU AI Act 2024/1689 Art. 5 prohibited practices, Annex III §1-8 high-risk categories, Arts. 9-15 technical requirements, Arts. 50/13 transparency, Arts. 51-55 GPAI/systemic risk; 8 ecosystem wrappers (LangChain/CrewAI/AutoGen/SK/LlamaIndex/Haystack/DSPy/MAF) | 31 |
 
 ---
 
@@ -270,7 +272,7 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
   author  = {Rana, Ashutosh},
   title   = {regulated-ai-governance: Policy enforcement for AI agents in regulated environments},
   year    = {2026},
-  version = {0.33.0},
+  version = {0.34.0},
   url     = {https://github.com/ashutoshrana/regulated-ai-governance},
   license = {MIT}
 }
@@ -282,9 +284,9 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 
 | Library | Focus | Coverage |
 |---------|-------|---------|
-| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 39 sectors · 41 regulations · 1315 tests |
-| **regulated-ai-governance** | What agents may do | 30 governance examples · 17 jurisdictions · 1624 tests |
-| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 32 patterns · schema registry · GraphQL · 1163 tests |
+| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 40 sectors · 42 regulations · 1331 tests |
+| **regulated-ai-governance** | What agents may do | 31 governance examples · 18 jurisdictions · 1716 tests |
+| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 33 patterns · schema registry · GraphQL · 1218 tests |
 
 ---
 
