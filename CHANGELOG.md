@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.31.0] — 2026-04-13
+
+### Added — Eastern Europe AI Governance (`29_eastern_europe_ai_governance.py`)
+
+Poland, Czech Republic, and Hungary national AI governance implementations:
+
+- `PolandAIFilter` (UODO AI Guidelines 2023 + GDPR Act Dz.U. 2018 poz. 1000) — automated decision for legal/significant effect without human review → REQUIRES_HUMAN_REVIEW (Art. 22); sensitive data without Art. 9 basis → DENIED; high-risk profiling without DPIA → DENIED
+- `CzechRepublicAIFilter` (ÚOOÚ AI Guidance 2023 + Act 110/2019 Coll.) — high-risk AI without registration → DENIED; biometric without explicit basis → DENIED; automated without transparency → REQUIRES_HUMAN_REVIEW
+- `HungaryAIFilter` (NAIH AI Guidelines 2023 + Privacy Act CXII/2011) — sensitive data without statutory basis → DENIED; fully automated without opt-out → REQUIRES_HUMAN_REVIEW; cross-border to non-adequate country → DENIED
+- `EasternEuropeCrossBorderFilter` — intra-EEA (30-jurisdiction) APPROVED; non-EEA with SCC/BCR APPROVED; non-EEA without safeguards DENIED with jurisdiction-specific GDPR citations
+
+87 new tests. Total: **1491 passed**.
+
+---
+
 ## [0.30.0] — 2026-04-13
 
 ### Added — Nordic/Scandinavia AI Governance (`28_nordic_ai_governance.py`)
