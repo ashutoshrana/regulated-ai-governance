@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] — 2026-04-13
+
+### Added
+- `integrations/llama_index.py`: `PolicyWorkflowGuard` — LlamaIndex 0.12+ event-driven Workflow guard step. Receives a `PolicyWorkflowEvent`, evaluates `ActionPolicy`, emits `GovernanceAuditRecord`, and either passes the event downstream (permitted) or raises `PermissionError` (denied/escalation-blocked). Closes #17.
+- `integrations/llama_index.py`: `PolicyWorkflowEvent` — Workflow event type carrying `documents`, `query`, and `action_name` between Workflow steps.
+- `integrations/haystack.py`: `make_haystack_policy_guard()` — factory that returns a Haystack 2.27 `@component`-decorated class enforcing `ActionPolicy` inside a Haystack pipeline. Applies `@component` and `@component.output_types(documents=list)` at call time (lazy Haystack import). Closes #18.
+- `integrations/__init__.py`: exports `PolicyWorkflowGuard`, `PolicyWorkflowEvent`, `make_haystack_policy_guard`
+
+---
+
 ## [0.4.0] — 2026-04-12
 
 ### Added

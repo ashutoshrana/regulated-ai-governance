@@ -140,3 +140,133 @@ class GovernedQueryEngine:
             execute_fn=lambda: self.engine.aquery(query_str),
             context={"query": query_str, "async": True},
         )
+
+
+# ---------------------------------------------------------------------------
+# LlamaIndex 0.12+ Workflow integration
+# ---------------------------------------------------------------------------
+
+
+def _check_llama_index_workflow_available() -> None:
+    """Verify llama-index-core>=0.12 is installed (Workflow API)."""
+    try:
+        import llama_index.core.workflow  # noqa: F401
+    except ImportError as exc:
+        raise ImportError(
+            "llama-index-core>=0.12.0 is required for PolicyWorkflowGuard. "
+            "Install it with: pip install 'regulated-ai-governance[llama-index]'"
+        ) from exc
+
+
+class PolicyWorkflowEvent:
+    """
+    LlamaIndex Workflow event carrying documents to be governed.
+
+    Passed between Workflow steps; the ``PolicyWorkflowGuard`` intercepts
+    this event, evaluates the ``ActionPolicy``, and either passes the event
+    downstream or raises ``PermissionError`` if the action is denied.
+
+    Args:
+        documents: List of ``NodeWithScore`` or any document objects.
+        query: The original query string (passed through to downstream steps).
+        action_name: Policy action name evaluated for this event.
+    """
+
+    def __init__(
+        self,
+        documents: list[Any],
+        query: str = "",
+        action_name: str = "workflow_step",
+    ) -> None:
+        self.documents = documents
+        self.query = query
+        self.action_name = action_name
+
+
+class PolicyWorkflowGuard:
+    """
+    LlamaIndex 0.12+ Workflow step that enforces ``ActionPolicy`` on documents.
+
+    Designed for the LlamaIndex event-driven Workflow API. Receives a
+    ``PolicyWorkflowEvent``, evaluates the configured policy, emits a
+    ``GovernanceAuditRecord``, and either returns the event (permitted) or
+    raises ``PermissionError`` (denied or escalation-blocked).
+
+    Installation::
+
+        pip install 'regulated-ai-governance[llama-index]'
+
+    Usage::
+
+        from llama_index.core.workflow import Workflow, StartEvent, StopEvent, step
+        from regulated_ai_governance.integrations.llama_index import (
+            PolicyWorkflowGuard,
+            PolicyWorkflowEvent,
+        )
+        from regulated_ai_governance.regulations.ferpa import make_ferpa_student_policy
+
+        policy_guard = PolicyWorkflowGuard(
+            policy=make_ferpa_student_policy(),
+            regulation="FERPA",
+            actor_id="stu-alice",
+            audit_sink=audit_log.append,
+        )
+
+        class EnrollmentWorkflow(Workflow):
+            @step
+            async def retrieve(self, event: StartEvent) -> PolicyWorkflowEvent:
+                nodes = await retriever.aretrieve(event.query)
+                return PolicyWorkflowEvent(documents=nodes, query=event.query)
+
+            policy_step = policy_guard  # inserted as a @step
+
+            @step
+            async def synthesize(self, event: PolicyWorkflowEvent) -> StopEvent:
+                response = await synthesizer.asynthesize(event.query, nodes=event.documents)
+                return StopEvent(result=str(response))
+
+    Args:
+        policy: ``ActionPolicy`` governing this workflow step.
+        regulation: Regulation label for audit records.
+        actor_id: Authenticated principal identifier.
+        audit_sink: Optional callable receiving each ``GovernanceAuditRecord``.
+        block_on_escalation: If True, escalated actions are blocked.
+    """
+
+    def __init__(
+        self,
+        policy: ActionPolicy,
+        regulation: str,
+        actor_id: str,
+        audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
+        block_on_escalation: bool = True,
+    ) -> None:
+        _check_llama_index_workflow_available()
+        self._guard = GovernedActionGuard(
+            policy=policy,
+            regulation=regulation,
+            actor_id=actor_id,
+            audit_sink=audit_sink or (lambda _: None),
+            block_on_escalation=block_on_escalation,
+            raise_on_deny=True,
+        )
+
+    async def __call__(self, event: PolicyWorkflowEvent) -> PolicyWorkflowEvent:
+        """
+        Evaluate policy for the event's ``action_name`` and return it if permitted.
+
+        Args:
+            event: ``PolicyWorkflowEvent`` carrying documents and action context.
+
+        Returns:
+            The same ``PolicyWorkflowEvent`` if the action is permitted.
+
+        Raises:
+            PermissionError: If the policy denies or escalation-blocks the action.
+        """
+        self._guard.guard(
+            action_name=event.action_name,
+            execute_fn=lambda: None,
+            context={"query": event.query, "document_count": len(event.documents)},
+        )
+        return event
