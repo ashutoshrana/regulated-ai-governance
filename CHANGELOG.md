@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] — 2026-04-13
+
+### Added — Insurance Sector AI Governance (NAIC Model Bulletin + State Anti-Discrimination + FCRA/GLBA)
+
+**`examples/08_insurance_ai_governance.py`** — multi-framework AI governance for an
+insurance underwriting and claims triage assistant, combining three compliance frameworks:
+
+New classes (self-contained in the example):
+- `InsuranceLine` — line of business (PERSONAL_AUTO, HOMEOWNERS, COMMERCIAL_PROPERTY,
+  WORKERS_COMP, LIFE, HEALTH)
+- `InsuranceAction` — agent actions (GENERATE_AUTO_QUOTE, UNDERWRITE_STANDARD_RISK,
+  UNDERWRITE_ADVERSE_DECISION, TRIAGE_CLAIM, APPROVE_CLAIM, DENY_CLAIM,
+  ISSUE_ADVERSE_ACTION_NOTICE, GENERATE_EXPLANATION)
+- `InsuranceRequestContext` — request boundary: line of business, action, applicant state,
+  model features, preliminary outcome, premium change %, credit report usage, MRM inventory ID
+- `NAICModelBulletinGuard` — enforces NAIC Model Bulletin on AI (2023): (1) AI system must
+  be in MRM inventory, (2) adverse decisions ≥ 15% premium impact require human attestation,
+  (3) claims denials require human review under §IV.B
+- `StateAntiDiscriminationGuard` — enforces state prohibited proxy variable registries;
+  state-specific: CA bans credit_score + zip_code for auto (CA Ins. Code §1861.02), NY
+  bans credit_score (N.Y. Ins. Law §2611), MI bans credit_score; federal baseline bans
+  race/religion/national_origin/sex; blocks decisions using prohibited proxy features
+- `FCRAGLBAGuard` — enforces FCRA §615 (credit-based adverse action requires written
+  consumer disclosure) and GLBA Safeguards Rule (NPI features — SSN, account_number,
+  income, credit_history — must not appear unprotected in AI payload)
+- `InsuranceGovernanceAuditRecord` — NAIC MRM-required audit record: request context,
+  per-framework results, governance outcome, prohibited proxies detected, human oversight
+  required flag, adverse action disclosure required flag
+- `InsuranceGovernanceOrchestrator` — deny-all aggregation; `ESCALATE_HUMAN` when NAIC
+  requires human oversight; `DENY` for state anti-discrimination violations; shadow mode
+  for quarterly MRM reporting
+
+Scenarios:
+- A: Standard CA auto quote (no prohibited proxies, no adverse outcome) — ALLOW
+- B: Adverse underwriting decision (premium +28%, CA) — NAIC threshold exceeded →
+  ESCALATE_HUMAN (human attestation required)
+- C: Underwriting with `credit_score` feature in CA — state anti-discrimination guard
+  detects prohibited proxy → DENY (escalate to compliance review)
+- D: Claims denial with credit report (NY) — NAIC (§IV.B human attestation) + FCRA §615
+  (written disclosure) both fire → ESCALATE_HUMAN with adverse_action_disclosure=True
+- E: Shadow mode — all 4 actions evaluated without blocking; violation counts logged
+  for NAIC quarterly MRM review (§IV.C)
+
+Framework coverage now spans 8 regulated sectors:
+HIPAA + NIST AI RMF + EU AI Act (healthcare) · ISO 42001 + IEC 62443 + DORA (OT) ·
+CMMC L2 + FedRAMP + NIST 800-53 (defense) · **NAIC + state anti-discrimination + FCRA/GLBA (insurance)**
+
+Closes #27.
+
+---
+
 ## [0.9.0] — 2026-04-13
 
 ### Added — Government/Defense AI Governance Example (CMMC L2 + FedRAMP + NIST 800-53)
