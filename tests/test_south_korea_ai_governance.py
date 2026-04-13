@@ -1,811 +1,994 @@
 """
-Tests for 24_south_korea_ai_governance.py — Four-layer South Korea AI
-governance framework covering Korea AI Framework Act (2024), PIPA 2020,
-Korea Sectoral AI Regulations, and Korea Data Governance & AI Auditing.
+Tests for 35_south_korea_ai_governance.py — South Korea AI Governance Framework
+covering:
+  1. KoreaPIPAFilter       — PIPA Arts. 15, 23, 28-8, 37-2 (2023 amendment)
+  2. KoreaFSCAIFilter      — FSCMA Art. 7+63; CB Act Art. 26; IBA Art. 176
+  3. KoreaAIBasicActFilter — AI Basic Act Arts. 35, 36, 46, 47 (enacted 2024)
+  4. KoreaCrossBorderFilter — PIPA Art. 28-8 + FSC EFTA Art. 21-2 + FSC Cloud
+  5. FilterResult.is_denied property
+  6. Eight ecosystem wrappers (LangChain, CrewAI, AutoGen, SK, LlamaIndex,
+     Haystack, DSPy, MAF)
+  7. Edge cases: missing keys, empty dict
 """
 
 from __future__ import annotations
 
 import importlib.util
-import os
 import sys
 import types
 
-# ---------------------------------------------------------------------------
-# Module loader
-# ---------------------------------------------------------------------------
-
-
-def _load():
-    _name = "south_korea_ai_governance_24"
-    spec = importlib.util.spec_from_file_location(
-        _name,
-        os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "examples",
-            "24_south_korea_ai_governance.py",
-        ),
-    )
-    mod = types.ModuleType(_name)
-    sys.modules[_name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-mod = _load()
-
+import pytest
 
 # ---------------------------------------------------------------------------
-# Helper factories
+# Module loader — use importlib per task specification
 # ---------------------------------------------------------------------------
 
+_MOD_NAME = "mod_korea"
 
-def _base_ctx(**overrides):
-    """Return a fully-compliant MINIMAL-risk GENERAL-sector context."""
-    defaults = dict(
-        user_id="u1",
-        sector=mod.KoreaSector.GENERAL,
-        ai_risk_level=mod.KoreaAIRiskLevel.MINIMAL,
-        is_automated_decision=False,
-        involves_personal_info=False,
-        contains_sensitive_info=False,
-        has_pipa_consent=True,
-        has_sensitive_info_consent=True,
-        processing_purpose="service_delivery",
-        is_high_impact_ai=False,
-        ai_transparency_disclosed=True,
-        involves_prohibited_practice=False,
-        is_automated_credit_decision=False,
-        has_credit_explainability=True,
-        is_automated_hiring_decision=False,
-        has_hiring_human_review=True,
-        is_medical_ai=False,
-        has_mfds_approval=False,
-        has_physician_oversight=False,
-        cross_border_transfer=False,
-        requester_jurisdiction="KR",
-        has_pipa_transfer_mechanism=True,
-        profiling_involved=False,
-        has_profiling_consent=True,
-        right_to_contest_provided=True,
-        is_generative_ai=False,
-        has_ai_output_label=True,
-    )
-    defaults.update(overrides)
-    return mod.KoreaAIContext(**defaults)
-
-
-def _base_doc(**overrides):
-    """Return a minimal, non-sensitive document."""
-    defaults = dict(
-        document_id="d1",
-        content_type="REPORT",
-        contains_personal_info=False,
-        risk_level="MINIMAL",
-        requires_human_review=False,
-        processing_timestamp="2024-06-01T09:00:00+09:00",
-        jurisdiction="KR",
-    )
-    defaults.update(overrides)
-    return mod.KoreaAIDocument(**defaults)
+spec = importlib.util.spec_from_file_location(
+    _MOD_NAME,
+    "/tmp/oss_work/regulated-ai-governance/examples/35_south_korea_ai_governance.py",
+)
+mod = types.ModuleType(_MOD_NAME)
+sys.modules[_MOD_NAME] = mod
+spec.loader.exec_module(mod)
 
 
 # ===========================================================================
-# TestKoreaAIFrameworkActFilter
+# TestFilterResult — is_denied property
 # ===========================================================================
 
 
-class TestKoreaAIFrameworkActFilter:
-    """Layer 1: Korea AI Framework Act (January 23, 2024)."""
+class TestFilterResult:
+    """FilterResult.is_denied must be True only for decision == 'DENIED'."""
 
-    def _eval(self, ctx, doc=None):
-        if doc is None:
-            doc = _base_doc()
-        return mod.KoreaAIFrameworkActFilter().evaluate(ctx, doc)
+    def test_is_denied_true_for_denied(self):
+        r = mod.FilterResult(filter_name="F", decision="DENIED", regulation="X", reason="Y")
+        assert r.is_denied is True
 
-    def test_prohibited_practice_denied(self):
-        """Prohibited AI practice (social scoring) → DENIED."""
-        ctx = _base_ctx(involves_prohibited_practice=True)
-        result = self._eval(ctx)
-        assert result.is_denied
-        assert result.decision == "DENIED"
+    def test_is_denied_false_for_permitted(self):
+        r = mod.FilterResult(filter_name="F", decision="PERMITTED", regulation="X", reason="Y")
+        assert r.is_denied is False
 
-    def test_prohibited_practice_cites_article_10(self):
-        """Prohibited practice denial cites Korea AI Framework Act Article 10."""
-        ctx = _base_ctx(involves_prohibited_practice=True)
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "Article 10" in combined or "10" in combined
-
-    def test_high_impact_no_disclosure_requires_human_review(self):
-        """High-impact AI + no transparency disclosure → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.HIGH_IMPACT,
-            ai_transparency_disclosed=False,
+    def test_is_denied_false_for_requires_human_review(self):
+        r = mod.FilterResult(
+            filter_name="F",
+            decision="REQUIRES_HUMAN_REVIEW",
+            regulation="X",
+            reason="Y",
         )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-        assert not result.is_denied
+        assert r.is_denied is False
 
-    def test_high_impact_no_disclosure_cites_article_6(self):
-        """REQUIRES_HUMAN_REVIEW for missing disclosure cites Article 6."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.HIGH_IMPACT,
-            ai_transparency_disclosed=False,
-        )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "Article 6" in combined or "6" in combined
+    def test_is_denied_false_for_redacted(self):
+        r = mod.FilterResult(filter_name="F", decision="REDACTED", regulation="X", reason="Y")
+        assert r.is_denied is False
 
-    def test_high_impact_with_disclosure_approved(self):
-        """High-impact AI + transparency disclosed → APPROVED."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.HIGH_IMPACT,
-            ai_transparency_disclosed=True,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
-
-    def test_non_high_impact_approved(self):
-        """Non-high-impact AI → APPROVED (no Framework Act obligations triggered)."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.MINIMAL,
-            involves_prohibited_practice=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
-
-    def test_significant_risk_no_prohibited_approved(self):
-        """SIGNIFICANT risk + no prohibited practice → APPROVED."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.SIGNIFICANT,
-            ai_transparency_disclosed=True,
-            involves_prohibited_practice=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
+    def test_filter_result_has_required_fields(self):
+        r = mod.FilterResult(filter_name="F", decision="DENIED", regulation="R", reason="Reason")
+        assert r.filter_name == "F"
+        assert r.decision == "DENIED"
+        assert r.regulation == "R"
+        assert r.reason == "Reason"
 
 
 # ===========================================================================
-# TestKoreaPIPAFilter
+# TestKoreaPIPAFilter — PIPA Arts. 15, 23, 28-8, 37-2
 # ===========================================================================
 
 
 class TestKoreaPIPAFilter:
-    """Layer 2: PIPA 2020 (Personal Information Protection Act)."""
+    """PIPA 2023 amendment — four principal controls."""
 
-    def _eval(self, ctx, doc=None):
-        if doc is None:
-            doc = _base_doc()
-        return mod.KoreaPIPAFilter().evaluate(ctx, doc)
+    def _eval(self, **kwargs):
+        return mod.KoreaPIPAFilter().filter(kwargs)
 
-    def test_no_personal_info_approved(self):
-        """No personal information involved → APPROVED."""
-        ctx = _base_ctx(involves_personal_info=False)
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
+    # --- Art. 15 Lawfulness of Collection: DENIED ---
 
-    def test_no_personal_info_cites_no_pipa(self):
-        """No personal info approval mentions PIPA not triggered."""
-        ctx = _base_ctx(involves_personal_info=False)
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "PIPA" in combined or "personal" in combined.lower()
-
-    def test_no_consent_no_lawful_basis_denied(self):
-        """Personal info + no consent + no lawful basis → DENIED."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=False,
-            processing_purpose="marketing",
+    def test_personal_info_no_consent_no_purpose_denied(self):
+        r = self._eval(
+            personal_information_processing=True,
+            consent_obtained=False,
+            legitimate_purpose=False,
         )
-        result = self._eval(ctx)
-        assert result.is_denied
-        assert result.decision == "DENIED"
+        assert r.decision == "DENIED"
+        assert r.is_denied
 
-    def test_no_consent_cites_article_15(self):
-        """No consent denial cites PIPA Article 15."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=False,
-            processing_purpose="marketing",
+    def test_personal_info_denied_cites_pipa_art_15(self):
+        r = self._eval(
+            personal_information_processing=True,
+            consent_obtained=False,
+            legitimate_purpose=False,
         )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "15" in combined
+        assert "15" in r.regulation or "Lawfulness" in r.regulation
 
-    def test_sensitive_info_no_consent_denied(self):
-        """Sensitive information + no explicit consent → DENIED."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
-            contains_sensitive_info=True,
-            has_sensitive_info_consent=False,
+    def test_personal_info_with_consent_permitted(self):
+        r = self._eval(
+            personal_information_processing=True,
+            consent_obtained=True,
         )
-        result = self._eval(ctx)
-        assert result.is_denied
-        assert result.decision == "DENIED"
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
 
-    def test_sensitive_info_no_consent_cites_article_23(self):
-        """Sensitive info denial cites PIPA Article 23."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
-            contains_sensitive_info=True,
-            has_sensitive_info_consent=False,
+    def test_personal_info_no_consent_but_legitimate_purpose_permitted(self):
+        r = self._eval(
+            personal_information_processing=True,
+            consent_obtained=False,
+            legitimate_purpose=True,
         )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "23" in combined
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
 
-    def test_automated_decision_no_contest_requires_human_review(self):
-        """Automated decision + no right to contest → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
-            is_automated_decision=True,
-            right_to_contest_provided=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-        assert not result.is_denied
+    # --- Art. 23 Sensitive Information: DENIED ---
 
-    def test_automated_decision_no_contest_cites_article_28_2(self):
-        """REQUIRES_HUMAN_REVIEW for missing contest cites PIPA Article 28-2."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
-            is_automated_decision=True,
-            right_to_contest_provided=False,
-        )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "28" in combined
+    def test_health_data_no_explicit_consent_denied(self):
+        r = self._eval(data_type="health", explicit_consent_obtained=False)
+        assert r.decision == "DENIED"
+        assert r.is_denied
 
-    def test_profiling_no_consent_requires_human_review(self):
-        """Profiling + no profiling consent → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
-            profiling_involved=True,
-            has_profiling_consent=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-        assert not result.is_denied
+    def test_biometric_data_no_explicit_consent_denied(self):
+        r = self._eval(data_type="biometric", explicit_consent_obtained=False)
+        assert r.decision == "DENIED"
+        assert r.is_denied
 
-    def test_profiling_no_consent_cites_article_28_3(self):
-        """REQUIRES_HUMAN_REVIEW for profiling cites PIPA Article 28-3."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
-            profiling_involved=True,
-            has_profiling_consent=False,
-        )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "28" in combined
+    def test_ideology_data_no_explicit_consent_denied(self):
+        r = self._eval(data_type="ideology", explicit_consent_obtained=False)
+        assert r.decision == "DENIED"
+        assert r.is_denied
 
-    def test_cross_border_to_adequate_jurisdiction_approved(self):
-        """Cross-border transfer to EU (adequate) → APPROVED."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
+    def test_criminal_data_no_explicit_consent_denied(self):
+        r = self._eval(data_type="criminal", explicit_consent_obtained=False)
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_union_data_no_explicit_consent_denied(self):
+        r = self._eval(data_type="union", explicit_consent_obtained=False)
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_sensitive_denied_cites_pipa_art_23(self):
+        r = self._eval(data_type="health", explicit_consent_obtained=False)
+        assert "23" in r.regulation or "Sensitive" in r.regulation
+
+    def test_health_data_with_explicit_consent_permitted(self):
+        r = self._eval(data_type="health", explicit_consent_obtained=True)
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_non_sensitive_data_type_permitted(self):
+        r = self._eval(data_type="name")
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- Art. 28-8 Cross-border Transfer: DENIED ---
+
+    def test_cross_border_to_jp_no_pipc_approval_denied(self):
+        r = self._eval(
             cross_border_transfer=True,
-            requester_jurisdiction="EU",
-            has_pipa_transfer_mechanism=False,
+            transfer_country="JP",
+            pipc_approval_obtained=False,
+            individual_consent_for_transfer=False,
         )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
+        assert r.decision == "DENIED"
+        assert r.is_denied
 
-    def test_cross_border_no_mechanism_denied(self):
-        """Cross-border to non-adequate jurisdiction + no mechanism → DENIED."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
+    def test_cross_border_to_us_no_pipc_approval_denied(self):
+        r = self._eval(
             cross_border_transfer=True,
-            requester_jurisdiction="BR",
-            has_pipa_transfer_mechanism=False,
+            transfer_country="US",
+            pipc_approval_obtained=False,
+            individual_consent_for_transfer=False,
         )
-        result = self._eval(ctx)
-        assert result.is_denied
-        assert result.decision == "DENIED"
+        assert r.decision == "DENIED"
+        assert r.is_denied
 
-    def test_cross_border_no_mechanism_cites_article_39_3(self):
-        """Cross-border denial cites PIPA Article 39-3."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
+    def test_cross_border_denied_cites_pipa_art_28_8(self):
+        r = self._eval(
             cross_border_transfer=True,
-            requester_jurisdiction="BR",
-            has_pipa_transfer_mechanism=False,
+            transfer_country="JP",
+            pipc_approval_obtained=False,
+            individual_consent_for_transfer=False,
         )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "39" in combined
+        assert "28" in r.regulation or "Cross-border" in r.regulation
 
-    def test_legal_obligation_basis_approved_without_consent(self):
-        """Legal obligation basis → APPROVED even without has_pipa_consent."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=False,
-            processing_purpose="legal_obligation",
-        )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
+    def test_cross_border_to_eu_permitted(self):
+        r = self._eval(cross_border_transfer=True, transfer_country="DE")
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
 
+    def test_cross_border_to_uk_permitted(self):
+        r = self._eval(cross_border_transfer=True, transfer_country="UK")
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
 
-# ===========================================================================
-# TestKoreaSectoralAIFilter
-# ===========================================================================
+    def test_cross_border_to_ca_permitted(self):
+        r = self._eval(cross_border_transfer=True, transfer_country="CA")
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
 
-
-class TestKoreaSectoralAIFilter:
-    """Layer 3: Korea Sectoral AI Regulations."""
-
-    def _eval(self, ctx, doc=None):
-        if doc is None:
-            doc = _base_doc()
-        return mod.KoreaSectoralAIFilter().evaluate(ctx, doc)
-
-    def test_financial_credit_no_explainability_requires_human_review(self):
-        """Financial sector + automated credit + no explainability → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.FINANCIAL,
-            is_automated_credit_decision=True,
-            has_credit_explainability=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-        assert not result.is_denied
-
-    def test_financial_credit_cites_credit_act_article_20(self):
-        """Financial credit review cites Credit Information Act Article 20."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.FINANCIAL,
-            is_automated_credit_decision=True,
-            has_credit_explainability=False,
-        )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "20" in combined or "Credit" in combined
-
-    def test_employment_no_human_review_requires_human_review(self):
-        """Employment sector + automated hiring + no human review → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.EMPLOYMENT,
-            is_automated_hiring_decision=True,
-            has_hiring_human_review=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-        assert not result.is_denied
-
-    def test_employment_no_human_review_cites_employment_act(self):
-        """Employment review cites Korea Employment Act."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.EMPLOYMENT,
-            is_automated_hiring_decision=True,
-            has_hiring_human_review=False,
-        )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "Employment" in combined or "hiring" in combined.lower()
-
-    def test_healthcare_no_mfds_denied(self):
-        """Healthcare sector + medical AI + no MFDS approval → DENIED."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.HEALTHCARE,
-            is_medical_ai=True,
-            has_mfds_approval=False,
-        )
-        result = self._eval(ctx)
-        assert result.is_denied
-        assert result.decision == "DENIED"
-
-    def test_healthcare_no_mfds_cites_medical_devices_act(self):
-        """Healthcare MFDS denial cites Korean Medical Devices Act."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.HEALTHCARE,
-            is_medical_ai=True,
-            has_mfds_approval=False,
-        )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "MFDS" in combined or "Medical" in combined
-
-    def test_healthcare_mfds_no_physician_requires_human_review(self):
-        """Healthcare + MFDS approved + no physician oversight → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.HEALTHCARE,
-            is_medical_ai=True,
-            has_mfds_approval=True,
-            has_physician_oversight=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-        assert not result.is_denied
-
-    def test_healthcare_mfds_physician_approved(self):
-        """Healthcare + MFDS approved + physician oversight → APPROVED."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.HEALTHCARE,
-            is_medical_ai=True,
-            has_mfds_approval=True,
-            has_physician_oversight=True,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
-
-    def test_public_high_impact_requires_human_review(self):
-        """Public sector + HIGH_IMPACT → REQUIRES_HUMAN_REVIEW (impact assessment)."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.PUBLIC,
-            ai_risk_level=mod.KoreaAIRiskLevel.HIGH_IMPACT,
-            ai_transparency_disclosed=True,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-        assert not result.is_denied
-
-    def test_public_high_impact_cites_article_7(self):
-        """Public high-impact review cites Korea AI Framework Act Article 7."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.PUBLIC,
-            ai_risk_level=mod.KoreaAIRiskLevel.HIGH_IMPACT,
-            ai_transparency_disclosed=True,
-        )
-        result = self._eval(ctx)
-        combined = result.regulation_citation + " " + result.reason
-        assert "7" in combined or "impact assessment" in combined.lower()
-
-    def test_general_sector_approved(self):
-        """GENERAL sector with no special AI types → APPROVED."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.GENERAL,
-            is_automated_credit_decision=False,
-            is_automated_hiring_decision=False,
-            is_medical_ai=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
-
-    def test_education_sector_approved(self):
-        """EDUCATION sector → APPROVED (no sector-specific AI rules triggered)."""
-        ctx = _base_ctx(
-            sector=mod.KoreaSector.EDUCATION,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
-
-
-# ===========================================================================
-# TestKoreaDataGovernanceFilter
-# ===========================================================================
-
-
-class TestKoreaDataGovernanceFilter:
-    """Layer 4: Korea Data Governance & AI Auditing."""
-
-    def _eval(self, ctx, doc=None):
-        if doc is None:
-            doc = _base_doc()
-        return mod.KoreaDataGovernanceFilter().evaluate(ctx, doc)
-
-    def test_high_impact_no_transparency_requires_human_review(self):
-        """HIGH_IMPACT risk + no AI transparency → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.HIGH_IMPACT,
-            ai_transparency_disclosed=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-        assert not result.is_denied
-
-    def test_significant_no_transparency_requires_human_review(self):
-        """SIGNIFICANT risk + no AI transparency → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.SIGNIFICANT,
-            ai_transparency_disclosed=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-
-    def test_personal_info_automated_no_contest_requires_human_review(self):
-        """Personal info + automated decision + no right to contest → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            is_automated_decision=True,
-            right_to_contest_provided=False,
-            ai_transparency_disclosed=True,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "REQUIRES_HUMAN_REVIEW"
-        assert not result.is_denied
-
-    def test_compliant_minimal_approved(self):
-        """Fully compliant MINIMAL risk context → APPROVED."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.MINIMAL,
-            ai_transparency_disclosed=True,
-            involves_personal_info=False,
-            is_automated_decision=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
-
-    def test_compliant_high_impact_with_disclosure_approved(self):
-        """HIGH_IMPACT + transparency disclosed + no automated decision → APPROVED."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.HIGH_IMPACT,
-            ai_transparency_disclosed=True,
-            involves_personal_info=False,
-            is_automated_decision=False,
-        )
-        result = self._eval(ctx)
-        assert result.decision == "APPROVED"
-
-
-# ===========================================================================
-# TestOrchestrator
-# ===========================================================================
-
-
-class TestOrchestrator:
-    """Integration tests across the full orchestrator."""
-
-    def test_fully_compliant_context_all_approved(self):
-        """Fully compliant MINIMAL-risk GENERAL context → all four filters APPROVED."""
-        ctx = _base_ctx()
-        doc = _base_doc()
-        orchestrator = mod.KoreaAIGovernanceOrchestrator()
-        results = orchestrator.evaluate(ctx, doc)
-        assert len(results) == 4
-        for r in results:
-            assert r.decision == "APPROVED"
-            assert not r.is_denied
-
-    def test_orchestrator_returns_four_results(self):
-        """Orchestrator always returns exactly four FilterResult objects."""
-        ctx = _base_ctx()
-        doc = _base_doc()
-        orchestrator = mod.KoreaAIGovernanceOrchestrator()
-        results = orchestrator.evaluate(ctx, doc)
-        assert len(results) == 4
-
-    def test_denied_path_produces_denied_result(self):
-        """Prohibited practice → at least one filter result is DENIED."""
-        ctx = _base_ctx(involves_prohibited_practice=True)
-        doc = _base_doc()
-        orchestrator = mod.KoreaAIGovernanceOrchestrator()
-        results = orchestrator.evaluate(ctx, doc)
-        assert any(r.is_denied for r in results)
-
-    def test_all_filters_run_regardless_of_denial(self):
-        """All four filters run even when first filter denies."""
-        ctx = _base_ctx(involves_prohibited_practice=True)
-        doc = _base_doc()
-        orchestrator = mod.KoreaAIGovernanceOrchestrator()
-        results = orchestrator.evaluate(ctx, doc)
-        # All four filter results must be present
-        assert len(results) == 4
-
-    def test_denied_overrides_requires_human_review(self):
-        """Scenario with both DENIED and REQUIRES_HUMAN_REVIEW → overall DENIED."""
-        # prohibited practice = DENIED from filter 1
-        # high-impact + no disclosure = REQUIRES_HUMAN_REVIEW from filter 1 normally,
-        # but prohibited practice takes priority in filter 1
-        # Trigger DENIED via prohibited practice and REQUIRES_HUMAN_REVIEW via
-        # personal info + automated decision + no contest in PIPA filter
-        ctx = _base_ctx(
-            involves_prohibited_practice=True,
-            involves_personal_info=True,
-            has_pipa_consent=True,
-            is_automated_decision=True,
-            right_to_contest_provided=False,
-        )
-        doc = _base_doc()
-        orchestrator = mod.KoreaAIGovernanceOrchestrator()
-        results = orchestrator.evaluate(ctx, doc)
-        report = mod.KoreaAIGovernanceReport(context=ctx, document=doc, filter_results=results)
-        assert report.overall_decision == "DENIED"
-
-
-# ===========================================================================
-# TestReport
-# ===========================================================================
-
-
-class TestReport:
-    """Tests for KoreaAIGovernanceReport aggregation properties."""
-
-    def _make_report(self, ctx=None, doc=None):
-        if ctx is None:
-            ctx = _base_ctx()
-        if doc is None:
-            doc = _base_doc()
-        orchestrator = mod.KoreaAIGovernanceOrchestrator()
-        results = orchestrator.evaluate(ctx, doc)
-        return mod.KoreaAIGovernanceReport(context=ctx, document=doc, filter_results=results)
-
-    def test_overall_decision_approved_when_all_pass(self):
-        """Fully compliant context → overall_decision is 'APPROVED'."""
-        report = self._make_report()
-        assert report.overall_decision == "APPROVED"
-
-    def test_overall_decision_denied_when_any_denied(self):
-        """Any DENIED result → overall_decision is 'DENIED'."""
-        ctx = _base_ctx(involves_prohibited_practice=True)
-        report = self._make_report(ctx=ctx)
-        assert report.overall_decision == "DENIED"
-
-    def test_overall_decision_requires_human_review_when_no_denial_but_review(self):
-        """REQUIRES_HUMAN_REVIEW result (no denial) → overall_decision is 'REQUIRES_HUMAN_REVIEW'."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.HIGH_IMPACT,
-            ai_transparency_disclosed=False,
-        )
-        report = self._make_report(ctx=ctx)
-        assert report.overall_decision == "REQUIRES_HUMAN_REVIEW"
-
-    def test_is_compliant_true_when_all_approved(self):
-        """Fully compliant context → is_compliant is True."""
-        report = self._make_report()
-        assert report.is_compliant is True
-
-    def test_is_compliant_false_when_denied(self):
-        """DENIED result → is_compliant is False."""
-        ctx = _base_ctx(involves_prohibited_practice=True)
-        report = self._make_report(ctx=ctx)
-        assert report.is_compliant is False
-
-    def test_is_compliant_false_when_requires_human_review(self):
-        """REQUIRES_HUMAN_REVIEW → is_compliant is False (not fully approved)."""
-        ctx = _base_ctx(
-            ai_risk_level=mod.KoreaAIRiskLevel.HIGH_IMPACT,
-            ai_transparency_disclosed=False,
-        )
-        report = self._make_report(ctx=ctx)
-        assert report.is_compliant is False
-
-    def test_compliance_summary_contains_user_id(self):
-        """compliance_summary includes the user_id."""
-        report = self._make_report()
-        assert "u1" in report.compliance_summary
-
-    def test_compliance_summary_contains_overall_decision(self):
-        """compliance_summary includes the overall decision string."""
-        report = self._make_report()
-        assert "APPROVED" in report.compliance_summary
-
-    def test_compliance_summary_contains_sector(self):
-        """compliance_summary includes the sector value."""
-        report = self._make_report()
-        assert "general" in report.compliance_summary.lower()
-
-
-# ===========================================================================
-# TestEdgeCases
-# ===========================================================================
-
-
-class TestEdgeCases:
-    """Edge case and boundary tests."""
-
-    def test_is_denied_property_false_for_approved(self):
-        """FilterResult.is_denied returns False for APPROVED decision."""
-        result = mod.FilterResult(
-            filter_name="TEST",
-            decision="APPROVED",
-            reason="ok",
-            regulation_citation="Test",
-        )
-        assert result.is_denied is False
-
-    def test_is_denied_property_false_for_requires_human_review(self):
-        """FilterResult.is_denied returns False for REQUIRES_HUMAN_REVIEW."""
-        result = mod.FilterResult(
-            filter_name="TEST",
-            decision="REQUIRES_HUMAN_REVIEW",
-            reason="review needed",
-            regulation_citation="Test",
-        )
-        assert result.is_denied is False
-
-    def test_is_denied_property_true_for_denied(self):
-        """FilterResult.is_denied returns True only for DENIED."""
-        result = mod.FilterResult(
-            filter_name="TEST",
-            decision="DENIED",
-            reason="violation",
-            regulation_citation="Test",
-        )
-        assert result.is_denied is True
-
-    def test_mixed_results_overall_denied(self):
-        """Mixed filter results with at least one DENIED → overall DENIED."""
-        ctx = _base_ctx()
-        doc = _base_doc()
-        fake_results = [
-            mod.FilterResult(filter_name="F1", decision="APPROVED", reason="ok", regulation_citation="x"),
-            mod.FilterResult(filter_name="F2", decision="DENIED", reason="fail", regulation_citation="y"),
-            mod.FilterResult(
-                filter_name="F3", decision="REQUIRES_HUMAN_REVIEW", reason="review", regulation_citation="z"
-            ),  # noqa: E501
-            mod.FilterResult(filter_name="F4", decision="APPROVED", reason="ok", regulation_citation="w"),
-        ]
-        report = mod.KoreaAIGovernanceReport(context=ctx, document=doc, filter_results=fake_results)
-        assert report.overall_decision == "DENIED"
-        assert report.is_compliant is False
-
-    def test_mixed_results_no_denial_requires_human_review(self):
-        """Mixed results with REQUIRES_HUMAN_REVIEW but no DENIED → REQUIRES_HUMAN_REVIEW."""
-        ctx = _base_ctx()
-        doc = _base_doc()
-        fake_results = [
-            mod.FilterResult(filter_name="F1", decision="APPROVED", reason="ok", regulation_citation="x"),
-            mod.FilterResult(
-                filter_name="F2", decision="REQUIRES_HUMAN_REVIEW", reason="review", regulation_citation="y"
-            ),  # noqa: E501
-            mod.FilterResult(filter_name="F3", decision="APPROVED", reason="ok", regulation_citation="z"),
-            mod.FilterResult(filter_name="F4", decision="APPROVED", reason="ok", regulation_citation="w"),
-        ]
-        report = mod.KoreaAIGovernanceReport(context=ctx, document=doc, filter_results=fake_results)
-        assert report.overall_decision == "REQUIRES_HUMAN_REVIEW"
-        assert report.is_compliant is False
-
-    def test_cross_border_to_japan_adequate_approved(self):
-        """Cross-border transfer to Japan (adequate) + no SCC → APPROVED."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
+    def test_cross_border_with_pipc_approval_permitted(self):
+        r = self._eval(
             cross_border_transfer=True,
-            requester_jurisdiction="JP",
-            has_pipa_transfer_mechanism=False,
+            transfer_country="JP",
+            pipc_approval_obtained=True,
         )
-        result = mod.KoreaPIPAFilter().evaluate(ctx, _base_doc())
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
 
-    def test_cross_border_with_mechanism_approved(self):
-        """Cross-border to non-adequate jurisdiction + SCC in place → APPROVED."""
-        ctx = _base_ctx(
-            involves_personal_info=True,
-            has_pipa_consent=True,
+    def test_cross_border_with_individual_consent_permitted(self):
+        r = self._eval(
             cross_border_transfer=True,
-            requester_jurisdiction="IN",
-            has_pipa_transfer_mechanism=True,
+            transfer_country="AU",
+            pipc_approval_obtained=False,
+            individual_consent_for_transfer=True,
         )
-        result = mod.KoreaPIPAFilter().evaluate(ctx, _base_doc())
-        assert result.decision == "APPROVED"
-        assert not result.is_denied
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
 
-    def test_context_is_frozen(self):
-        """KoreaAIContext is frozen (immutable) — direct assignment raises."""
-        ctx = _base_ctx()
-        raised = False
-        try:
-            ctx.user_id = "changed"  # type: ignore[misc]
-        except Exception:
-            raised = True
-        assert raised, "Expected frozen dataclass to raise on attribute assignment"
+    # --- Art. 37-2 Automated Decisions: REQUIRES_HUMAN_REVIEW ---
 
-    def test_document_is_frozen(self):
-        """KoreaAIDocument is frozen (immutable) — direct assignment raises."""
-        doc = _base_doc()
-        raised = False
-        try:
-            doc.document_id = "changed"  # type: ignore[misc]
-        except Exception:
-            raised = True
-        assert raised, "Expected frozen dataclass to raise on attribute assignment"
+    def test_automated_decision_no_right_to_explanation_rhr(self):
+        r = self._eval(
+            automated_decision_significant_legal_effect=True,
+            right_to_explanation_provided=False,
+        )
+        assert r.decision == "REQUIRES_HUMAN_REVIEW"
+        assert not r.is_denied
+
+    def test_automated_decision_rhr_cites_pipa_art_37_2(self):
+        r = self._eval(
+            automated_decision_significant_legal_effect=True,
+            right_to_explanation_provided=False,
+        )
+        assert "37" in r.regulation or "Automated" in r.regulation
+
+    def test_automated_decision_with_explanation_permitted(self):
+        r = self._eval(
+            automated_decision_significant_legal_effect=True,
+            right_to_explanation_provided=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- Edge cases ---
+
+    def test_empty_dict_permitted(self):
+        r = mod.KoreaPIPAFilter().filter({})
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_filter_name_set(self):
+        r = mod.KoreaPIPAFilter().filter({})
+        assert r.filter_name
+
+
+# ===========================================================================
+# TestKoreaFSCAIFilter — FSCMA Art. 7+63; CB Act Art. 26; IBA Art. 176
+# ===========================================================================
+
+
+class TestKoreaFSCAIFilter:
+    """FSC AI financial governance — four principal controls."""
+
+    def _eval(self, **kwargs):
+        return mod.KoreaFSCAIFilter().filter(kwargs)
+
+    # --- FSCMA Art. 7 + Robo-Advisor Guidelines: DENIED ---
+
+    def test_ai_investment_advisory_no_registration_denied(self):
+        r = self._eval(
+            ai_investment_advisory=True,
+            robo_advisor_registration_confirmed=False,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_robo_advisor_denied_cites_fscma_art_7(self):
+        r = self._eval(
+            ai_investment_advisory=True,
+            robo_advisor_registration_confirmed=False,
+        )
+        assert "FSCMA" in r.regulation or "7" in r.regulation or "Robo" in r.regulation
+
+    def test_ai_investment_advisory_with_registration_permitted(self):
+        r = self._eval(
+            ai_investment_advisory=True,
+            robo_advisor_registration_confirmed=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- CB Act Art. 26 + AI Guidelines: DENIED ---
+
+    def test_ai_credit_scoring_no_validation_denied(self):
+        r = self._eval(
+            ai_credit_scoring=True,
+            fsc_model_validation_completed=False,
+            audit_trail_maintained=True,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_ai_credit_scoring_no_audit_trail_denied(self):
+        r = self._eval(
+            ai_credit_scoring=True,
+            fsc_model_validation_completed=True,
+            audit_trail_maintained=False,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_credit_scoring_denied_cites_cb_act_26(self):
+        r = self._eval(
+            ai_credit_scoring=True,
+            fsc_model_validation_completed=False,
+            audit_trail_maintained=True,
+        )
+        assert "CB Act" in r.regulation or "26" in r.regulation or "Credit" in r.regulation
+
+    def test_ai_credit_scoring_compliant_permitted(self):
+        r = self._eval(
+            ai_credit_scoring=True,
+            fsc_model_validation_completed=True,
+            audit_trail_maintained=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- IBA Art. 176 + FSC Supervisory Regulation: DENIED ---
+
+    def test_insurance_ai_no_actuarial_cert_denied(self):
+        r = self._eval(
+            insurance_ai_underwriting=True,
+            actuarial_certification_obtained=False,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_insurance_denied_cites_iba_art_176(self):
+        r = self._eval(
+            insurance_ai_underwriting=True,
+            actuarial_certification_obtained=False,
+        )
+        assert "IBA" in r.regulation or "176" in r.regulation or "actuarial" in r.reason.lower()
+
+    def test_insurance_ai_with_actuarial_cert_permitted(self):
+        r = self._eval(
+            insurance_ai_underwriting=True,
+            actuarial_certification_obtained=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- FSCMA Art. 63 + KSDA: REQUIRES_HUMAN_REVIEW ---
+
+    def test_ai_trading_no_fsc_registration_rhr(self):
+        r = self._eval(
+            ai_trading_algorithm=True,
+            fsc_algorithmic_trading_registration_confirmed=False,
+        )
+        assert r.decision == "REQUIRES_HUMAN_REVIEW"
+        assert not r.is_denied
+
+    def test_trading_rhr_cites_fscma_art_63(self):
+        r = self._eval(
+            ai_trading_algorithm=True,
+            fsc_algorithmic_trading_registration_confirmed=False,
+        )
+        assert "63" in r.regulation or "KSDA" in r.regulation or "trading" in r.reason.lower()
+
+    def test_ai_trading_with_registration_permitted(self):
+        r = self._eval(
+            ai_trading_algorithm=True,
+            fsc_algorithmic_trading_registration_confirmed=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- Edge cases ---
+
+    def test_empty_dict_permitted(self):
+        r = mod.KoreaFSCAIFilter().filter({})
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_filter_name_set(self):
+        r = mod.KoreaFSCAIFilter().filter({})
+        assert r.filter_name
+
+
+# ===========================================================================
+# TestKoreaAIBasicActFilter — AI Basic Act Arts. 35, 36, 46, 47
+# ===========================================================================
+
+
+class TestKoreaAIBasicActFilter:
+    """Korea AI Basic Act 2024 — four principal controls."""
+
+    def _eval(self, **kwargs):
+        return mod.KoreaAIBasicActFilter().filter(kwargs)
+
+    # --- Art. 47 Impact Assessment: DENIED ---
+
+    def test_medical_ai_no_impact_assessment_denied(self):
+        r = self._eval(ai_sector="medical", impact_assessment_completed=False)
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_legal_ai_no_impact_assessment_denied(self):
+        r = self._eval(ai_sector="legal", impact_assessment_completed=False)
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_education_ai_no_impact_assessment_denied(self):
+        r = self._eval(ai_sector="education", impact_assessment_completed=False)
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_employment_ai_no_impact_assessment_denied(self):
+        r = self._eval(ai_sector="employment", impact_assessment_completed=False)
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_impact_assessment_denied_cites_art_47(self):
+        r = self._eval(ai_sector="medical", impact_assessment_completed=False)
+        assert "47" in r.regulation or "Impact" in r.regulation
+
+    def test_medical_ai_with_impact_assessment_permitted(self):
+        r = self._eval(ai_sector="medical", impact_assessment_completed=True)
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_non_high_impact_sector_permitted(self):
+        r = self._eval(ai_sector="marketing", impact_assessment_completed=False)
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- Art. 35 Transparency Obligations: DENIED ---
+
+    def test_ai_deployed_no_transparency_denied(self):
+        r = self._eval(
+            ai_system_deployed_to_users=True,
+            transparency_disclosure_provided=False,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_transparency_denied_cites_art_35(self):
+        r = self._eval(
+            ai_system_deployed_to_users=True,
+            transparency_disclosure_provided=False,
+        )
+        assert "35" in r.regulation or "Transparency" in r.regulation
+
+    def test_ai_deployed_with_transparency_permitted(self):
+        r = self._eval(
+            ai_system_deployed_to_users=True,
+            transparency_disclosure_provided=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- Art. 36 GenAI Disclosure: DENIED ---
+
+    def test_genai_content_no_watermark_denied(self):
+        r = self._eval(
+            generative_ai_content=True,
+            ai_generated_watermark_or_disclosure=False,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_genai_denied_cites_art_36(self):
+        r = self._eval(
+            generative_ai_content=True,
+            ai_generated_watermark_or_disclosure=False,
+        )
+        assert "36" in r.regulation or "GenAI" in r.regulation
+
+    def test_genai_content_with_watermark_permitted(self):
+        r = self._eval(
+            generative_ai_content=True,
+            ai_generated_watermark_or_disclosure=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- Art. 46 Human Oversight: REQUIRES_HUMAN_REVIEW ---
+
+    def test_critical_infra_ai_no_oversight_rhr(self):
+        r = self._eval(
+            critical_infrastructure_ai=True,
+            human_oversight_mechanism_present=False,
+        )
+        assert r.decision == "REQUIRES_HUMAN_REVIEW"
+        assert not r.is_denied
+
+    def test_oversight_rhr_cites_art_46(self):
+        r = self._eval(
+            critical_infrastructure_ai=True,
+            human_oversight_mechanism_present=False,
+        )
+        assert "46" in r.regulation or "oversight" in r.reason.lower()
+
+    def test_critical_infra_ai_with_oversight_permitted(self):
+        r = self._eval(
+            critical_infrastructure_ai=True,
+            human_oversight_mechanism_present=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- Edge cases ---
+
+    def test_empty_dict_permitted(self):
+        r = mod.KoreaAIBasicActFilter().filter({})
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_filter_name_set(self):
+        r = mod.KoreaAIBasicActFilter().filter({})
+        assert r.filter_name
+
+
+# ===========================================================================
+# TestKoreaCrossBorderFilter — PIPA Art. 28-8 + FSC EFTA + FSC Cloud
+# ===========================================================================
+
+
+class TestKoreaCrossBorderFilter:
+    """Cross-border AI data flows — four principal controls."""
+
+    def _eval(self, **kwargs):
+        return mod.KoreaCrossBorderFilter().filter(kwargs)
+
+    # --- PIPA Art. 28-8 restricted countries: DENIED ---
+
+    def test_personal_data_to_cn_denied(self):
+        r = self._eval(
+            personal_data_transfer_country="CN",
+            pipc_adequacy_confirmed=False,
+            explicit_individual_consent=False,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_personal_data_to_ru_denied(self):
+        r = self._eval(
+            personal_data_transfer_country="RU",
+            pipc_adequacy_confirmed=False,
+            explicit_individual_consent=False,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_personal_data_to_kp_denied(self):
+        r = self._eval(
+            personal_data_transfer_country="KP",
+            pipc_adequacy_confirmed=False,
+            explicit_individual_consent=False,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_restricted_country_denied_cites_pipa_28_8(self):
+        r = self._eval(
+            personal_data_transfer_country="CN",
+            pipc_adequacy_confirmed=False,
+            explicit_individual_consent=False,
+        )
+        assert "28" in r.regulation or "PIPC" in r.regulation
+
+    def test_personal_data_to_cn_with_pipc_adequacy_permitted(self):
+        r = self._eval(
+            personal_data_transfer_country="CN",
+            pipc_adequacy_confirmed=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_personal_data_to_cn_with_explicit_consent_permitted(self):
+        r = self._eval(
+            personal_data_transfer_country="CN",
+            pipc_adequacy_confirmed=False,
+            explicit_individual_consent=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- FSC EFTA Art. 21-2: DENIED ---
+
+    def test_financial_ai_data_no_fsc_approval_no_safeguards_denied(self):
+        r = self._eval(
+            financial_ai_data_transfer=True,
+            fsc_approved_entity=False,
+            contractual_safeguards_in_place=False,
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_financial_ai_denied_cites_efta_21_2(self):
+        r = self._eval(
+            financial_ai_data_transfer=True,
+            fsc_approved_entity=False,
+            contractual_safeguards_in_place=False,
+        )
+        assert "21" in r.regulation or "EFTA" in r.regulation or "Financial" in r.regulation
+
+    def test_financial_ai_with_fsc_approved_entity_permitted(self):
+        r = self._eval(
+            financial_ai_data_transfer=True,
+            fsc_approved_entity=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_financial_ai_with_contractual_safeguards_permitted(self):
+        r = self._eval(
+            financial_ai_data_transfer=True,
+            fsc_approved_entity=False,
+            contractual_safeguards_in_place=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- FSC Cloud Security Guidelines: DENIED ---
+
+    def test_fsc_entity_on_aws_us_east_denied(self):
+        r = self._eval(
+            serves_fsc_regulated_entity=True,
+            cloud_region="aws_us_east_1",
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_fsc_entity_on_gcp_us_central_denied(self):
+        r = self._eval(
+            serves_fsc_regulated_entity=True,
+            cloud_region="gcp_us_central1",
+        )
+        assert r.decision == "DENIED"
+        assert r.is_denied
+
+    def test_cloud_denied_cites_fsc_cloud_guidelines(self):
+        r = self._eval(
+            serves_fsc_regulated_entity=True,
+            cloud_region="aws_us_east_1",
+        )
+        assert "Cloud" in r.regulation or "FSC" in r.regulation or "Seoul" in r.regulation
+
+    def test_fsc_entity_on_aws_seoul_permitted(self):
+        r = self._eval(
+            serves_fsc_regulated_entity=True,
+            cloud_region="aws_ap_northeast_2",
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_fsc_entity_on_gcp_seoul_permitted(self):
+        r = self._eval(
+            serves_fsc_regulated_entity=True,
+            cloud_region="gcp_asia_northeast3",
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_fsc_entity_on_azure_korea_central_permitted(self):
+        r = self._eval(
+            serves_fsc_regulated_entity=True,
+            cloud_region="azure_korea_central",
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_non_fsc_entity_non_approved_cloud_permitted(self):
+        r = self._eval(
+            serves_fsc_regulated_entity=False,
+            cloud_region="aws_us_east_1",
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- PIPA Art. 28-8 + PIPC Sensitive Data Guidelines: REQUIRES_HUMAN_REVIEW ---
+
+    def test_cross_border_ai_training_biometric_no_pipc_notification_rhr(self):
+        r = self._eval(
+            cross_border_ai_training=True,
+            cross_border_ai_training_data_type="biometric",
+            pipc_notification_provided=False,
+        )
+        assert r.decision == "REQUIRES_HUMAN_REVIEW"
+        assert not r.is_denied
+
+    def test_cross_border_ai_training_health_no_pipc_notification_rhr(self):
+        r = self._eval(
+            cross_border_ai_training=True,
+            cross_border_ai_training_data_type="health",
+            pipc_notification_provided=False,
+        )
+        assert r.decision == "REQUIRES_HUMAN_REVIEW"
+        assert not r.is_denied
+
+    def test_sensitive_ai_training_rhr_cites_pipa_28_8(self):
+        r = self._eval(
+            cross_border_ai_training=True,
+            cross_border_ai_training_data_type="biometric",
+            pipc_notification_provided=False,
+        )
+        assert "28" in r.regulation or "PIPC" in r.regulation
+
+    def test_cross_border_ai_training_biometric_with_pipc_notification_permitted(self):
+        r = self._eval(
+            cross_border_ai_training=True,
+            cross_border_ai_training_data_type="biometric",
+            pipc_notification_provided=True,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_cross_border_ai_training_non_sensitive_type_permitted(self):
+        r = self._eval(
+            cross_border_ai_training=True,
+            cross_border_ai_training_data_type="product_usage",
+            pipc_notification_provided=False,
+        )
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    # --- Edge cases ---
+
+    def test_empty_dict_permitted(self):
+        r = mod.KoreaCrossBorderFilter().filter({})
+        assert r.decision == "PERMITTED"
+        assert not r.is_denied
+
+    def test_filter_name_set(self):
+        r = mod.KoreaCrossBorderFilter().filter({})
+        assert r.filter_name
+
+
+# ===========================================================================
+# Ecosystem wrapper tests
+# ===========================================================================
+
+
+class TestKoreaLangChainPolicyGuard:
+    """LangChain wrapper — invoke raises PermissionError on DENIED."""
+
+    def test_invoke_denied_raises_permission_error(self):
+        guard = mod.KoreaLangChainPolicyGuard(filter_instance=mod.KoreaPIPAFilter())
+        denied_doc = {
+            "personal_information_processing": True,
+            "consent_obtained": False,
+            "legitimate_purpose": False,
+        }
+        with pytest.raises(PermissionError):
+            guard.invoke(denied_doc)
+
+    def test_invoke_permitted_returns_list(self):
+        guard = mod.KoreaLangChainPolicyGuard(filter_instance=mod.KoreaPIPAFilter())
+        r = guard.invoke({})
+        assert isinstance(r, list)
+        assert len(r) == 1
+        assert r[0].decision == "PERMITTED"
+
+    def test_ainvoke_permitted_returns_list(self):
+        guard = mod.KoreaLangChainPolicyGuard(filter_instance=mod.KoreaPIPAFilter())
+        r = guard.ainvoke({})
+        assert isinstance(r, list)
+
+    def test_process_denied_raises_permission_error(self):
+        guard = mod.KoreaLangChainPolicyGuard(filter_instance=mod.KoreaPIPAFilter())
+        with pytest.raises(PermissionError):
+            guard.process(
+                {
+                    "personal_information_processing": True,
+                    "consent_obtained": False,
+                    "legitimate_purpose": False,
+                }
+            )
+
+    def test_process_permitted_returns_doc(self):
+        guard = mod.KoreaLangChainPolicyGuard(filter_instance=mod.KoreaPIPAFilter())
+        doc = {}
+        result = guard.process(doc)
+        assert result is doc
+
+    def test_multi_filter_invoke_denied_raises(self):
+        guard = mod.KoreaLangChainPolicyGuard()
+        with pytest.raises(PermissionError):
+            guard.invoke(
+                {
+                    "personal_information_processing": True,
+                    "consent_obtained": False,
+                    "legitimate_purpose": False,
+                }
+            )
+
+    def test_multi_filter_invoke_permitted_returns_list(self):
+        guard = mod.KoreaLangChainPolicyGuard()
+        r = guard.invoke({})
+        assert isinstance(r, list)
+        assert len(r) == 4
+
+
+class TestKoreaCrewAIGovernanceGuard:
+    """CrewAI wrapper — _run raises PermissionError on DENIED."""
+
+    def test_run_denied_raises_permission_error(self):
+        guard = mod.KoreaCrewAIGovernanceGuard(filter_instance=mod.KoreaPIPAFilter())
+        with pytest.raises(PermissionError):
+            guard._run(
+                {
+                    "personal_information_processing": True,
+                    "consent_obtained": False,
+                    "legitimate_purpose": False,
+                }
+            )
+
+    def test_run_permitted_returns_doc(self):
+        guard = mod.KoreaCrewAIGovernanceGuard(filter_instance=mod.KoreaPIPAFilter())
+        doc = {}
+        result = guard._run(doc)
+        assert result is doc
+
+    def test_has_name_and_description(self):
+        guard = mod.KoreaCrewAIGovernanceGuard(filter_instance=mod.KoreaPIPAFilter())
+        assert guard.name
+        assert guard.description
+
+
+class TestKoreaAutoGenGovernedAgent:
+    """AutoGen wrapper — generate_reply raises PermissionError on DENIED."""
+
+    def test_generate_reply_denied_raises(self):
+        agent = mod.KoreaAutoGenGovernedAgent(filter_instance=mod.KoreaPIPAFilter())
+        with pytest.raises(PermissionError):
+            agent.generate_reply(
+                {
+                    "personal_information_processing": True,
+                    "consent_obtained": False,
+                    "legitimate_purpose": False,
+                }
+            )
+
+    def test_generate_reply_permitted_returns_doc(self):
+        agent = mod.KoreaAutoGenGovernedAgent(filter_instance=mod.KoreaPIPAFilter())
+        result = agent.generate_reply({})
+        assert isinstance(result, dict)
+
+    def test_generate_reply_none_messages_permitted(self):
+        agent = mod.KoreaAutoGenGovernedAgent(filter_instance=mod.KoreaPIPAFilter())
+        result = agent.generate_reply(None)
+        assert isinstance(result, dict)
+
+
+class TestKoreaSemanticKernelPlugin:
+    """Semantic Kernel wrapper — enforce_governance raises PermissionError on DENIED."""
+
+    def test_enforce_governance_denied_raises(self):
+        plugin = mod.KoreaSemanticKernelPlugin(filter_instance=mod.KoreaPIPAFilter())
+        with pytest.raises(PermissionError):
+            plugin.enforce_governance(
+                {
+                    "personal_information_processing": True,
+                    "consent_obtained": False,
+                    "legitimate_purpose": False,
+                }
+            )
+
+    def test_enforce_governance_permitted_returns_doc(self):
+        plugin = mod.KoreaSemanticKernelPlugin(filter_instance=mod.KoreaPIPAFilter())
+        doc = {}
+        result = plugin.enforce_governance(doc)
+        assert result is doc
+
+
+class TestKoreaLlamaIndexWorkflowGuard:
+    """LlamaIndex wrapper — process_event raises PermissionError on DENIED."""
+
+    def test_process_event_denied_raises(self):
+        guard = mod.KoreaLlamaIndexWorkflowGuard(filter_instance=mod.KoreaPIPAFilter())
+        with pytest.raises(PermissionError):
+            guard.process_event(
+                {
+                    "personal_information_processing": True,
+                    "consent_obtained": False,
+                    "legitimate_purpose": False,
+                }
+            )
+
+    def test_process_event_permitted_returns_doc(self):
+        guard = mod.KoreaLlamaIndexWorkflowGuard(filter_instance=mod.KoreaPIPAFilter())
+        doc = {}
+        result = guard.process_event(doc)
+        assert result is doc
+
+
+class TestKoreaHaystackGovernanceComponent:
+    """Haystack wrapper — run filters denied documents, does not raise."""
+
+    def test_run_filters_denied_documents(self):
+        component = mod.KoreaHaystackGovernanceComponent(filter_instance=mod.KoreaPIPAFilter())
+        denied_doc = {
+            "personal_information_processing": True,
+            "consent_obtained": False,
+            "legitimate_purpose": False,
+        }
+        permitted_doc = {}
+        result = component.run([denied_doc, permitted_doc])
+        assert "documents" in result
+        assert len(result["documents"]) == 1
+        assert result["documents"][0] is permitted_doc
+
+    def test_run_all_permitted_returns_all(self):
+        component = mod.KoreaHaystackGovernanceComponent(filter_instance=mod.KoreaPIPAFilter())
+        docs = [{}, {"consent_obtained": True}]
+        result = component.run(docs)
+        assert len(result["documents"]) == 2
+
+    def test_run_empty_list_returns_empty(self):
+        component = mod.KoreaHaystackGovernanceComponent(filter_instance=mod.KoreaPIPAFilter())
+        result = component.run([])
+        assert result["documents"] == []
+
+
+class TestKoreaDSPyGovernanceModule:
+    """DSPy wrapper — forward raises PermissionError on DENIED, delegates on PERMITTED."""
+
+    def test_forward_denied_raises(self):
+        sentinel = object()
+
+        def dummy_module(doc, **kwargs):
+            return sentinel
+
+        module = mod.KoreaDSPyGovernanceModule(
+            filter_instance=mod.KoreaPIPAFilter(),
+            module=dummy_module,
+        )
+        with pytest.raises(PermissionError):
+            module.forward(
+                {
+                    "personal_information_processing": True,
+                    "consent_obtained": False,
+                    "legitimate_purpose": False,
+                }
+            )
+
+    def test_forward_permitted_delegates_to_module(self):
+        sentinel = object()
+
+        def dummy_module(doc, **kwargs):
+            return sentinel
+
+        module = mod.KoreaDSPyGovernanceModule(
+            filter_instance=mod.KoreaPIPAFilter(),
+            module=dummy_module,
+        )
+        result = module.forward({})
+        assert result is sentinel
+
+
+class TestKoreaMAFPolicyMiddleware:
+    """MAF middleware — process raises PermissionError on DENIED, calls next_handler on PERMITTED."""
+
+    def test_process_denied_raises(self):
+        middleware = mod.KoreaMAFPolicyMiddleware(filter_instance=mod.KoreaPIPAFilter())
+        with pytest.raises(PermissionError):
+            middleware.process(
+                {
+                    "personal_information_processing": True,
+                    "consent_obtained": False,
+                    "legitimate_purpose": False,
+                },
+                lambda msg: msg,
+            )
+
+    def test_process_permitted_calls_next_handler(self):
+        sentinel = object()
+
+        def next_handler(msg):
+            return sentinel
+
+        middleware = mod.KoreaMAFPolicyMiddleware(filter_instance=mod.KoreaPIPAFilter())
+        result = middleware.process({}, next_handler)
+        assert result is sentinel

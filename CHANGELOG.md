@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.38.0] — 2026-04-13
+
+### Added — South Korea AI Governance Framework (`35_south_korea_ai_governance.py`)
+
+Four-layer governance filter for South Korea PIPA 2023, FSC AI governance, Korea AI Basic Act 2024, and cross-border controls; 8 ecosystem wrappers:
+
+- `KoreaPIPAFilter` — Art. 15 consent → DENIED; Art. 23 sensitive categories (ideology/beliefs/union/political/health/sexual/biometric/criminal/genetic) → DENIED; Art. 28-8 cross-border (adequate: EU/UK/Canada; others PIPC approval required) → DENIED; Art. 37-2 automated decision without right to explanation → REQUIRES_HUMAN_REVIEW
+- `KoreaFSCAIFilter` — FSCMA Art. 7 + Robo-Advisor Guidelines unregistered AI advisory → DENIED; CB Act Art. 26 + AI Guidelines 2021 credit scoring without FSC validation → DENIED; IBA Art. 176 + FSC Reg. Art. 7-8 insurance AI without actuarial cert → DENIED; FSCMA Art. 63 unregistered AI trading algorithm → REQUIRES_HUMAN_REVIEW
+- `KoreaAIBasicActFilter` — Art. 47 high-impact AI without impact assessment → DENIED; Art. 35 AI without transparency disclosure → DENIED; Art. 36 GenAI without watermark/disclosure → DENIED; Art. 46 critical infrastructure without human oversight → REQUIRES_HUMAN_REVIEW
+- `KoreaCrossBorderFilter` — PIPA Art. 28-8 + PIPC restricted jurisdictions (CN/RU/KP) → DENIED; FSC EFTA Art. 21-2 financial AI without safeguards → DENIED; FSC Cloud outside AWS/GCP/Azure Seoul whitelist → DENIED; PIPC biometric/health AI training without notification → REQUIRES_HUMAN_REVIEW
+- 8 ecosystem wrappers: KoreaLangChainPolicyGuard, KoreaCrewAIGovernanceGuard, KoreaAutoGenGovernedAgent, KoreaSemanticKernelPlugin, KoreaLlamaIndexWorkflowGuard, KoreaHaystackGovernanceComponent, KoreaDSPyGovernanceModule, KoreaMAFPolicyMiddleware
+
+111 new tests. Total: **2023 passed**.
+
+---
+
 ## [0.37.0] — 2026-04-13
 
 ### Added — Japan AI Governance Framework (`34_japan_ai_governance.py`)

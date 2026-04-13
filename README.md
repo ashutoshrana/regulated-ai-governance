@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Downloads](https://img.shields.io/pypi/dm/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
 
-**Governance framework for AI agents and RAG systems in regulated environments — 34 examples, 20 jurisdictions, 9 AI frameworks, 1973 tests.**
+**Governance framework for AI agents and RAG systems in regulated environments — 35 examples, 21 jurisdictions, 9 AI frameworks, 2023 tests.**
 
 Policy enforcement, audit logging, and compliance orchestration for AI systems that must satisfy FERPA, HIPAA, GDPR, EU AI Act, APPI, MAS FEAT, and 15+ additional regulatory frameworks.
 
@@ -121,7 +121,7 @@ print(report.compliance_summary)  # human-readable for audit file
 
 ---
 
-## Example catalog — 34 governance examples
+## Example catalog — 35 governance examples
 
 | # | File | Jurisdiction / Domain | Frameworks Enforced |
 |---|------|----------------------|---------------------|
@@ -159,6 +159,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | 32 | `32_gdpr_ai_accountability.py` | GDPR AI Accountability (EU/EEA) | GDPRAutomatedDecisionFilter (Art. 22(1) legal basis + Art. 22(3) explanation right + Art. 22(4) special category data + Art. 21(2) direct marketing objection), GDPRTransparencyFilter (Art. 13(1) privacy notice + Art. 13(2)(f) logic disclosure + Art. 13(1)(f) transfer safeguards + Art. 13(2)(a) retention period), GDPRDPIAFilter (Art. 35(1) high-risk DPIA + Art. 35(3)(c) systematic monitoring + Art. 35(3)(b) special category scale + Art. 36(1) SA prior consultation), GDPRDataMinimisationFilter (Art. 5(1)(c) minimisation + Art. 5(1)(b)/89 purpose limitation + Art. 25(1) privacy by design + Art. 5(1)(e) storage limitation), 8 ecosystem wrappers |
 | 33 | `33_singapore_ai_governance.py` | Singapore (PDPA + MAS FEAT + AI Verify) | SingaporePDPAFilter (§13 consent + §15A sensitive data NRIC/FIN/health/biometric + §26 cross-border adequacy AU/CA/DE/JP/NZ/UK/EU + AI Advisory §4.2 automated decision), MASFEATFilter (Fairness §2.1 + Accountability §4.1 + Transparency §5.2 + Ethics §3.3), AIVerifySingaporeFilter (§3.1 self-assessment 11 principles + §4.2 explainability LIME/SHAP + IMDA GenAI §5.1 + §4.1 fairness testing), SingaporeCrossBorderFilter (MAS TRM §4.1 financial safeguards + PDPC TIA for CN/RU/KP + MAS Cloud AWS/GCP/Azure SG whitelist + FAA-N18 FATF), 8 ecosystem wrappers |
 | 34 | `34_japan_ai_governance.py` | Japan (APPI 2022 + FSA + METI AI Governance) | JapanAPPIFilter (Arts. 15/17 consent + Art. 20 specially considered PI race/creed/medical/criminal/disability + Art. 28 cross-border adequacy EU/UK + PPC AI Guidelines §3.2 automated profiling), JapanFSAAIFilter (FIEA Art. 40 suitability + FSA Principle 3 credit explainability + Insurance Business Act Art. 113 actuarial opinion + FSA stress testing), JapanAIGovernanceFilter (METI Guideline v1.1 §4 self-assessment + AI Strategy §2.1 human oversight + METI GenAI §3 eight principles + Cabinet Office §3.3 public services), JapanCrossBorderFilter (APPI Art. 28 CN/RU/KP restricted + AML FATF non-compliant jurisdictions + FSA Cloud aws_tokyo/gcp_tokyo/azure_japan_east whitelist + US adequacy pending), 8 ecosystem wrappers |
+| 35 | `35_south_korea_ai_governance.py` | South Korea (PIPA 2023 + FSC + AI Basic Act 2024) | KoreaPIPAFilter (Art. 15 consent + Art. 23 sensitive ideology/beliefs/union/political/health/sexual/biometric/criminal/genetic + Art. 28-8 cross-border adequacy EU/UK/CA + Art. 37-2 automated decision explanation 2023 amendment), KoreaFSCAIFilter (FSCMA Art. 7 robo-advisor registration + CB Act Art. 26 credit scoring FSC validation + IBA Art. 176 actuarial cert + FSCMA Art. 63 algorithmic trading), KoreaAIBasicActFilter (Art. 47 high-impact impact assessment + Art. 35 transparency + Art. 36 GenAI watermark + Art. 46 critical infrastructure human oversight), KoreaCrossBorderFilter (PIPA Art. 28-8 CN/RU/KP + FSC EFTA Art. 21-2 financial safeguards + FSC Cloud AWS/GCP/Azure Seoul whitelist + PIPC biometric notification), 8 ecosystem wrappers |
 
 ---
 
@@ -287,9 +288,9 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 
 | Library | Focus | Coverage |
 |---------|-------|---------|
-| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 43 sectors · 54 regulations · 1492 tests |
-| **regulated-ai-governance** | What agents may do | 34 governance examples · 20 jurisdictions · 1973 tests |
-| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 36 patterns · schema registry · GraphQL · 1429 tests |
+| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 44 sectors · 58 regulations · 1548 tests |
+| **regulated-ai-governance** | What agents may do | 35 governance examples · 21 jurisdictions · 2023 tests |
+| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 37 patterns · schema registry · GraphQL · 1503 tests |
 
 ---
 
