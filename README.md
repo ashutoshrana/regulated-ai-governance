@@ -121,7 +121,7 @@ print(report.compliance_summary)  # human-readable for audit file
 
 ---
 
-## Example catalog — 38 governance examples
+## Example catalog — 41 governance examples
 
 | # | File | Jurisdiction / Domain | Frameworks Enforced |
 |---|------|----------------------|---------------------|
@@ -163,6 +163,12 @@ print(report.compliance_summary)  # human-readable for audit file
 | 36 | `36_brazil_lgpd_ai_governance.py` | Brazil (LGPD + ANPD + Sectoral AI) | BrazilLGPDFilter (LGPD Arts. 7/11/20/33: legal basis + sensitive explicit consent + cross-border adequacy CN/RU/KP non-adequate + automated decision human review), ANPDAIFilter (LGPD Arts. 9(V)/10§3/38 + ANPD Resolutions: DPIA for high-risk + AI profiling transparency + legitimate interest LIA + credit scoring SERASA/SCR), BrazilSectoralAIFilter (CMN 4.993/2022 BCB notification + CFM 2.314/2022 health guidelines + ANATEL 740/2020 telecom framework + TSE 23.732/2024 electoral deepfake labeling), BrazilCrossBorderFilter (LGPD Art. 33 + AML Coaf 36/2021 + FATF Black List jurisdictions + ANPD biometric authorization), 8 ecosystem wrappers |
 | 37 | `37_india_dpdp_ai_governance.py` | India (DPDP Act 2023 + MeitY + Sectoral AI) | IndiaDPDPFilter (DPDP Act 2023 §5 notice + §6 consent + §9 sensitive data financial/health/biometric/children + §16 cross-border RU/CN/KP/IR non-adequate + §13 grievance redressal), MeitYAIFilter (Draft §4.2 high-risk impact assessment + Advisory §3.1 explainability + March 2024 §2 GenAI labeling + Draft §5.3 human oversight), IndiaSectoralAIFilter (RBI/2023-24/73 financial AI + ICMR healthcare ethics + TRAI telecom consent + IRDAI insurance circular), IndiaCrossBorderFilter (DPDP §16 restricted countries + MeitY cloud empanelment aws_mumbai/gcp_mumbai/azure_india_central + sensitive training data export + RBI/2021-22/57 payment data), 8 ecosystem wrappers |
 | 38 | `38_uae_saudi_ai_governance.py` | UAE + Saudi Arabia (PDPL + AI Strategy 2031 + Saudi NDMO) | UAEPDPLFilter (Federal Decree-Law No. 45/2021: Art. 6 legal basis + Art. 9 sensitive health/financial/biometric/religious + Art. 22 cross-border DTA + Art. 13 automated decision), UAEAIRegFilter (UAE AI Strategy §4 impact assessment + DFSA RPP DIFC + FSRA AI RMF ADGM + UAE AI Ethics transparency), SaudiNDMOFilter (PDPL M/19: Art. 5 consent + Art. 23 sensitive health/genetic/biometric/financial/criminal + Art. 29 SDAIA authorization + NDMO DGF v2.0), GCCCrossBorderFilter (GCC adequacy + FATF KP/IR/MM financial + SDAIA export approval + GCC national cloud sovereignty), 8 ecosystem wrappers |
+
+**Agentic AI Security (OWASP 2026 + NIST + ISO + MITRE + CSA)**
+
+| 39 | `39_owasp_agentic_top10_governance.py` | OWASP Agentic AI Top 10 2026 | OWASPAgenticInjectionFilter (ASI01 goal hijack + ASI04 prompt injection defense), OWASPAgenticToolSafetyFilter (ASI02 tool misuse + ASI05 scope creep + ASI06 resource abuse), OWASPAgenticDataLeakageFilter (ASI03 memory poisoning + ASI07 insecure output handling), OWASPAgenticGovernanceFilter (ASI08 trust boundaries + ASI09 audit gaps + ASI10 unvalidated composition), 8 ecosystem wrappers (LangChain/CrewAI/AutoGen/SK/LlamaIndex/Haystack/DSPy/MAF) |
+| 40 | `40_governance_framework_auditor.py` | Multi-Framework Governance Audit | Holistic governance gap-analysis — GovernanceFrameworkConfig (37 boolean controls), GovernanceFrameworkAuditor (37 controls spanning OWASP LLM Top 10 2025 (8), OWASP Agentic AI 2026 (4), NIST AI RMF + AI 600-1 (5), ISO/IEC 42001:2023 (9), MITRE ATLAS v5.1 (6), CSA ATF (5)), GovernanceAuditReport (scored 0–100, INITIAL/DEVELOPING/DEFINED/MANAGED/OPTIMIZING maturity, per-domain breakdown) |
+| 41 | `41_trilogy_security_audit.py` | Unified Enterprise AI Security Audit | TrilogyAuditOrchestrator — combines RAG + Agentic + Governance auditors into a single enterprise assessment: TrilogySystemProfile (35 fields across all 3 auditor dimensions), combined_score = RAG×0.35 + Agent×0.35 + Gov×0.30, combined_maturity = minimum of three (weakest link), 7 cross-module gap correlations (XG-001 injection mismatch → XG-007 HITL gap across layers), TrilogyAuditResult with box-formatted enterprise security report |
 
 ---
 
