@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] — 2026-04-13
+
+### Added — Financial Services AI Governance (SEC Reg BI + FINRA Rule 3110 + SR 11-7)
+
+**`examples/09_finra_sec_governance.py`** — multi-framework AI governance for a
+registered broker-dealer's AI investment advisory assistant:
+
+New classes (self-contained in the example):
+- `CustomerType` — RETAIL (full Reg BI protections) vs. INSTITUTIONAL (Reg BI exempted)
+- `RecommendationAction` — BUY, SELL, HOLD, REBALANCE, GENERATE_REPORT,
+  GENERATE_SUITABILITY_ANALYSIS, SCREEN_SECURITIES
+- `GovernanceOutcome` — ALLOW, DENY, ESCALATE_HUMAN, ADVISORY_ONLY, SHADOW_ALLOW;
+  `ADVISORY_ONLY` is distinct from `DENY` — recommendation is generated but must
+  include explicit model limitation disclosure (SEC Model Risk stale validation)
+- `BrokerDealerRequestContext` — request boundary: customer type, action, securities,
+  portfolio concentration %, firm inventory positions, suitability data age, model ID,
+  model validation age, conflicts disclosed flag
+- `RegBIGuard` — enforces SEC Reg BI §240.15l-1: (1) firm inventory conflict without
+  disclosure → DENY; (2) BUY recommendation for conflicted security requires care
+  obligation review even when disclosed; applies only to retail customers
+- `FINRA3110Guard` — enforces FINRA Rule 3110: (1) concentration > 25% requires
+  registered principal review → ESCALATE_HUMAN; (2) suitability data > 365 days
+  requires KYC refresh; (3) large transaction (> 10% portfolio) requires supervisory
+  review; principal review = ESCALATE_HUMAN (not DENY)
+- `SECModelRiskGuard` — enforces SR 11-7 principles: (1) model must be in firm model
+  inventory; (2) model validated > 365 days ago → ADVISORY_ONLY (not DENY — model is
+  useful but must be presented as non-binding with limitation disclosure); unregistered
+  model → DENY
+- `BrokerDealerAuditRecord` — FINRA Rule 4511 / SEC Reg S-P compliant audit record:
+  per-framework results, governance outcome, conflicts_detected, principal_review_required,
+  advisory_only_mode
+- `BrokerDealerGovernanceOrchestrator` — outcome priority: DENY > ESCALATE_HUMAN >
+  ADVISORY_ONLY > ALLOW; shadow mode for FINRA exam / SEC model risk quarterly review
+
+Scenarios:
+- A: Standard diversified BUY (5% concentration, no conflicts, model validated 180d) → ALLOW
+- B: High-concentration BUY (35% in single security) → ESCALATE_HUMAN (FINRA 3110)
+- C: BUY in firm inventory security, conflicts not disclosed → DENY (Reg BI)
+- D: Model last validated 420 days ago → ADVISORY_ONLY (SR 11-7; not DENY)
+- E: Shadow audit mode — 4 scenarios logged without blocking for FINRA exam prep
+
+Framework coverage now spans 9 regulated sectors:
+healthcare · OT/manufacturing · government/defense · insurance · **broker-dealer/investment**
+
+Closes #28.
+
+---
+
 ## [0.10.0] — 2026-04-13
 
 ### Added — Insurance Sector AI Governance (NAIC Model Bulletin + State Anti-Discrimination + FCRA/GLBA)
