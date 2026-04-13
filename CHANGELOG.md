@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] — 2026-04-13
+
+### Added — Healthcare AI Governance Example
+
+**`examples/05_healthcare_ai_governance.py`** — multi-framework AI governance for an
+ICU clinical decision support (CDS) agent combining HIPAA, NIST AI RMF AI 600-1,
+and EU AI Act HIGH_RISK classification:
+- Deny-all aggregation: `GovernanceOrchestrator` with three `FrameworkGuard`s active
+  simultaneously — one DENY from any framework stops the action.
+- Scenario A: `read_vitals` — allowed by all three frameworks (ALLOW)
+- Scenario B: `recommend_medication_dosage` — HIPAA allows; NIST AI RMF + EU AI Act
+  trigger mandatory escalation with `block_on_escalation=True` (DENY, human review required)
+- Scenario C: `share_phi_externally` — explicitly denied by HIPAA (DENY immediately)
+- Scenario D: `create_clinical_note` — allowed by all frameworks (ALLOW)
+- Scenario E: Audit-only mode — all four actions evaluated without blocking; full
+  `ComprehensiveAuditReport` emitted per evaluation for shadow compliance assessment
+- Governance design notes: minimum-necessary scoping, MANAGE function escalation,
+  Art. 14 human oversight, audit-only rollout pattern
+- Closes #19.
+
+---
+
 ## [0.7.0] — 2026-04-13
 
 ### Added — DSPy Framework Integration
