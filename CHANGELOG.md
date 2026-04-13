@@ -5,6 +5,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] — 2026-04-13
+
+### Added — EU AI Act Standalone Governance Example (Regulation 2024/1689)
+
+**`examples/10_eu_ai_act_governance.py`** — standalone EU AI Act governance framework
+implementing the full risk-based approach: prohibited practices (Article 5), high-risk
+classification (Article 6 / Annex III), transparency obligations (Article 13), human
+oversight (Article 14), accuracy/robustness (Article 15), and GPAI model obligations
+(Articles 51–55).
+
+New classes (self-contained in the example):
+- `AIRiskLevel` — UNACCEPTABLE_RISK (Article 5 prohibited), HIGH_RISK (Annex III),
+  LIMITED_RISK (Article 50 transparency), MINIMAL_RISK (voluntary code only)
+- `AnnexIIICategory` — 8 high-risk domains: BIOMETRIC_ID, CRITICAL_INFRASTRUCTURE,
+  EDUCATION, EMPLOYMENT, ESSENTIAL_SERVICES, LAW_ENFORCEMENT, MIGRATION_BORDER, JUSTICE
+- `ProhibitedAIType` — 7 Article 5(1) prohibited practices: real-time biometric ID
+  in public spaces, social scoring, subliminal manipulation, vulnerability exploitation,
+  predictive policing of individuals, emotion recognition in workplace/schools,
+  untargeted facial image scraping
+- `GovernanceOutcome` — ALLOW, ALLOW_WITH_CONDITIONS, ESCALATE_HUMAN, DENY
+- `EUAIActRequestContext` — governance evaluation boundary: annex_iii_category,
+  prohibited_ai_type, is_gpai, gpai_flops_training, transparency/oversight/accuracy/
+  robustness flags, model_card_published, adversarial_testing_completed,
+  incident_reporting_capability, conformity_assessment_done, public authority/space flags
+- `Article5ProhibitionGuard` — absolute prohibition guard; Article 5 denials have no
+  mitigation path regardless of safeguards or oversight measures in place
+- `Article6ClassificationGuard` — Annex III classification + Article 43 conformity
+  assessment verification; covers all 8 Annex III domains
+- `Article13TransparencyGuard` — high-risk AI systems must have complete capability
+  documentation, accuracy ranges, intended purpose, and oversight specifications
+- `Article14OversightGuard` — high-risk AI systems must have meaningful review
+  capability, override mechanism, and active monitoring duty
+- `Article15RobustnessGuard` — accuracy validation (Art. 15(1)) and resilience
+  against errors, faults, and adversarial inputs (Art. 15(2))
+- `GPAIGuard` — Articles 51–55: model card required for all GPAI (Art. 53(1)(d));
+  systemic risk threshold 10^25 FLOPs (Art. 51) triggers adversarial testing
+  (Art. 55(1)(a)) and incident reporting capability (Art. 55(1)(c))
+- `EUAIActGovernanceOrchestrator` — applies all 6 guards; outcome priority:
+  DENY > ESCALATE_HUMAN > ALLOW_WITH_CONDITIONS > ALLOW; notified body required
+  for biometric ID, law enforcement, migration/border, and justice categories
+- `EUAIActAuditRecord` — conformity assessment required flag, notified body required
+  flag, applicable articles list, all violations, risk level, GPAI systemic risk flag
+
+Key design decisions:
+- **Article 5 prohibitions are absolute:** no safeguard, transparency measure, or
+  oversight mechanism makes a prohibited AI practice lawful — DENY with no escalation
+- **Missing conformity assessment → ESCALATE, not DENY:** an assessable high-risk
+  system that hasn't completed conformity assessment goes to ESCALATE_HUMAN (notified
+  body review) rather than outright DENY — the system could become compliant
+- **GPAI model card is required for all GPAI models:** not just those with systemic risk;
+  the systemic risk threshold (10^25 FLOPs) adds adversarial testing + incident reporting
+- **Notified body required only for highest-risk Annex III categories:** biometric ID,
+  law enforcement, migration/border control, administration of justice — others may
+  self-assess under Annex VI
+
+Four scenarios: high-risk employment screening (ALLOW_WITH_CONDITIONS), prohibited
+social scoring (DENY), GPAI systemic risk with missing model card (DENY), minimal-risk
+chatbot (ALLOW).
+
+Tests: 50 new test cases in `tests/test_eu_ai_act_governance.py`.
+
+Regulated environments covered: **10** (added EU AI Act standalone + GPAI obligations).
+
+---
+
 ## [0.11.0] — 2026-04-13
 
 ### Added — Financial Services AI Governance (SEC Reg BI + FINRA Rule 3110 + SR 11-7)
