@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.37.0] — 2026-04-13
+
+### Added — Japan AI Governance Framework (`34_japan_ai_governance.py`)
+
+Four-layer governance filter for Japan APPI 2022, FSA AI governance, METI AI Governance Guidelines, and cross-border controls; 8 ecosystem wrappers:
+
+- `JapanAPPIFilter` — Arts. 15/17 consent → DENIED; Art. 20 specially considered PI (race/creed/social status/medical/criminal/disability) → DENIED; Art. 28 cross-border adequacy (EU/UK adequate; others require individual consent) → DENIED; PPC AI Guidelines §3.2 automated profiling without opt-out → REQUIRES_HUMAN_REVIEW
+- `JapanFSAAIFilter` — FIEA Art. 40 suitability → DENIED; FSA Principle 3 credit scoring explainability → DENIED; Insurance Business Act Art. 113 actuarial opinion → DENIED; FSA stress testing → REQUIRES_HUMAN_REVIEW
+- `JapanAIGovernanceFilter` — METI Guideline v1.1 §4 self-assessment (10 items) → DENIED; AI Strategy §2.1 + METI §4.8 human oversight → DENIED; METI GenAI §3 eight principles → DENIED; Cabinet Office §3.3 public services → REQUIRES_HUMAN_REVIEW
+- `JapanCrossBorderFilter` — APPI Art. 28 + PPC restricted jurisdictions (CN/RU/KP) → DENIED; AML Act + FSA AML/CFT FATF non-compliant → DENIED; FSA Cloud whitelist (aws_tokyo/gcp_tokyo/azure_japan_east) → DENIED; US adequacy pending → REQUIRES_HUMAN_REVIEW
+- 8 ecosystem wrappers: JapanLangChainPolicyGuard, JapanCrewAIGovernanceGuard, JapanAutoGenGovernedAgent, JapanSemanticKernelPlugin, JapanLlamaIndexWorkflowGuard, JapanHaystackGovernanceComponent, JapanDSPyGovernanceModule, JapanMAFPolicyMiddleware
+
+123 new tests. Total: **1973 passed**.
+
+---
+
 ## [0.36.0] — 2026-04-13
 
 ### Added — Singapore AI Governance Framework (`33_singapore_ai_governance.py`)
