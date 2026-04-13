@@ -439,8 +439,8 @@ class GovernanceAuditSkill:
             ImportError: If ``crewai`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.crewai import (
-                GovernedCrewAITool,  # type: ignore[import, attr-defined]
+            from regulated_ai_governance.integrations.crewai import (  # type: ignore[attr-defined]
+                GovernedCrewAITool,
             )
 
             return GovernedCrewAITool(
@@ -470,8 +470,8 @@ class GovernanceAuditSkill:
             ImportError: If ``llama-index-core`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.llama_index import (
-                GovernanceNodePostprocessor,  # type: ignore[import, attr-defined]
+            from regulated_ai_governance.integrations.llama_index import (  # type: ignore[attr-defined]
+                GovernanceNodePostprocessor,
             )
 
             return GovernanceNodePostprocessor(skill=self, actor_id=actor_id)
@@ -495,8 +495,8 @@ class GovernanceAuditSkill:
             ImportError: If ``haystack-ai`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.haystack import (
-                GovernanceFilter,  # type: ignore[import, attr-defined]
+            from regulated_ai_governance.integrations.haystack import (  # type: ignore[attr-defined]
+                GovernanceFilter,
             )
 
             return GovernanceFilter(skill=self, actor_id=actor_id)
@@ -520,8 +520,8 @@ class GovernanceAuditSkill:
             ImportError: If ``microsoft-agents`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.maf import (
-                GovernanceMAFMiddleware,  # type: ignore[import, attr-defined]
+            from regulated_ai_governance.integrations.maf import (  # type: ignore[attr-defined]
+                GovernanceMAFMiddleware,
             )
 
             return GovernanceMAFMiddleware(skill=self, actor_id=actor_id)
