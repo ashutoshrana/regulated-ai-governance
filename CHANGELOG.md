@@ -23,6 +23,22 @@ Four-layer governance filter for Brazil LGPD, ANPD AI guidelines, sectoral AI re
 
 ---
 
+## [0.41.0] — 2026-04-13
+
+### Added — UAE PDPL + Saudi NDMO AI Governance Framework (`38_uae_saudi_ai_governance.py`)
+
+Four-layer governance filter for UAE Personal Data Protection Law, UAE AI Strategy 2031, Saudi Arabia PDPL, NDMO Data Governance Framework, and GCC cross-border controls; 8 ecosystem wrappers:
+
+- `UAEPDPLFilter` (Federal Decree-Law No. 45/2021) — no legal basis Art. 6 → DENIED; sensitive data (health/financial/biometric/religious) Art. 9 → DENIED; cross-border without DTA Art. 22 → DENIED; automated decision without human review Art. 13 → REQUIRES_HUMAN_REVIEW
+- `UAEAIRegFilter` (UAE AI Strategy 2031 + DFSA + FSRA) — high-risk AI without UAE AI Office impact assessment → DENIED; DIFC financial AI without DFSA RPP compliance → DENIED; ADGM financial AI without FSRA AI RMF → DENIED; GenAI without UAE AI Ethics transparency → REQUIRES_HUMAN_REVIEW
+- `SaudiNDMOFilter` (Saudi PDPL Royal Decree M/19) — no consent Art. 5 → DENIED; sensitive (health/genetic/biometric/financial/criminal) Art. 23 → DENIED; cross-border without SDAIA authorization Art. 29 → DENIED; not NDMO DGF v2.0 compliant → REQUIRES_HUMAN_REVIEW
+- `GCCCrossBorderFilter` — personal data to non-GCC-adequate country → DENIED; financial AI to FATF High-Risk (KP/IR/MM) → DENIED; Saudi citizen training data without SDAIA export approval → DENIED; critical data outside GCC national clouds → REQUIRES_HUMAN_REVIEW
+- 8 ecosystem wrappers: `UAELangChainPolicyGuard`, `UAECrewAIGovernanceGuard`, `UAEAutoGenGovernedAgent`, `UAESemanticKernelPlugin`, `UAELlamaIndexWorkflowGuard`, `UAEHaystackGovernanceComponent`, `UAEDSPyGovernanceModule`, `UAEMAFPolicyMiddleware`
+
+160 new tests. Total: **2451 passed**.
+
+---
+
 ## [0.40.0] — 2026-04-13
 
 ### Added — India DPDP Act 2023 + MeitY AI Governance Framework (`37_india_dpdp_ai_governance.py`)
