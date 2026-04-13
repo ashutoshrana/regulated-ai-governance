@@ -1,480 +1,462 @@
 """
-Tests for 10_eu_ai_act_governance.py
+Tests for 16_eu_ai_act_governance.py
 
-Covers Article5ProhibitionGuard, Article6ClassificationGuard,
-Article13TransparencyGuard, Article14OversightGuard, Article15RobustnessGuard,
-GPAIGuard, and EUAIActGovernanceOrchestrator.
+Four-layer EU AI Act governance framework:
+  1. EURiskClassificationFilter — prohibited/high-risk/limited-transparency/minimal
+  2. EUConformityAssessmentFilter — RMS + conformity assessment + CE marking
+  3. EUDataGovernanceFilter — training data quality + bias examination + monitoring
+  4. EUTransparencyHumanOversightFilter — instructions + oversight + logs + incident reporting
 """
 
-from __future__ import annotations
-
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 import importlib.util
+import sys
+import types
+from pathlib import Path
 
-_spec = importlib.util.spec_from_file_location(
-    "eu_ai_act_governance",
-    os.path.join(os.path.dirname(__file__), "..", "examples", "10_eu_ai_act_governance.py"),
+import pytest
+
+# ---------------------------------------------------------------------------
+# Module loading
+# ---------------------------------------------------------------------------
+
+_MOD_PATH = (
+    Path(__file__).parent.parent / "examples" / "16_eu_ai_act_governance.py"
 )
-_mod = importlib.util.module_from_spec(_spec)  # type: ignore[arg-type]
-sys.modules["eu_ai_act_governance"] = _mod  # required for frozen dataclasses on Python 3.14
-_spec.loader.exec_module(_mod)  # type: ignore[union-attr]
 
-AIRiskLevel = _mod.AIRiskLevel
-AnnexIIICategory = _mod.AnnexIIICategory
-ProhibitedAIType = _mod.ProhibitedAIType
-GovernanceOutcome = _mod.GovernanceOutcome
-EUAIActRequestContext = _mod.EUAIActRequestContext
-Article5ProhibitionGuard = _mod.Article5ProhibitionGuard
-Article6ClassificationGuard = _mod.Article6ClassificationGuard
-Article13TransparencyGuard = _mod.Article13TransparencyGuard
-Article14OversightGuard = _mod.Article14OversightGuard
-Article15RobustnessGuard = _mod.Article15RobustnessGuard
-GPAIGuard = _mod.GPAIGuard
-EUAIActGovernanceOrchestrator = _mod.EUAIActGovernanceOrchestrator
-_GPAI_SYSTEMIC_RISK_FLOPS_THRESHOLD = _mod._GPAI_SYSTEMIC_RISK_FLOPS_THRESHOLD
+
+def _load_module():
+    module_name = "eu_ai_act_governance_16"
+    if module_name in sys.modules:
+        return sys.modules[module_name]
+    spec = importlib.util.spec_from_file_location(module_name, _MOD_PATH)
+    mod = types.ModuleType(module_name)
+    sys.modules[module_name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@pytest.fixture(scope="module")
+def m():
+    return _load_module()
 
 
 # ---------------------------------------------------------------------------
-# Helper
+# Helpers
 # ---------------------------------------------------------------------------
 
-def _ctx(
-    name: str = "Test AI",
-    *,
-    annex: AnnexIIICategory | None = None,
-    prohibited: ProhibitedAIType | None = None,
-    is_gpai: bool = False,
-    flops: float | None = None,
-    transparency_ok: bool = True,
-    oversight_ok: bool = True,
-    accuracy_ok: bool = True,
-    robustness_ok: bool = True,
-    model_card: bool = False,
-    adversarial: bool = False,
-    incident_reporting: bool = True,
-    conformity: bool = False,
-    public_authority: bool = False,
-    public_space: bool = False,
-) -> EUAIActRequestContext:
-    return EUAIActRequestContext(
-        system_name=name,
-        annex_iii_category=annex,
-        prohibited_ai_type=prohibited,
-        is_gpai=is_gpai,
-        gpai_flops_training=flops,
-        transparency_documentation_complete=transparency_ok,
-        human_oversight_mechanism_in_place=oversight_ok,
-        accuracy_level_validated=accuracy_ok,
-        robustness_measures_in_place=robustness_ok,
-        model_card_published=model_card,
-        adversarial_testing_completed=adversarial,
-        incident_reporting_capability=incident_reporting,
-        conformity_assessment_done=conformity,
-        deployer_is_public_authority=public_authority,
-        deployment_in_public_space=public_space,
+
+def _ctx(m, **kwargs):
+    """Fully compliant HIGH_RISK EMPLOYMENT_WORKERS context (baseline)."""
+    defaults = dict(
+        system_id="EU-TEST-001",
+        system_name="Test CV Screener",
+        risk_level=m.EUAIActRiskLevel.HIGH_RISK,
+        annex_iii_category=m.AnnexIIICategory.EMPLOYMENT_WORKERS,
+        conformity_assessment_route=m.EUConformityAssessmentRoute.INTERNAL_CONTROL,
+        deploying_country="DE",
+        provider_name="Test GmbH",
+        is_prohibited_practice=False,
+        risk_management_system_established=True,
+        residual_risks_acceptable=True,
+        post_market_monitoring_plan=True,
+        training_data_quality_documented=True,
+        bias_examination_completed=True,
+        data_monitoring_active=True,
+        conformity_assessment_completed=True,
+        ce_marking_affixed=True,
+        instructions_for_use_complete=True,
+        disclosure_obligation_met=True,
+        human_oversight_measures_designed=True,
+        override_capability_available=True,
+        deployer_logs_maintained=True,
+        serious_incident_reporting_active=True,
     )
+    defaults.update(kwargs)
+    return m.EUAIActContext(**defaults)
+
+
+def _limited_ctx(m, **kwargs):
+    """Compliant LIMITED_TRANSPARENCY chatbot context."""
+    defaults = dict(
+        system_id="EU-LT-001",
+        system_name="Test Chatbot",
+        risk_level=m.EUAIActRiskLevel.LIMITED_TRANSPARENCY,
+        annex_iii_category=None,
+        conformity_assessment_route=m.EUConformityAssessmentRoute.NOT_REQUIRED,
+        deploying_country="FR",
+        provider_name="ChatCo",
+        is_prohibited_practice=False,
+        risk_management_system_established=False,
+        residual_risks_acceptable=True,
+        post_market_monitoring_plan=False,
+        training_data_quality_documented=False,
+        bias_examination_completed=False,
+        data_monitoring_active=False,
+        conformity_assessment_completed=False,
+        ce_marking_affixed=False,
+        instructions_for_use_complete=True,
+        disclosure_obligation_met=True,
+        human_oversight_measures_designed=True,
+        override_capability_available=True,
+        deployer_logs_maintained=True,
+        serious_incident_reporting_active=False,
+    )
+    defaults.update(kwargs)
+    return m.EUAIActContext(**defaults)
+
+
+def _minimal_ctx(m, **kwargs):
+    """MINIMAL_RISK context."""
+    defaults = dict(
+        system_id="EU-MIN-001",
+        system_name="Spam Filter",
+        risk_level=m.EUAIActRiskLevel.MINIMAL_RISK,
+        annex_iii_category=None,
+        conformity_assessment_route=m.EUConformityAssessmentRoute.NOT_REQUIRED,
+        deploying_country="NL",
+        provider_name="SpamCo",
+        is_prohibited_practice=False,
+        risk_management_system_established=False,
+        residual_risks_acceptable=True,
+        post_market_monitoring_plan=False,
+        training_data_quality_documented=False,
+        bias_examination_completed=False,
+        data_monitoring_active=False,
+        conformity_assessment_completed=False,
+        ce_marking_affixed=False,
+        instructions_for_use_complete=True,
+        disclosure_obligation_met=False,
+        human_oversight_measures_designed=False,
+        override_capability_available=False,
+        deployer_logs_maintained=False,
+        serious_incident_reporting_active=False,
+    )
+    defaults.update(kwargs)
+    return m.EUAIActContext(**defaults)
 
 
 # ---------------------------------------------------------------------------
-# Article 5 tests
+# Layer 1 — EURiskClassificationFilter
 # ---------------------------------------------------------------------------
 
-class TestArticle5ProhibitionGuard:
-    def setup_method(self):
-        self.g = Article5ProhibitionGuard()
 
-    def test_social_scoring_is_prohibited(self):
-        result = self.g.evaluate(_ctx(prohibited=ProhibitedAIType.SOCIAL_SCORING_PUBLIC))
-        assert result["allowed"] is False
-        assert any("Article 5" in v for v in result["violations"])
+class TestEURiskClassificationFilter:
 
-    def test_subliminal_manipulation_is_prohibited(self):
-        result = self.g.evaluate(_ctx(prohibited=ProhibitedAIType.SUBLIMINAL_MANIPULATION))
-        assert result["allowed"] is False
+    def test_prohibited_practice_denied(self, m):
+        f = m.EURiskClassificationFilter()
+        ctx = _ctx(m, risk_level=m.EUAIActRiskLevel.PROHIBITED, is_prohibited_practice=True)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 5" in finding for finding in result.findings)
 
-    def test_vulnerability_exploitation_is_prohibited(self):
-        result = self.g.evaluate(_ctx(prohibited=ProhibitedAIType.VULNERABILITY_EXPLOITATION))
-        assert result["allowed"] is False
+    def test_is_prohibited_flag_alone_denies(self, m):
+        f = m.EURiskClassificationFilter()
+        ctx = _ctx(m, is_prohibited_practice=True)
+        result = f.evaluate(ctx)
+        assert result.is_denied
 
-    def test_predictive_policing_is_prohibited(self):
-        result = self.g.evaluate(_ctx(prohibited=ProhibitedAIType.PREDICTIVE_POLICING_INDIVIDUAL))
-        assert result["allowed"] is False
+    def test_high_risk_with_annex_iii_approved_with_conditions(self, m):
+        f = m.EURiskClassificationFilter()
+        ctx = _ctx(m)  # HIGH_RISK + EMPLOYMENT_WORKERS
+        result = f.evaluate(ctx)
+        assert result.has_conditions
+        assert any("HIGH_RISK" in c or "EMPLOYMENT_WORKERS" in c for c in result.conditions)
 
-    def test_emotion_recognition_workplace_is_prohibited(self):
-        result = self.g.evaluate(_ctx(prohibited=ProhibitedAIType.EMOTION_RECOGNITION_WORK_SCHOOL))
-        assert result["allowed"] is False
+    def test_high_risk_without_annex_iii_denied(self, m):
+        f = m.EURiskClassificationFilter()
+        ctx = _ctx(m, annex_iii_category=None)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 6" in finding for finding in result.findings)
 
-    def test_untargeted_face_scraping_is_prohibited(self):
-        result = self.g.evaluate(_ctx(prohibited=ProhibitedAIType.UNTARGETED_FACE_SCRAPING))
-        assert result["allowed"] is False
+    def test_limited_transparency_with_disclosure_approved_with_conditions(self, m):
+        f = m.EURiskClassificationFilter()
+        ctx = _limited_ctx(m)
+        result = f.evaluate(ctx)
+        assert result.has_conditions
+        assert any("Article 50" in c for c in result.conditions)
 
-    def test_real_time_biometric_in_public_space_is_prohibited(self):
-        result = self.g.evaluate(_ctx(
-            prohibited=ProhibitedAIType.REAL_TIME_BIOMETRIC_PUBLIC,
-            public_space=True,
-        ))
-        assert result["allowed"] is False
-        assert any("5(1)(a)" in v for v in result["violations"])
+    def test_limited_transparency_no_disclosure_denied(self, m):
+        f = m.EURiskClassificationFilter()
+        ctx = _limited_ctx(m, disclosure_obligation_met=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 50" in finding for finding in result.findings)
 
-    def test_real_time_biometric_not_in_public_space_is_allowed(self):
-        result = self.g.evaluate(_ctx(
-            prohibited=ProhibitedAIType.REAL_TIME_BIOMETRIC_PUBLIC,
-            public_space=False,  # e.g. controlled environment
-        ))
-        assert result["allowed"] is True
-
-    def test_no_prohibited_type_is_allowed(self):
-        result = self.g.evaluate(_ctx())
-        assert result["allowed"] is True
-        assert result["violations"] == []
-
-
-# ---------------------------------------------------------------------------
-# Article 6 tests
-# ---------------------------------------------------------------------------
-
-class TestArticle6ClassificationGuard:
-    def setup_method(self):
-        self.g = Article6ClassificationGuard()
-
-    def test_no_annex_iii_is_not_high_risk(self):
-        result = self.g.evaluate(_ctx())
-        assert result["is_high_risk"] is False
-        assert result["risk_level"] == AIRiskLevel.MINIMAL_RISK
-
-    def test_employment_category_is_high_risk(self):
-        result = self.g.evaluate(_ctx(annex=AnnexIIICategory.EMPLOYMENT))
-        assert result["is_high_risk"] is True
-        assert result["risk_level"] == AIRiskLevel.HIGH_RISK
-
-    def test_all_annex_iii_categories_are_high_risk(self):
-        for cat in AnnexIIICategory:
-            result = self.g.evaluate(_ctx(annex=cat))
-            assert result["is_high_risk"] is True, f"{cat} should be HIGH_RISK"
-
-    def test_conformity_assessment_missing_is_violation(self):
-        result = self.g.evaluate(_ctx(annex=AnnexIIICategory.EDUCATION, conformity=False))
-        assert not result["allowed"]
-        assert any("Article 43" in v for v in result["violations"])
-
-    def test_conformity_assessment_done_no_violation(self):
-        result = self.g.evaluate(_ctx(annex=AnnexIIICategory.EDUCATION, conformity=True))
-        assert result["allowed"] is True
-        assert result["violations"] == []
+    def test_minimal_risk_approved_with_conditions(self, m):
+        f = m.EURiskClassificationFilter()
+        ctx = _minimal_ctx(m)
+        result = f.evaluate(ctx)
+        assert result.has_conditions
+        assert any("MINIMAL_RISK" in c or "Recital 97" in c for c in result.conditions)
 
 
 # ---------------------------------------------------------------------------
-# Article 13 transparency tests
+# Layer 2 — EUConformityAssessmentFilter
 # ---------------------------------------------------------------------------
 
-class TestArticle13TransparencyGuard:
-    def setup_method(self):
-        self.g = Article13TransparencyGuard()
 
-    def test_non_high_risk_skips_transparency(self):
-        result = self.g.evaluate(_ctx(transparency_ok=False), is_high_risk=False)
-        assert result["allowed"] is True
+class TestEUConformityAssessmentFilter:
 
-    def test_high_risk_requires_transparency_documentation(self):
-        result = self.g.evaluate(_ctx(transparency_ok=False), is_high_risk=True)
-        assert result["allowed"] is False
-        assert any("Article 13" in v for v in result["violations"])
+    def test_compliant_high_risk_approved_with_conditions(self, m):
+        f = m.EUConformityAssessmentFilter()
+        ctx = _ctx(m)
+        result = f.evaluate(ctx)
+        assert result.has_conditions
 
-    def test_high_risk_with_documentation_is_allowed(self):
-        result = self.g.evaluate(_ctx(transparency_ok=True), is_high_risk=True)
-        assert result["allowed"] is True
+    def test_no_risk_management_system_denied(self, m):
+        f = m.EUConformityAssessmentFilter()
+        ctx = _ctx(m, risk_management_system_established=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 9" in finding for finding in result.findings)
 
+    def test_residual_risks_not_acceptable_denied(self, m):
+        f = m.EUConformityAssessmentFilter()
+        ctx = _ctx(m, residual_risks_acceptable=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 9(4)" in finding for finding in result.findings)
 
-# ---------------------------------------------------------------------------
-# Article 14 oversight tests
-# ---------------------------------------------------------------------------
+    def test_no_post_market_plan_denied(self, m):
+        f = m.EUConformityAssessmentFilter()
+        ctx = _ctx(m, post_market_monitoring_plan=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 72" in finding for finding in result.findings)
 
-class TestArticle14OversightGuard:
-    def setup_method(self):
-        self.g = Article14OversightGuard()
+    def test_conformity_assessment_not_completed_denied(self, m):
+        f = m.EUConformityAssessmentFilter()
+        ctx = _ctx(m, conformity_assessment_completed=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 43" in finding for finding in result.findings)
 
-    def test_non_high_risk_skips_oversight(self):
-        result = self.g.evaluate(_ctx(oversight_ok=False), is_high_risk=False)
-        assert result["allowed"] is True
+    def test_no_ce_marking_denied(self, m):
+        f = m.EUConformityAssessmentFilter()
+        ctx = _ctx(m, ce_marking_affixed=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 49" in finding for finding in result.findings)
 
-    def test_high_risk_requires_human_oversight(self):
-        result = self.g.evaluate(_ctx(oversight_ok=False), is_high_risk=True)
-        assert result["allowed"] is False
-        assert any("Article 14" in v for v in result["violations"])
+    def test_non_high_risk_passes_with_approved(self, m):
+        f = m.EUConformityAssessmentFilter()
+        ctx = _limited_ctx(m)
+        result = f.evaluate(ctx)
+        assert not result.is_denied
+        assert result.decision == m.EUGovernanceDecision.APPROVED
 
-    def test_high_risk_with_oversight_is_allowed(self):
-        result = self.g.evaluate(_ctx(oversight_ok=True), is_high_risk=True)
-        assert result["allowed"] is True
-
-
-# ---------------------------------------------------------------------------
-# Article 15 robustness tests
-# ---------------------------------------------------------------------------
-
-class TestArticle15RobustnessGuard:
-    def setup_method(self):
-        self.g = Article15RobustnessGuard()
-
-    def test_non_high_risk_skips_robustness(self):
-        result = self.g.evaluate(_ctx(accuracy_ok=False, robustness_ok=False), is_high_risk=False)
-        assert result["allowed"] is True
-
-    def test_high_risk_requires_accuracy_validation(self):
-        result = self.g.evaluate(_ctx(accuracy_ok=False, robustness_ok=True), is_high_risk=True)
-        assert result["allowed"] is False
-        assert any("15(1)" in v for v in result["violations"])
-
-    def test_high_risk_requires_robustness_measures(self):
-        result = self.g.evaluate(_ctx(accuracy_ok=True, robustness_ok=False), is_high_risk=True)
-        assert result["allowed"] is False
-        assert any("15(2)" in v for v in result["violations"])
-
-    def test_high_risk_with_both_validated_is_allowed(self):
-        result = self.g.evaluate(_ctx(accuracy_ok=True, robustness_ok=True), is_high_risk=True)
-        assert result["allowed"] is True
+    def test_compliant_conditions_reference_reassessment(self, m):
+        f = m.EUConformityAssessmentFilter()
+        ctx = _ctx(m)
+        result = f.evaluate(ctx)
+        assert any("re-assessment" in c or "Article 43" in c for c in result.conditions)
 
 
 # ---------------------------------------------------------------------------
-# GPAI tests
+# Layer 3 — EUDataGovernanceFilter
 # ---------------------------------------------------------------------------
 
-class TestGPAIGuard:
-    def setup_method(self):
-        self.g = GPAIGuard()
 
-    def test_non_gpai_is_allowed(self):
-        result = self.g.evaluate(_ctx(is_gpai=False))
-        assert result["allowed"] is True
-        assert result["has_systemic_risk"] is False
+class TestEUDataGovernanceFilter:
 
-    def test_gpai_without_model_card_is_violation(self):
-        result = self.g.evaluate(_ctx(is_gpai=True, model_card=False))
-        assert result["allowed"] is False
-        assert any("53(1)(d)" in v for v in result["violations"])
+    def test_compliant_high_risk_approved_with_conditions(self, m):
+        f = m.EUDataGovernanceFilter()
+        ctx = _ctx(m)
+        result = f.evaluate(ctx)
+        assert result.has_conditions
+        assert any("Article 10(5)" in c for c in result.conditions)
 
-    def test_gpai_with_model_card_below_threshold_is_allowed(self):
-        result = self.g.evaluate(_ctx(
-            is_gpai=True,
-            flops=1e24,   # below 10^25 threshold
-            model_card=True,
-        ))
-        assert result["allowed"] is True
-        assert result["has_systemic_risk"] is False
+    def test_no_training_data_quality_docs_denied(self, m):
+        f = m.EUDataGovernanceFilter()
+        ctx = _ctx(m, training_data_quality_documented=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 10(2)" in finding for finding in result.findings)
 
-    def test_gpai_above_threshold_is_systemic_risk(self):
-        result = self.g.evaluate(_ctx(
-            is_gpai=True,
-            flops=2e25,   # above 10^25 threshold
-            model_card=True,
-            adversarial=True,
-            incident_reporting=True,
-        ))
-        assert result["has_systemic_risk"] is True
-        assert result["allowed"] is True
+    def test_no_bias_examination_denied(self, m):
+        f = m.EUDataGovernanceFilter()
+        ctx = _ctx(m, bias_examination_completed=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 10(5)" in finding for finding in result.findings)
 
-    def test_gpai_systemic_risk_requires_adversarial_testing(self):
-        result = self.g.evaluate(_ctx(
-            is_gpai=True,
-            flops=2e25,
-            model_card=True,
-            adversarial=False,  # missing
-            incident_reporting=True,
-        ))
-        assert result["allowed"] is False
-        assert any("55(1)(a)" in v for v in result["violations"])
+    def test_data_monitoring_inactive_denied(self, m):
+        f = m.EUDataGovernanceFilter()
+        ctx = _ctx(m, data_monitoring_active=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
 
-    def test_gpai_systemic_risk_requires_incident_reporting(self):
-        result = self.g.evaluate(_ctx(
-            is_gpai=True,
-            flops=2e25,
-            model_card=True,
-            adversarial=True,
-            incident_reporting=False,  # missing
-        ))
-        assert result["allowed"] is False
-        assert any("55(1)(c)" in v for v in result["violations"])
+    def test_non_high_risk_gets_best_practice_condition(self, m):
+        f = m.EUDataGovernanceFilter()
+        ctx = _limited_ctx(m)
+        result = f.evaluate(ctx)
+        assert result.has_conditions
+        assert any("best practice" in c or "Article 10" in c for c in result.conditions)
 
-    def test_flops_threshold_value(self):
-        assert _GPAI_SYSTEMIC_RISK_FLOPS_THRESHOLD == 1e25
+    def test_minimal_risk_also_gets_best_practice(self, m):
+        f = m.EUDataGovernanceFilter()
+        ctx = _minimal_ctx(m)
+        result = f.evaluate(ctx)
+        assert result.has_conditions
+
+    def test_bias_condition_references_article(self, m):
+        f = m.EUDataGovernanceFilter()
+        ctx = _ctx(m)
+        result = f.evaluate(ctx)
+        assert any("bias" in c.lower() or "Article 10(5)" in c for c in result.conditions)
 
 
 # ---------------------------------------------------------------------------
-# Orchestrator integration tests
+# Layer 4 — EUTransparencyHumanOversightFilter
 # ---------------------------------------------------------------------------
+
+
+class TestEUTransparencyHumanOversightFilter:
+
+    def test_compliant_high_risk_approved_with_conditions(self, m):
+        f = m.EUTransparencyHumanOversightFilter()
+        ctx = _ctx(m)
+        result = f.evaluate(ctx)
+        assert result.has_conditions
+        assert any("Article 13" in c for c in result.conditions)
+
+    def test_no_instructions_denied(self, m):
+        f = m.EUTransparencyHumanOversightFilter()
+        ctx = _ctx(m, instructions_for_use_complete=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 13" in finding for finding in result.findings)
+
+    def test_no_human_oversight_high_risk_denied(self, m):
+        f = m.EUTransparencyHumanOversightFilter()
+        ctx = _ctx(m, human_oversight_measures_designed=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 14" in finding for finding in result.findings)
+
+    def test_no_override_capability_high_risk_denied(self, m):
+        f = m.EUTransparencyHumanOversightFilter()
+        ctx = _ctx(m, override_capability_available=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 14(4)" in finding for finding in result.findings)
+
+    def test_no_deployer_logs_high_risk_denied(self, m):
+        f = m.EUTransparencyHumanOversightFilter()
+        ctx = _ctx(m, deployer_logs_maintained=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 26" in finding for finding in result.findings)
+
+    def test_no_incident_reporting_high_risk_denied(self, m):
+        f = m.EUTransparencyHumanOversightFilter()
+        ctx = _ctx(m, serious_incident_reporting_active=False)
+        result = f.evaluate(ctx)
+        assert result.is_denied
+        assert any("Article 73" in finding for finding in result.findings)
+
+    def test_no_incident_reporting_limited_transparency_not_denied(self, m):
+        """Article 73 incident reporting is HIGH_RISK only — not required for LIMITED_TRANSPARENCY."""
+        f = m.EUTransparencyHumanOversightFilter()
+        ctx = _limited_ctx(m, serious_incident_reporting_active=False)
+        result = f.evaluate(ctx)
+        assert not result.is_denied
+
+    def test_minimal_risk_early_return_approved_with_conditions(self, m):
+        f = m.EUTransparencyHumanOversightFilter()
+        ctx = _minimal_ctx(m)
+        result = f.evaluate(ctx)
+        assert result.has_conditions
+        assert any("Article 13" in c for c in result.conditions)
+
+    def test_limited_transparency_compliant_approved_with_conditions(self, m):
+        f = m.EUTransparencyHumanOversightFilter()
+        ctx = _limited_ctx(m)
+        result = f.evaluate(ctx)
+        assert result.has_conditions
+
+
+# ---------------------------------------------------------------------------
+# EUAIActGovernanceOrchestrator
+# ---------------------------------------------------------------------------
+
 
 class TestEUAIActGovernanceOrchestrator:
-    def setup_method(self):
-        self.orch = EUAIActGovernanceOrchestrator()
 
-    def test_prohibited_ai_is_denied(self):
-        ctx = _ctx(prohibited=ProhibitedAIType.SOCIAL_SCORING_PUBLIC)
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.DENY
+    def test_fully_compliant_high_risk_approved_with_conditions(self, m):
+        orch = m.EUAIActGovernanceOrchestrator()
+        ctx = _ctx(m)
+        report = orch.evaluate(ctx)
+        assert report.final_decision == m.EUGovernanceDecision.APPROVED_WITH_CONDITIONS
 
-    def test_prohibited_ai_denied_even_with_all_safeguards(self):
-        ctx = _ctx(
-            prohibited=ProhibitedAIType.SUBLIMINAL_MANIPULATION,
-            transparency_ok=True,
-            oversight_ok=True,
-            accuracy_ok=True,
-            robustness_ok=True,
-            conformity=True,
-        )
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.DENY
+    def test_prohibited_practice_final_denied(self, m):
+        orch = m.EUAIActGovernanceOrchestrator()
+        ctx = _ctx(m, risk_level=m.EUAIActRiskLevel.PROHIBITED, is_prohibited_practice=True)
+        report = orch.evaluate(ctx)
+        assert report.final_decision == m.EUGovernanceDecision.DENIED
 
-    def test_high_risk_compliant_is_allow_with_conditions(self):
-        ctx = _ctx(
-            annex=AnnexIIICategory.EMPLOYMENT,
-            transparency_ok=True,
-            oversight_ok=True,
-            accuracy_ok=True,
-            robustness_ok=True,
-            conformity=True,
-        )
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.ALLOW_WITH_CONDITIONS
-        assert audit.is_high_risk is True
+    def test_all_four_layers_evaluated(self, m):
+        orch = m.EUAIActGovernanceOrchestrator()
+        ctx = _ctx(m)
+        report = orch.evaluate(ctx)
+        layer_names = {lr.layer for lr in report.layer_results}
+        assert "EU_RISK_CLASSIFICATION" in layer_names
+        assert "EU_CONFORMITY_ASSESSMENT" in layer_names
+        assert "EU_DATA_GOVERNANCE" in layer_names
+        assert "EU_TRANSPARENCY_OVERSIGHT" in layer_names
 
-    def test_high_risk_missing_conformity_escalates(self):
-        ctx = _ctx(
-            annex=AnnexIIICategory.EDUCATION,
-            transparency_ok=True,
-            oversight_ok=True,
-            accuracy_ok=True,
-            robustness_ok=True,
-            conformity=False,  # not done
-        )
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.ESCALATE_HUMAN
+    def test_layer_order(self, m):
+        orch = m.EUAIActGovernanceOrchestrator()
+        ctx = _ctx(m)
+        report = orch.evaluate(ctx)
+        order = [lr.layer for lr in report.layer_results]
+        assert order == [
+            "EU_RISK_CLASSIFICATION",
+            "EU_CONFORMITY_ASSESSMENT",
+            "EU_DATA_GOVERNANCE",
+            "EU_TRANSPARENCY_OVERSIGHT",
+        ]
 
-    def test_high_risk_missing_transparency_is_denied(self):
-        ctx = _ctx(
-            annex=AnnexIIICategory.EMPLOYMENT,
-            transparency_ok=False,   # violation
-            oversight_ok=True,
-            accuracy_ok=True,
-            robustness_ok=True,
-            conformity=True,
-        )
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.DENY
+    def test_report_summary_structure(self, m):
+        orch = m.EUAIActGovernanceOrchestrator()
+        ctx = _ctx(m)
+        report = orch.evaluate(ctx)
+        s = report.summary()
+        assert s["system_id"] == ctx.system_id
+        assert s["system_name"] == ctx.system_name
+        assert s["risk_level"] == "HIGH_RISK"
+        assert "final_decision" in s
+        assert len(s["layers"]) == 4
 
-    def test_minimal_risk_is_allowed(self):
-        ctx = _ctx()
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.ALLOW
-        assert audit.is_high_risk is False
+    def test_missing_conformity_assessment_denied(self, m):
+        orch = m.EUAIActGovernanceOrchestrator()
+        ctx = _ctx(m, conformity_assessment_completed=False, ce_marking_affixed=False)
+        report = orch.evaluate(ctx)
+        assert report.final_decision == m.EUGovernanceDecision.DENIED
 
-    def test_gpai_systemic_risk_compliant_is_allow_with_conditions(self):
-        ctx = _ctx(
-            is_gpai=True,
-            flops=5e25,
-            model_card=True,
-            adversarial=True,
-            incident_reporting=True,
-        )
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.ALLOW_WITH_CONDITIONS
-        assert audit.has_systemic_risk is True
+    def test_limited_transparency_compliant_approved_with_conditions(self, m):
+        orch = m.EUAIActGovernanceOrchestrator()
+        ctx = _limited_ctx(m)
+        report = orch.evaluate(ctx)
+        assert report.final_decision == m.EUGovernanceDecision.APPROVED_WITH_CONDITIONS
 
-    def test_gpai_without_model_card_is_denied(self):
-        ctx = _ctx(is_gpai=True, flops=5e25, model_card=False)
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.DENY
+    def test_minimal_risk_approved_with_conditions(self, m):
+        orch = m.EUAIActGovernanceOrchestrator()
+        ctx = _minimal_ctx(m)
+        report = orch.evaluate(ctx)
+        assert report.final_decision == m.EUGovernanceDecision.APPROVED_WITH_CONDITIONS
 
-    def test_audit_record_applicable_articles_for_high_risk(self):
-        ctx = _ctx(
-            annex=AnnexIIICategory.EMPLOYMENT,
-            transparency_ok=True,
-            oversight_ok=True,
-            accuracy_ok=True,
-            robustness_ok=True,
-            conformity=True,
-        )
-        audit = self.orch.evaluate(ctx)
-        assert any("Annex III" in a for a in audit.applicable_articles)
+    def test_is_denied_property(self, m):
+        result = m.EUGovernanceResult(layer="TEST")
+        result.decision = m.EUGovernanceDecision.DENIED
+        assert result.is_denied
+        result.decision = m.EUGovernanceDecision.APPROVED
+        assert not result.is_denied
 
-    def test_conformity_assessment_required_for_high_risk(self):
-        ctx = _ctx(annex=AnnexIIICategory.EMPLOYMENT, conformity=True)
-        audit = self.orch.evaluate(ctx)
-        assert audit.conformity_assessment_required is True
-
-    def test_notified_body_required_for_biometric_id(self):
-        ctx = _ctx(annex=AnnexIIICategory.BIOMETRIC_ID, conformity=True,
-                   transparency_ok=True, oversight_ok=True,
-                   accuracy_ok=True, robustness_ok=True)
-        audit = self.orch.evaluate(ctx)
-        assert audit.notified_body_required is True
-
-    def test_notified_body_not_required_for_employment(self):
-        ctx = _ctx(annex=AnnexIIICategory.EMPLOYMENT, conformity=True,
-                   transparency_ok=True, oversight_ok=True,
-                   accuracy_ok=True, robustness_ok=True)
-        audit = self.orch.evaluate(ctx)
-        assert audit.notified_body_required is False
-
-    def test_audit_includes_system_name(self):
-        ctx = _ctx(name="My Test System")
-        audit = self.orch.evaluate(ctx)
-        assert audit.system_name == "My Test System"
-
-    def test_prohibited_type_recorded_in_audit(self):
-        ctx = _ctx(prohibited=ProhibitedAIType.SOCIAL_SCORING_PUBLIC)
-        audit = self.orch.evaluate(ctx)
-        assert audit.prohibited_ai_type == ProhibitedAIType.SOCIAL_SCORING_PUBLIC.value
-
-    def test_annex_iii_recorded_in_audit(self):
-        ctx = _ctx(annex=AnnexIIICategory.EDUCATION, conformity=True,
-                   transparency_ok=True, oversight_ok=True,
-                   accuracy_ok=True, robustness_ok=True)
-        audit = self.orch.evaluate(ctx)
-        assert audit.annex_iii_category == AnnexIIICategory.EDUCATION.value
-
-    def test_scenario_a_employment_screening_compliant(self):
-        """Full Scenario A: employment screening with all obligations met."""
-        ctx = _ctx(
-            name="CV Ranking & Candidate Screening AI",
-            annex=AnnexIIICategory.EMPLOYMENT,
-            conformity=True,
-            transparency_ok=True,
-            oversight_ok=True,
-            accuracy_ok=True,
-            robustness_ok=True,
-        )
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.ALLOW_WITH_CONDITIONS
-        assert len(audit.violations) == 0
-
-    def test_scenario_b_social_scoring_denied(self):
-        """Full Scenario B: social scoring by public authority is prohibited."""
-        ctx = _ctx(
-            prohibited=ProhibitedAIType.SOCIAL_SCORING_PUBLIC,
-            public_authority=True,
-        )
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.DENY
-
-    def test_scenario_c_gpai_missing_model_card_denied(self):
-        """Full Scenario C: GPAI systemic risk without model card is denied."""
-        ctx = _ctx(
-            is_gpai=True,
-            flops=3e25,
-            model_card=False,
-            adversarial=False,
-            incident_reporting=True,
-        )
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.DENY
-        assert audit.has_systemic_risk is True
-
-    def test_scenario_d_minimal_risk_chatbot_allowed(self):
-        """Full Scenario D: minimal-risk chatbot with no obligations violated."""
-        ctx = _ctx(name="Customer Support Chatbot")
-        audit = self.orch.evaluate(ctx)
-        assert audit.outcome == GovernanceOutcome.ALLOW
-        assert len(audit.violations) == 0
+    def test_has_conditions_property(self, m):
+        result = m.EUGovernanceResult(layer="TEST")
+        result.decision = m.EUGovernanceDecision.APPROVED_WITH_CONDITIONS
+        assert result.has_conditions
+        result.decision = m.EUGovernanceDecision.APPROVED
+        assert not result.has_conditions

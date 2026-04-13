@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] — 2026-04-13
+
+### Added — EU AI Act Governance (Articles 5–7, 9–10, 13–14, 43–49, 61–62, 73)
+
+**`examples/16_eu_ai_act_governance.py`** — four-layer governance orchestrator for AI systems
+subject to the EU AI Act (Regulation (EU) 2024/1689), enforcing Risk Classification and
+Prohibited Practices (Articles 5–7, Annex III), Conformity Assessment and CE Marking
+(Articles 9, 43–49), Data Governance and Bias Examination (Article 10), and Transparency,
+Human Oversight, and Post-Market Monitoring (Articles 13–14, 26, 61–62, 73).
+
+**New classes:**
+- `EUAIActRiskLevel` — PROHIBITED / HIGH_RISK / LIMITED_TRANSPARENCY / MINIMAL_RISK
+- `AnnexIIICategory` — 8 high-risk categories: BIOMETRIC_IDENTIFICATION,
+  CRITICAL_INFRASTRUCTURE, EDUCATION_VOCATIONAL, EMPLOYMENT_WORKERS, ESSENTIAL_SERVICES,
+  LAW_ENFORCEMENT, MIGRATION_ASYLUM, JUSTICE_DEMOCRACY
+- `EUConformityAssessmentRoute` — INTERNAL_CONTROL / THIRD_PARTY_NOTIFIED / NOT_REQUIRED
+- `EUGovernanceDecision` — APPROVED / APPROVED_WITH_CONDITIONS / DENIED
+- `EUAIActContext` (frozen) — 22-field governance review context covering risk level,
+  Annex III category, conformity assessment route, RMS establishment, residual risk
+  acceptability, post-market plan, data quality, bias examination, conformity assessment
+  completion, CE marking, instructions for use, disclosure obligations, human oversight
+  measures, override capability, deployer logs, and incident reporting
+- `EUGovernanceResult` — per-layer result with `is_denied` / `has_conditions` properties
+- `EURiskClassificationFilter` — Layer 1: unconditional DENIED for Article 5 prohibited
+  practices; DENIED for HIGH_RISK without Annex III category; conditions for LIMITED_TRANSPARENCY
+  disclosure; conditions for MINIMAL_RISK voluntary code adherence
+- `EUConformityAssessmentFilter` — Layer 2: non-HIGH_RISK passes; HIGH_RISK checks RMS
+  (Article 9), residual risk acceptance (Article 9(4)), post-market plan (Article 72),
+  conformity assessment completion (Article 43), and CE marking (Article 49)
+- `EUDataGovernanceFilter` — Layer 3: HIGH_RISK requires training data quality documentation
+  (Article 10(2)), bias examination for protected characteristics (Article 10(5)), and active
+  data monitoring; non-HIGH_RISK receives best-practice condition
+- `EUTransparencyHumanOversightFilter` — Layer 4: MINIMAL_RISK early return; all non-minimal
+  check instructions for use (Article 13); HIGH_RISK additionally checks human oversight
+  measures (Article 14), override capability (Article 14(4)(d)), deployer logs (Article 26(6)),
+  and serious incident reporting (Article 73)
+- `EUAIActGovernanceOrchestrator` — four-layer orchestrator; any DENIED → DENIED; no DENIED
+  + any CONDITIONS → APPROVED_WITH_CONDITIONS; all APPROVED → APPROVED
+- `EUAIActGovernanceReport` — aggregated report with `summary()` method returning structured dict
+
+**Test coverage:** 41 tests across all four layers and orchestrator, including the critical
+Article 73 incident-reporting boundary: not required for LIMITED_TRANSPARENCY systems.
+
+---
+
 ## [0.17.0] — 2026-04-13
 
 ### Added — Public Sector AI Governance (OMB M-24-10 + EO 14110 + NIST AI RMF + Section 508)
