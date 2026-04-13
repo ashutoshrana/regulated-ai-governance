@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] — 2026-04-13
+
+### Added — Automotive / Transportation AI Governance (UNECE WP.29 R155/R156 + ISO 26262 + NHTSA AV)
+
+**`examples/11_automotive_ai_governance.py`** — layered governance framework for AI deployed in
+automotive and mobility systems, covering three regulatory pillars: ISO 26262 Functional Safety
+(ASIL classification), UNECE WP.29 Regulations R155 (cybersecurity management) and R156 (software
+update management), and NHTSA AV safety guidance.
+
+New classes (self-contained in the example):
+- `ASILLevel` — QM, ASIL_A, ASIL_B, ASIL_C, ASIL_D (ISO 26262-1:2018 §3.6)
+- `SAELevel` — L0 through L5 (SAE J3016 automation taxonomy)
+- `AISystemFunction` — 14 automotive AI functions including EMERGENCY_BRAKING (ASIL D),
+  STEERING_CONTROL (ASIL D), PATH_PLANNING (ASIL C), LANE_KEEP_ASSIST (ASIL B),
+  OTA_UPDATE_EXECUTION (ASIL D per ISO 26262-8 §7), INFOTAINMENT (QM)
+- `GovernanceOutcome` — ALLOW, ALLOW_WITH_CONDITIONS, ESCALATE_HUMAN, DENY
+- `SafetyClassifier` — ISO 26262 ASIL assignment table; `verify_requirements_met()` checks that
+  all ASIL-required verification activities (unit_testing, code_review, fmea_complete, hara_complete,
+  independent_safety_assessment, safety_case_documented, formal_verification,
+  safety_element_out_of_context) have been completed
+- `CybersecurityContext` — frozen dataclass: csms_certified, csms_certificate_id, threat_assessment_current,
+  known_vulnerabilities_mitigated, intrusion_detection_active, incident_response_tested, security_logging_enabled
+- `R155CybersecFilter` — UNECE WP.29 R155 CSMS compliance; missing CSMS cert (§7.3.1) or
+  unmitigated vulnerabilities (§7.3.3) → DENY; missing IDS (§7.3.5) or logging (§7.3.7) →
+  ALLOW_WITH_CONDITIONS
+- `SoftwareUpdateContext` — frozen dataclass: sums_documented, update_cryptographically_signed,
+  rollback_capability_present, over_the_air, driver_consent_obtained, installation_state_verified,
+  asil_change_requires_reapproval
+- `R156SUMSFilter` — UNECE WP.29 R156 SUMS compliance; unsigned OTA (§7.2.2) or no rollback (§7.2.4) →
+  DENY; ASIL D + any violation → DENY; OTA without consent (§7.2.6) → ALLOW_WITH_CONDITIONS for lower ASILs
+- `NHTSAAVContext` — frozen dataclass: sae_level, odd_documented, safety_performance_tested,
+  cybersecurity_compliance, crash_avoidance_validated, sgo_reporting_enabled,
+  fallback_minimal_risk_condition, human_machine_interface_tested, data_recording_capability
+- `NHTSAAVFilter` — NHTSA AV Safety Principles and SGO 2021-01; missing ODD or safety testing →
+  DENY; L3+ without MRC → DENY; L2+ without SGO reporting → ALLOW_WITH_CONDITIONS
+- `AutomotiveGovernanceAuditRecord` — OEM-grade audit: all per-layer outcomes, ASIL level,
+  missing activities, final_outcome, denial_reasons, conditions
+- `AutomotiveAIOrchestrator` — orchestrates all four checks; DENY from any layer blocks deployment;
+  conditions surfaced in audit even when final outcome is ALLOW
+
+Four scenarios: ADAS lane-keep (ASIL B fully compliant → ALLOW), L3 conditional automation
+(no CSMS → DENY), OTA update to ASIL D (unsigned + no rollback → DENY), L4 robotaxi
+(SGO reporting not wired → ALLOW_WITH_CONDITIONS).
+
+**Test coverage:** 36 tests (`tests/test_automotive_ai_governance.py`)
+
+---
+
 ## [0.12.0] — 2026-04-13
 
 ### Added — EU AI Act Standalone Governance Example (Regulation 2024/1689)
