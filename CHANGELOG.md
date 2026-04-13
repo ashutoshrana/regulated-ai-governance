@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] — 2026-04-13
+
+### Added — Manufacturing/OT Governance Example + Implementation Notes
+
+**`examples/06_manufacturing_ot_governance.py`** — multi-framework AI governance for a
+predictive maintenance agent in a chemical plant, combining ISO/IEC 42001:2023 AI Management
+System, IEC 62443 OT Security Levels, and DORA ICT Risk Management (Art. 28):
+- ISO 42001 A.6.2.10: operating-scope enforcement (advisory monitoring zone only)
+- ISO 42001 A.9.5: human oversight required for autonomous actuation (HIGH-risk classification)
+- IEC 62443 SL-2: agent authorized at Security Level 2; SL-3 Control Zone actions denied
+- IEC 62443 zone/conduit model: Process Control Zone → Business Zone crossing denied
+- DORA Art. 28: third-party ML services not in the ICT service register are denied
+- Scenario A: `sensor_anomaly_detection` — advisory monitoring, all frameworks permit (ALLOW)
+- Scenario B: `autonomous_valve_control` — ISO 42001 + IEC 62443 both deny (DENY)
+- Scenario C: `third_party_ml_inference` — DORA Art. 28 undocumented dependency (DENY)
+- Scenario D: `maintenance_scheduling_recommendation` — advisory, all frameworks permit (ALLOW)
+- Scenario E: `cross_plant_data_sharing` — IEC 62443 zone boundary violation (DENY)
+- Closes #21.
+
+**`docs/implementation-note-01.md`** — "Multi-Framework AI Governance: Why Single-Layer Compliance Fails":
+- Deny-all aggregation rationale and the conjunctive nature of compliance obligations
+- Escalation routing: why different violations go to different targets
+- Skip vs. deny distinction for jurisdictional applicability
+- Concrete failure scenario: HIPAA-only system lacking NIST AI RMF guard
+- Three-step pattern for adding a new framework to an existing orchestrator
+- Closes #20 (partially).
+
+**`docs/implementation-note-02.md`** — "Audit Trail Design for Regulated AI: What to Log and Why":
+- `GovernanceAuditRecord` and `ComprehensiveAuditReport` field-by-field rationale
+- Retention requirements by regulation: HIPAA (6yr), EU AI Act (10yr), GDPR, DORA, SOC 2
+- Shadow (audit-only) mode and its compliance implications
+- What the governance audit trail is NOT responsible for
+- Closes #20 (partially).
+
+**`docs/implementation-note-03.md`** — "Adapter Pattern for Multi-Framework Integrations":
+- Why adapter-over-inheritance (ADR-003) keeps the compliance core framework-agnostic
+- Complete integration table: 8 framework adapters (CrewAI, LangChain, AutoGen, SK, Haystack, LlamaIndex, DSPy, MAF)
+- Step-by-step guide to adding a new framework adapter
+- Testing strategy: unit testing guards vs. integration testing adapters
+- Framework version migration pattern (e.g. AutoGen 0.2 → MAF)
+- Closes #20.
+
+---
+
 ## [0.7.1] — 2026-04-13
 
 ### Added — Healthcare AI Governance Example
