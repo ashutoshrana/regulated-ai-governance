@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] — 2026-04-13
+
+### Added — Public Sector AI Governance (OMB M-24-10 + EO 14110 + NIST AI RMF + Section 508)
+
+**`examples/15_public_sector_ai_governance.py`** — four-layer governance orchestrator for AI
+systems deployed by or on behalf of US federal agencies, enforcing OMB M-24-10 (March 2024)
+agency AI governance obligations, Executive Order 14110 (October 2023) safety and security
+requirements, NIST AI Risk Management Framework AI 100-1 (2023) four-function maturity
+requirements, and Section 508 / ADA accessibility and plain-language explanation obligations.
+
+**New classes:**
+- `FederalAIUseCase` — 10 use cases from BENEFITS_DETERMINATION (rights-impacting) through
+  DOCUMENT_CLASSIFICATION (minimum-impact)
+- `AIImpactLevel` — RIGHTS_IMPACTING / SAFETY_IMPACTING / LOW_IMPACT / MINIMUM_IMPACT
+  per OMB M-24-10 classification
+- `EO14110RiskTier` — DUAL_USE_FOUNDATION / SAFETY_CRITICAL / HIGH_RISK / STANDARD
+- `NISTRMFLevel` — FULL / PARTIAL / MINIMAL / NONE maturity levels for AI RMF implementation
+- `PublicSectorAIContext` (frozen) — 21-field governance review context covering all four
+  framework dimensions
+- `PublicSectorGovernanceResult` (dataclass) — per-layer result with default APPROVED
+  decision, findings list, and conditions list
+- `OMBM2410Filter` — Layer 1: CAIO + inventory for all non-minimum-impact AI; human review
+  + appeal for rights-impacting; safety testing + incident reporting for safety-impacting;
+  minimum-impact: inventory only
+- `EO14110Filter` — Layer 2: red-team + TEVV for DUAL_USE_FOUNDATION; TEVV + safety testing
+  for SAFETY_CRITICAL; safety testing for HIGH_RISK (with quarterly review condition);
+  STANDARD: documentation condition only
+- `NISTAIRMFFilter` — Layer 3: FULL → annual review condition; PARTIAL → conditions with
+  missing function list; MINIMAL/NONE → denied for non-minimum-impact; minimum-impact accepts
+  MINIMAL or higher
+- `Section508Filter` — Layer 4: minimum-impact → employee accessibility condition; public-
+  facing → 508 compliance required; rights/safety/citizen-services → plain-language
+  explanations required
+- `PublicSectorGovernanceReport` — aggregated report with summary() dict method
+- `PublicSectorGovernanceOrchestrator` — four-layer evaluation; any DENIED → final DENIED;
+  all layers evaluated regardless of earlier failures
+
+**New tests:** 44 tests across `tests/test_public_sector_ai_governance.py`
+
+---
+
 ## [0.16.0] — 2026-04-13
 
 ### Added — Insurance AI Governance (NAIC 2023 + FCRA + NY DFS + ECOA Disparate Impact)
