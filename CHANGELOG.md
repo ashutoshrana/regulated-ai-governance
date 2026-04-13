@@ -23,6 +23,22 @@ Four-layer governance filter for Brazil LGPD, ANPD AI guidelines, sectoral AI re
 
 ---
 
+## [0.40.0] — 2026-04-13
+
+### Added — India DPDP Act 2023 + MeitY AI Governance Framework (`37_india_dpdp_ai_governance.py`)
+
+Four-layer governance filter for India's Digital Personal Data Protection Act 2023, MeitY AI advisory, sectoral AI regulations, and cross-border controls; 8 ecosystem wrappers:
+
+- `IndiaDPDPFilter` (DPDP Act 2023 §§5/6/9/13/16) — no notice → DENIED; no consent → DENIED; sensitive data (financial/health/biometric/children) without explicit consent → DENIED; cross-border to RU/CN/KP/IR non-adequate → DENIED; automated processing without grievance redressal → REQUIRES_HUMAN_REVIEW
+- `MeitYAIFilter` (MeitY Draft AI Policy + Advisory 2023/2024) — high-risk AI without impact assessment §4.2 → DENIED; no explainability §3.1 → DENIED; GenAI content without labeling/watermark §2 → DENIED; citizen-affecting AI without human oversight §5.3 → REQUIRES_HUMAN_REVIEW
+- `IndiaSectoralAIFilter` (RBI/ICMR/TRAI/IRDAI) — financial AI without RBI/2023-24/73 compliance → DENIED; healthcare AI without ICMR ethics review → DENIED; telecom AI without TRAI consent → DENIED; insurance AI without IRDAI circular → REQUIRES_HUMAN_REVIEW
+- `IndiaCrossBorderFilter` (DPDP §16 + MeitY + RBI) — personal data to restricted countries without adequacy → DENIED; critical data to non-empanelled cloud → DENIED; sensitive AI training data export without MeitY clearance → DENIED; payment data without RBI/2021-22/57 compliance → REQUIRES_HUMAN_REVIEW
+- 8 ecosystem wrappers: `IndiaLangChainPolicyGuard`, `IndiaCrewAIGovernanceGuard`, `IndiaAutoGenGovernedAgent`, `IndiaSemanticKernelPlugin`, `IndiaLlamaIndexWorkflowGuard`, `IndiaHaystackGovernanceComponent`, `IndiaDSPyGovernanceModule`, `IndiaMAFPolicyMiddleware`
+
+132 new tests. Total: **2291 passed**.
+
+---
+
 ## [0.38.0] — 2026-04-13
 
 ### Added — South Korea AI Governance Framework (`35_south_korea_ai_governance.py`)
