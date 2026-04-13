@@ -96,6 +96,7 @@ Quick start — governance skill with factory
 
 from regulated_ai_governance.agent_guard import GovernedActionGuard
 from regulated_ai_governance.audit import GovernanceAuditRecord
+from regulated_ai_governance.base import FilterResult, GovernanceFilter, GovernancePipeline
 from regulated_ai_governance.orchestrator import (
     ComprehensiveAuditReport,
     FrameworkGuard,
@@ -111,6 +112,10 @@ from regulated_ai_governance.skill import (
 )
 
 __all__ = [
+    # Base filter primitives
+    "FilterResult",
+    "GovernanceFilter",
+    "GovernancePipeline",
     # Core policy primitives
     "ActionPolicy",
     "EscalationRule",
@@ -131,4 +136,4 @@ __all__ = [
     "GovernanceAuditSkill",
 ]
 
-__version__ = "0.7.0"
+__version__ = "0.32.0"

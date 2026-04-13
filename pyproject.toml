@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "regulated-ai-governance"
-version = "0.31.0"
+version = "0.32.0"
 description = "Comprehensive governance framework for AI agents operating in FERPA, HIPAA, GDPR, GLBA, ISO 42001, and 10+ regulated environments"
 readme = "README.md"
 license = "MIT"
@@ -86,6 +86,9 @@ Changelog = "https://github.com/ashutoshrana/regulated-ai-governance/blob/main/C
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+regulated_ai_governance = ["py.typed"]
 
 [tool.ruff]
 line-length = 120

@@ -10,6 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.32.0] — 2026-04-13
+
+### Added — GovernancePipeline base classes and public API foundation
+
+- `src/regulated_ai_governance/base.py` — `FilterResult` (canonical dataclass with `is_denied`/`is_approved`/`requires_review` properties), `GovernanceFilter` (runtime-checkable Protocol), `GovernancePipeline` (chains filters, short-circuits on DENIED, optional `stop_on_review`, `filter_batch`/`approved_only` helpers)
+- `py.typed` — PEP 561 type marker (confirmed present)
+- `__init__.py` — `__version__ = "0.32.0"`, exports `FilterResult`, `GovernanceFilter`, `GovernancePipeline`, `__all__`
+- `pyproject.toml` — `[tool.setuptools.package-data]` declares `py.typed`
+- `.claude/skills/add-governance-filter.md` — Claude Code skill encoding conventions for adding new governance filter examples
+
+36 new tests. Total: **1527 passed**.
+
+---
+
 ## [0.31.0] — 2026-04-13
 
 ### Added — Eastern Europe AI Governance (`29_eastern_europe_ai_governance.py`)

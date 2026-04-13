@@ -268,7 +268,7 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
   author  = {Rana, Ashutosh},
   title   = {regulated-ai-governance: Policy enforcement for AI agents in regulated environments},
   year    = {2026},
-  version = {0.31.0},
+  version = {0.32.0},
   url     = {https://github.com/ashutoshrana/regulated-ai-governance},
   license = {MIT}
 }
@@ -280,9 +280,9 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 
 | Library | Focus | Coverage |
 |---------|-------|---------|
-| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 36 sectors · 38 regulations · 1145 tests |
-| **regulated-ai-governance** | What agents may do | 29 governance examples · 16 jurisdictions · 1491 tests |
-| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 29 patterns · schema registry · GraphQL · 903 tests |
+| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 38 sectors · 40 regulations · 1265 tests |
+| **regulated-ai-governance** | What agents may do | 29 governance examples · 16 jurisdictions · 1527 tests |
+| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 31 patterns · schema registry · GraphQL · 1072 tests |
 
 ---
 
