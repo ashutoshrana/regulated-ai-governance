@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] — 2026-04-13
+
+### Added — DSPy Framework Integration
+
+- `integrations/dspy.py`: `GovernedDSPyModule` and `GovernedDSPyPipeline` —
+  policy-enforcing wrappers for DSPy `Module` objects (DSPy ≥ 2.5.0, Pydantic v2).
+
+  **`GovernedDSPyModule`** wraps any DSPy module:
+  - `forward(*args, **kwargs)` and `__call__` evaluate the `ActionPolicy` before
+    delegating to the wrapped module.  Denied actions raise `PermissionError`.
+  - `action_name` defaults to `type(wrapped_module).__name__` — configure
+    `ActionPolicy.allowed_actions` with class names of permitted modules.
+  - Emits a `GovernanceAuditRecord` for every call (permitted, denied, escalated).
+  - `__getattr__` delegation — DSPy introspection (`predictors()`, `parameters()`,
+    etc.) works transparently through the guard wrapper.
+  - Optional `context` dict included in every audit record (session ID, pipeline
+    stage, etc.).
+
+  **`GovernedDSPyPipeline`** wraps a sequential pipeline:
+  - Each module is individually guarded; denied intermediate steps fail fast.
+  - Dict outputs are unpacked as `**kwargs` for the next step; non-dict outputs
+    are passed as a single positional argument.
+
+  Closes #2. 27 new tests.
+
+- `integrations/__init__.py`: exports `GovernedDSPyModule`, `GovernedDSPyPipeline`.
+
+---
+
 ## [0.6.0] — 2026-04-13
 
 ### Added — Cross-Industry AI Governance Regulation Modules

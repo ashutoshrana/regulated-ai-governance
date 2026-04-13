@@ -8,6 +8,8 @@ any framework dependency installed.
 Available integrations
 ----------------------
 - ``EnterpriseActionGuard``     — CrewAI ``BaseTool`` wrapper (crewai>=1.14)
+- ``GovernedDSPyModule``        — DSPy ``Module`` wrapper (dspy>=2.5, Pydantic v2)
+- ``GovernedDSPyPipeline``      — DSPy sequential pipeline with per-step enforcement
 - ``PolicyEnforcingAgent``      — AutoGen agent with inline policy enforcement
 - ``PolicyKernelPlugin``        — Semantic Kernel function plugin
 - ``PolicyMiddleware``          — Microsoft Agent Framework (MAF) middleware (NEW — MAF 2026)
@@ -25,10 +27,13 @@ Semantic Kernel integrations remain available for backward compatibility, but
 new projects should use the MAF integration (``PolicyMiddleware``).
 """
 
+from .dspy import GovernedDSPyModule, GovernedDSPyPipeline
 from .haystack import GovernedHaystackComponent, make_haystack_policy_guard
 from .llama_index import GovernedQueryEngine, PolicyWorkflowEvent, PolicyWorkflowGuard
 
 __all__ = [
+    "GovernedDSPyModule",
+    "GovernedDSPyPipeline",
     "GovernedHaystackComponent",
     "make_haystack_policy_guard",
     "GovernedQueryEngine",
