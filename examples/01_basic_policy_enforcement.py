@@ -14,13 +14,13 @@ Run:
     python examples/01_basic_policy_enforcement.py
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from regulated_ai_governance.policy import ActionPolicy
 from regulated_ai_governance.adapters.crewai import PolicyViolationError
+from regulated_ai_governance.policy import ActionPolicy
 
 
 def attempt_action(policy: ActionPolicy, action_name: str) -> None:
@@ -47,7 +47,7 @@ def main() -> None:
         require_all_allowed=True,
     )
 
-    print(f"\nPolicy configuration:")
+    print("\nPolicy configuration:")
     print(f"  allowed_actions:    {sorted(policy.allowed_actions)}")
     print(f"  denied_actions:     {sorted(policy.denied_actions)}")
     print(f"  require_all_allowed: {policy.require_all_allowed}")

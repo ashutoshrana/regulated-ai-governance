@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Downloads](https://img.shields.io/pypi/dm/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
 
-**Governance framework for AI agents and RAG systems in regulated environments — 24 examples, 12 jurisdictions, 9 AI frameworks, 1088 tests.**
+**Governance framework for AI agents and RAG systems in regulated environments — 25 examples, 13 jurisdictions, 9 AI frameworks, 1153 tests.**
 
 Policy enforcement, audit logging, and compliance orchestration for AI systems that must satisfy FERPA, HIPAA, GDPR, EU AI Act, APPI, MAS FEAT, and 15+ additional regulatory frameworks.
 
@@ -121,7 +121,7 @@ print(report.compliance_summary)  # human-readable for audit file
 
 ---
 
-## Example catalog — 24 governance examples
+## Example catalog — 25 governance examples
 
 | # | File | Jurisdiction / Domain | Frameworks Enforced |
 |---|------|----------------------|---------------------|
@@ -149,6 +149,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | 22 | `22_brazil_ai_governance.py` | Brazil | LGPD Law 13.709/2018 (Art. 7/11/33/37), Brazilian AI Bill PL 2338/2023 (Art. 3/14/16/22), ANPD Guidelines 2023, CFM 2299/2021, BCB Circular 3.978/2020, CLT + MPT |
 | 23 | `23_india_ai_governance.py` | India | DPDP Act 2023 (§4/6/9/12/16), MEITY AI Advisory 2024 (synthetic media + election safeguards + bias testing), IT Act §43A + IT Rules 2011, RBI/IRDAI/CDSCO sectoral AI guidance |
 | 24 | `24_south_korea_ai_governance.py` | South Korea | Korea AI Framework Act 2024 (Art. 6/10 high-impact + prohibited AI), PIPA (Art. 15/23/28-2/28-3/39-3 automated decisions + profiling + cross-border), Credit Information Act Art. 20, MFDS SaMD approval |
+| 25 | `25_middle_east_ai_governance.py` | Middle East (GCC) | UAE PDPL (Federal Decree-Law No. 45/2021 Art. 7/10/16) + UAE AI Ethics 2019, Saudi PDPL (Royal Decree M/19 Art. 4/NDMO) + SAMA/SFDA, Qatar PDPA (Law No. 13/2016 Art. 8/9) + Qatar AI Strategy 2030, GCCCrossBorderFilter (adequate: AE/SA/QA/BH/KW/OM) |
 
 ---
 
@@ -168,6 +169,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | **Brazil** | LGPD Law 13.709/2018, Brazilian AI Bill PL 2338/2023, ANPD Guidelines 2023, CFM Resolution 2299/2021, BCB Circular 3.978/2020 | 22 |
 | **India** | DPDP Act 2023, MEITY AI Advisory 2024, IT Act 2000 §43A + IT Rules 2011, RBI AI Guidance, IRDAI Guidelines, CDSCO SaMD Guidance | 23 |
 | **South Korea** | Korea AI Framework Act 2024, PIPA 2020/2023 amendments, Credit Information Use and Protection Act, Korean Medical Devices Act (MFDS SaMD) | 24 |
+| **Middle East (GCC)** | UAE PDPL Federal Decree-Law No. 45/2021 + UAE AI Ethics 2019, Saudi PDPL Royal Decree M/19 + NDMO + SAMA + SFDA, Qatar PDPA Law No. 13/2016 + Qatar AI Strategy 2030, GCC cross-border adequacy | 25 |
 
 ---
 
@@ -241,9 +243,8 @@ JSON-serializable; suitable for compliance databases, SIEM ingestion, and regula
 
 ## Near-term roadmap
 
-- `25_middle_east_ai_governance.py` — UAE AI Strategy 2031 + Saudi NDMO + Qatar PDPL
 - `26_iso42001_compliance.py` — ISO 42001:2023 AI Management System (standalone)
-- ISO 42001:2023 AI Management System compliance layer (standalone)
+- `27_africa_ai_governance.py` — Kenya DPA 2019, Nigeria NDPA 2023, South Africa POPIA
 - Async filter support for FastAPI/asyncio environments
 
 ---
@@ -261,7 +262,7 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
   author  = {Rana, Ashutosh},
   title   = {regulated-ai-governance: Policy enforcement for AI agents in regulated environments},
   year    = {2026},
-  version = {0.24.0},
+  version = {0.27.0},
   url     = {https://github.com/ashutoshrana/regulated-ai-governance},
   license = {MIT}
 }
@@ -273,9 +274,9 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 
 | Library | Focus | Coverage |
 |---------|-------|---------|
-| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 30 sectors · 29 regulations · 924 tests |
-| **regulated-ai-governance** | What agents may do | 24 governance examples · 12 jurisdictions · 1088 tests |
-| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 25 patterns · schema registry · distributed tracing · 695 tests |
+| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 33 sectors · 33 regulations · 1033 tests |
+| **regulated-ai-governance** | What agents may do | 25 governance examples · 13 jurisdictions · 1153 tests |
+| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 26 patterns · schema registry · GraphQL · 741 tests |
 
 ---
 

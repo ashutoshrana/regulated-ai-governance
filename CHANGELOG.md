@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
+
+## [0.27.0] — 2026-04-13
+
+### Added — Middle East (GCC) AI Governance (`25_middle_east_ai_governance.py`)
+
+UAE, Saudi Arabia, and Qatar AI governance as composable filters:
+
+- `UAEAIFilter` (UAE PDPL Federal Decree-Law No. 45/2021 + UAE AI Ethics 2019) — Art. 7 consent required; Art. 10 biometric prohibition; Ethics Principle 3 transparency for automated decisions; Art. 16 DPO requirement for large-scale processing
+- `SaudiAIFilter` (Saudi PDPL Royal Decree M/19 + NDMO + SAMA + SFDA) — Art. 4 consent; NDMO data classification; SAMA approval for financial AI; SFDA SaMD approval for medical AI
+- `QatarAIFilter` (Qatar PDPA Law No. 13/2016 + Qatar AI Strategy 2030) — Art. 8 consent; automated decision explainability; Art. 9 profiling consent
+- `GCCCrossBorderFilter` — GCC adequate states (AE/SA/QA/BH/KW/OM); UAE to non-GCC without consent → DENIED (Art. 26); Saudi to non-GCC → REQUIRES_HUMAN_REVIEW (Art. 29/SDAIA); Qatar to non-GCC without consent → DENIED (Art. 12/MOTC)
+
+65 new tests. Total: **1153 passed**.
+
+---
+
+
 ## [0.26.0] — 2026-04-13
 
 ### Added — South Korea AI Governance (`24_south_korea_ai_governance.py`)

@@ -15,17 +15,16 @@ Run:
     python examples/02_crewai_guard.py
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-
-from regulated_ai_governance.policy import ActionPolicy
 
 # EnterpriseActionGuard calls _import_crewai() in __init__, which raises
 # ImportError when crewai is not installed.  We patch the check so the
 # adapter can be demonstrated without the optional SDK dependency.
 import regulated_ai_governance.adapters.crewai as _crewai_module
+from regulated_ai_governance.policy import ActionPolicy
 
 try:
     import crewai  # noqa: F401
@@ -85,12 +84,12 @@ def main() -> None:
 
     print(f"  Tool name:     {guarded_export.name!r}")
     print(f"  Tool desc:     {guarded_export.description!r}")
-    print(f"  Calling guarded_export._run()...")
+    print("  Calling guarded_export._run()...")
     try:
         result = guarded_export._run()
         print(f"  Unexpected success: {result}")
     except PolicyViolationError as exc:
-        print(f"  PolicyViolationError raised (expected):")
+        print("  PolicyViolationError raised (expected):")
         print(f"    {exc}")
     print(f"  Underlying tool._run() call count: {export_tool._run_call_count} (expected 0)")
     assert export_tool._run_call_count == 0, "Guard failed: underlying tool was called despite block"
@@ -109,7 +108,7 @@ def main() -> None:
     )
 
     print(f"  Tool name:     {guarded_read.name!r}")
-    print(f"  Calling guarded_read._run()...")
+    print("  Calling guarded_read._run()...")
     try:
         result = guarded_read._run()
         print(f"  Result: {result!r}")

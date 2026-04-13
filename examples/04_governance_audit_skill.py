@@ -24,7 +24,6 @@ from regulated_ai_governance import (
     GovernedActionGuard,
 )
 
-
 # ---------------------------------------------------------------------------
 # Shared audit log
 # ---------------------------------------------------------------------------
@@ -39,6 +38,7 @@ def _log(report: ComprehensiveAuditReport) -> None:
 # ---------------------------------------------------------------------------
 # Demo 1: Education — FERPA enforcement via factory
 # ---------------------------------------------------------------------------
+
 
 def demo_education() -> None:
     print("=" * 60)
@@ -84,6 +84,7 @@ def demo_education() -> None:
 # Demo 2: Healthcare — HIPAA enforcement via factory
 # ---------------------------------------------------------------------------
 
+
 def demo_healthcare() -> None:
     print("=" * 60)
     print("Demo 2: Healthcare — HIPAA via GovernanceAuditSkill.for_healthcare()")
@@ -117,6 +118,7 @@ def demo_healthcare() -> None:
 # Demo 3: Enterprise — multi-framework via factory
 # ---------------------------------------------------------------------------
 
+
 def demo_enterprise() -> None:
     print("=" * 60)
     print("Demo 3: Enterprise — multi-framework via for_enterprise()")
@@ -148,6 +150,7 @@ def demo_enterprise() -> None:
 # ---------------------------------------------------------------------------
 # Demo 4: Scoped evaluation — only run FERPA + GDPR out of FERPA/HIPAA/GDPR
 # ---------------------------------------------------------------------------
+
 
 def demo_framework_scoping() -> None:
     print("=" * 60)
@@ -182,6 +185,7 @@ def demo_framework_scoping() -> None:
 # Demo 5: Audit-only shadow mode
 # ---------------------------------------------------------------------------
 
+
 def demo_audit_only() -> None:
     print("=" * 60)
     print("Demo 5: Audit-only shadow mode — evaluate without blocking")
@@ -193,9 +197,7 @@ def demo_audit_only() -> None:
                 FrameworkConfig(
                     regulation="FERPA",
                     guard=GovernedActionGuard(
-                        policy=ActionPolicy(
-                            allowed_actions={"read_transcript"}
-                        ),
+                        policy=ActionPolicy(allowed_actions={"read_transcript"}),
                         regulation="FERPA",
                         actor_id="shadow_agent",
                     ),
@@ -225,6 +227,7 @@ def demo_audit_only() -> None:
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
+
 
 def print_summary() -> None:
     print("=" * 60)
