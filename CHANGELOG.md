@@ -10,6 +10,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.30.0] — 2026-04-13
+
+### Added — Nordic/Scandinavia AI Governance (`28_nordic_ai_governance.py`)
+
+Sweden, Denmark, and Finland national AI governance implementations:
+
+- `SwedenAIFilter` (IMY AI Guidelines 2023 + SFS 2018:218) — public authority automated without oversight → DENIED; sensitive data without basis → DENIED; high-risk without transparency → REQUIRES_HUMAN_REVIEW
+- `DenmarkAIFilter` (Datatilsynet AI Guidance 2023 + Act No. 502/2018) — high-risk sensitive without DPIA → DENIED; limited/high automated without oversight → REQUIRES_HUMAN_REVIEW; public sector unregistered → REQUIRES_HUMAN_REVIEW
+- `FinlandAIFilter` (TSV AI Guidelines 2023 + Data Protection Act 1050/2018) — sensitive data without basis → DENIED; public authority automated without transparency → DENIED; high-risk without DPIA → REQUIRES_HUMAN_REVIEW
+- `NordicCrossBorderFilter` — intra-EEA transfers APPROVED; non-EEA with Art. 46 safeguards APPROVED; non-EEA without safeguards DENIED with jurisdiction-specific citations
+
+104 new tests. Total: **1404 passed**.
+
+---
+
+
+---
+
 ## [0.29.0] — 2026-04-13
 
 ### Added — ISO 42001:2023 AI Management System (`27_iso42001_compliance.py`)

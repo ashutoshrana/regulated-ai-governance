@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Downloads](https://img.shields.io/pypi/dm/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
 
-**Governance framework for AI agents and RAG systems in regulated environments — 27 examples, 14 jurisdictions, 9 AI frameworks, 1300 tests.**
+**Governance framework for AI agents and RAG systems in regulated environments — 28 examples, 15 jurisdictions, 9 AI frameworks, 1404 tests.**
 
 Policy enforcement, audit logging, and compliance orchestration for AI systems that must satisfy FERPA, HIPAA, GDPR, EU AI Act, APPI, MAS FEAT, and 15+ additional regulatory frameworks.
 
@@ -121,7 +121,7 @@ print(report.compliance_summary)  # human-readable for audit file
 
 ---
 
-## Example catalog — 27 governance examples
+## Example catalog — 28 governance examples
 
 | # | File | Jurisdiction / Domain | Frameworks Enforced |
 |---|------|----------------------|---------------------|
@@ -152,6 +152,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | 25 | `25_middle_east_ai_governance.py` | Middle East (GCC) | UAE PDPL (Federal Decree-Law No. 45/2021 Art. 7/10/16) + UAE AI Ethics 2019, Saudi PDPL (Royal Decree M/19 Art. 4/NDMO) + SAMA/SFDA, Qatar PDPA (Law No. 13/2016 Art. 8/9) + Qatar AI Strategy 2030, GCCCrossBorderFilter (adequate: AE/SA/QA/BH/KW/OM) |
 | 26 | `26_africa_ai_governance.py` | Africa (Kenya, Nigeria, South Africa) | Kenya DPA 2019 (§25/§30/§31 automated decisions + sensitive data + profiling), Nigeria NDPA 2023 (§25/§34) + NITDA AI Policy §3.2, South Africa POPIA 2013 (§26/§71) + FSCA AI Guidance 2023, AU cross-border adequacy framework (KE/NG/ZA/GH/MA/TN/EG) |
 | 27 | `27_iso42001_compliance.py` | ISO 42001:2023 AI Management System | ISO 42001 Clause 5 (AI Policy — top management leadership), Clause 6 (Risk assessment + Annex B impact assessment), Clause 8 (Operations — human oversight + data governance + third-party AI), Clause 9 (Performance evaluation — audit trail + documented information + incident process); conformity_level: FULL/PARTIAL/NON_CONFORMING |
+| 28 | `28_nordic_ai_governance.py` | Nordic/Scandinavia (Sweden, Denmark, Finland) | Sweden IMY AI Guidelines 2023 + SFS 2018:218, Denmark Datatilsynet AI Guidance 2023 + Act No. 502/2018, Finland TSV AI Guidelines 2023 + Data Protection Act 1050/2018, NordicCrossBorderFilter (intra-EEA adequate; non-EEA jurisdiction-specific GDPR Art. 46 denials) |
 
 ---
 
@@ -173,6 +174,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | **South Korea** | Korea AI Framework Act 2024, PIPA 2020/2023 amendments, Credit Information Use and Protection Act, Korean Medical Devices Act (MFDS SaMD) | 24 |
 | **Middle East (GCC)** | UAE PDPL Federal Decree-Law No. 45/2021 + UAE AI Ethics 2019, Saudi PDPL Royal Decree M/19 + NDMO + SAMA + SFDA, Qatar PDPA Law No. 13/2016 + Qatar AI Strategy 2030, GCC cross-border adequacy | 25 |
 | **Africa** | Kenya DPA 2019 (§25/§30/§31), Nigeria NDPA 2023 (§25/§34) + NITDA AI Policy §3.2, South Africa POPIA 2013 (§26/§71) + FSCA AI Guidance 2023, AU Data Policy Framework 2022 cross-border adequacy | 26 |
+| **Nordic / Scandinavia** | Sweden IMY AI Guidelines 2023 + SFS 2018:218, Denmark Datatilsynet AI Guidance 2023 + Act No. 502/2018, Finland TSV AI Guidelines 2023 + Data Protection Act 1050/2018, EEA intra-transfer adequacy | 28 |
 
 ---
 
@@ -212,7 +214,7 @@ src/regulated_ai_governance/
     ├── haystack.py           # FERPAMetadataFilter
     ├── dspy.py               # ComplianceModule
     └── maf.py                # GovernanceMAFMiddleware
-examples/                     # 24 runnable governance examples (see catalog above)
+examples/                     # 28 runnable governance examples (see catalog above)
 tests/                        # 983 passing tests
 docs/
 └── ECOSYSTEM.md              # Full regulation and framework coverage matrix
@@ -246,7 +248,7 @@ JSON-serializable; suitable for compliance databases, SIEM ingestion, and regula
 
 ## Near-term roadmap
 
-- `28_southeast_asia_multi_country_governance.py` — Thailand PDPC + Indonesia Kominfo + Vietnam MIC
+- `29_latam_ai_governance.py` — Argentina AAIP + Chile SII + Colombia SIC AI enforcement
 - Async filter support for FastAPI/asyncio environments
 
 ---
@@ -264,7 +266,7 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
   author  = {Rana, Ashutosh},
   title   = {regulated-ai-governance: Policy enforcement for AI agents in regulated environments},
   year    = {2026},
-  version = {0.29.0},
+  version = {0.30.0},
   url     = {https://github.com/ashutoshrana/regulated-ai-governance},
   license = {MIT}
 }
@@ -276,9 +278,9 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 
 | Library | Focus | Coverage |
 |---------|-------|---------|
-| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 34 sectors · 36 regulations · 1069 tests |
-| **regulated-ai-governance** | What agents may do | 26 governance examples · 14 jurisdictions · 1225 tests |
-| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 28 patterns · schema registry · GraphQL · 846 tests |
+| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 36 sectors · 38 regulations · 1145 tests |
+| **regulated-ai-governance** | What agents may do | 28 governance examples · 15 jurisdictions · 1404 tests |
+| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 29 patterns · schema registry · GraphQL · 903 tests |
 
 ---
 
