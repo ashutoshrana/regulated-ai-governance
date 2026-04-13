@@ -10,6 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.29.0] — 2026-04-13
+
+### Added — ISO 42001:2023 AI Management System (`27_iso42001_compliance.py`)
+
+ISO 42001:2023 AIMS compliance as composable governance filters:
+
+- `ISO42001PolicyFilter` (Clause 5 — Leadership) — production without AI policy → REQUIRES_HUMAN_REVIEW; high-risk without policy → DENIED
+- `ISO42001RiskFilter` (Clause 6 — Planning + Annex B) — limited/high-risk without risk assessment → DENIED; high-risk without impact assessment → REQUIRES_HUMAN_REVIEW; unacceptable risk → DENIED
+- `ISO42001OperationsFilter` (Clause 8 — Operations) — autonomous AI without human oversight → DENIED; production without data governance → REQUIRES_HUMAN_REVIEW; third-party AI without supplier evaluation → REQUIRES_HUMAN_REVIEW
+- `ISO42001PerformanceFilter` (Clause 9 + 10) — limited/high-risk without audit trail → DENIED; production without documented information → REQUIRES_HUMAN_REVIEW; high-risk without incident process → REQUIRES_HUMAN_REVIEW
+- `ISO42001ComplianceReport` with `conformity_level`: FULL / PARTIAL / NON_CONFORMING
+
+75 new tests. Total: **1300 passed**.
+
+---
+
+
+---
+
 ## [0.28.0] — 2026-04-13
 
 ### Added — Africa AI Governance (`26_africa_ai_governance.py`)
