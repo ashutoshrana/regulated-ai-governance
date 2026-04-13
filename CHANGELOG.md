@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] — 2026-04-13
+
+### Added — Government/Defense AI Governance Example (CMMC L2 + FedRAMP + NIST 800-53)
+
+**`examples/07_government_ai_governance.py`** — multi-framework AI governance for a
+DoD procurement AI assistant, combining CMMC Level 2 (32 CFR Part 170), FedRAMP
+Moderate authorization boundary, and NIST 800-53 AC-3 access control:
+
+Three `FrameworkGuard`s orchestrated by a single `GovernanceOrchestrator` (deny-all
+aggregation — any one framework blocking an action stops execution):
+
+- **CMMC Level 2 Guard (32 CFR Part 170):** Defense contractors handling CUI must be
+  CMMC Level 2 certified. Allowed actions restricted to the 11 domains of CMMC L2
+  (`CMMC_L2_ALLOWED_ACTIONS`). Non-certified entities have a minimal allowed set.
+- **FedRAMP Moderate Guard:** Actions touching federal systems must operate within
+  the FedRAMP authorization boundary. `FEDRAMP_DENIED_ACTIONS` (use_commercial_api,
+  store_data_commercial_cloud, export_controlled_data_transfer) are blocked regardless
+  of CMMC status; `FEDRAMP_ALLOWED_ACTIONS` defines the approved surface.
+- **NIST 800-53 AC-3 Guard:** Privileged functions (`run_privileged_query`,
+  `modify_system_configuration`, `export_controlled_data_transfer`) are restricted to
+  the `nist_privileged` role; standard government users are denied.
+
+Scenarios:
+- A: CMMC L2 certified contractor + FedRAMP boundary + standard role → `query_procurement_database`
+  allowed by all three frameworks (ALLOW)
+- B: Non-certified vendor attempts CUI access → CMMC L2 guard denies immediately (DENY);
+  uses a separate `GovernanceOrchestrator` with an uncertified policy to accurately model
+  a non-certified entity
+- C: Certified contractor calls `use_commercial_api` → FedRAMP guard denies (DENY);
+  action is in `FEDRAMP_DENIED_ACTIONS` regardless of CMMC certification
+- D: Standard user attempts `run_privileged_query` → NIST AC-3 guard denies (DENY);
+  action restricted to `nist_privileged` role
+- E: Public notice action (`publish_solicitation_notice`) → all three frameworks allow
+  (ALLOW); action is in all approved sets and requires no privileged role
+
+Closes #26.
+
+---
+
 ## [0.8.0] — 2026-04-13
 
 ### Added — Manufacturing/OT Governance Example + Implementation Notes
