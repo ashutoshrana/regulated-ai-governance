@@ -136,4 +136,4 @@ __all__ = [
     "GovernanceAuditSkill",
 ]
 
-__version__ = "0.41.0"
+__version__ = "0.42.0"

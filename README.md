@@ -291,9 +291,9 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 
 | Library | Focus | Coverage |
 |---------|-------|---------|
-| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 47 sectors · 64 regulations · 1722 tests |
+| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 48 sectors · 65 regulations · 1784 tests |
 | **regulated-ai-governance** | What agents may do | 38 governance examples · 25 jurisdictions · 2451 tests |
-| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 40 patterns · schema registry · GraphQL · 1780 tests |
+| [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 41 patterns · schema registry · GraphQL · 1866 tests |
 
 ---
 
