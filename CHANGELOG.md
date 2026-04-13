@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.39.0] — 2026-04-13
+
+### Added — Brazil LGPD + ANPD AI Governance Framework (`36_brazil_lgpd_ai_governance.py`)
+
+Four-layer governance filter for Brazil LGPD, ANPD AI guidelines, sectoral AI regulations, and cross-border controls; 8 ecosystem wrappers:
+
+- `BrazilLGPDFilter` (LGPD Arts. 7/11/20/33) — no legal basis → DENIED; sensitive data without explicit consent → DENIED; cross-border to CN/RU/KP without SCCs/BCR → DENIED; automated decision without human review → REQUIRES_HUMAN_REVIEW
+- `ANPDAIFilter` (LGPD Arts. 9(V)/10§3/38 + ANPD Resolutions) — high-risk processing without DPIA → DENIED; AI profiling without transparency → DENIED; legitimate interest without LIA → DENIED; credit scoring without SERASA/SCR compliance → REQUIRES_HUMAN_REVIEW
+- `BrazilSectoralAIFilter` (CMN 4.993/2022 + BCB Circular 3.979 + CFM 2.314/2022 + ANATEL 740/2020 + TSE 23.732/2024) — financial AI without BCB notification → DENIED; health AI without CFM guidelines → DENIED; telecom AI without ANATEL framework → DENIED; electoral deepfake without TSE labeling → REQUIRES_HUMAN_REVIEW
+- `BrazilCrossBorderFilter` (LGPD Art. 33 + Lei 9.613/1998 AML + Coaf 36/2021 + FATF) — personal data to CN/RU/KP without safeguards → DENIED; financial AI to FATF Black List jurisdiction → DENIED; Brazilian data offshore without ANPD authorization → DENIED; sensitive biometric transfer without ANPD notification → REQUIRES_HUMAN_REVIEW
+- 8 ecosystem wrappers: `BrazilLangChainPolicyGuard`, `BrazilCrewAIGovernanceGuard`, `BrazilAutoGenGovernedAgent`, `BrazilSemanticKernelPlugin`, `BrazilLlamaIndexWorkflowGuard`, `BrazilHaystackGovernanceComponent`, `BrazilDSPyGovernanceModule`, `BrazilMAFPolicyMiddleware`
+
+136 new tests. Total: **2159 passed**.
+
+---
+
 ## [0.38.0] — 2026-04-13
 
 ### Added — South Korea AI Governance Framework (`35_south_korea_ai_governance.py`)
