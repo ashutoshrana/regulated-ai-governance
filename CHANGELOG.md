@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.33.0] — 2026-04-13
+
+### Added — US State AI Laws Governance Filter (`30_us_state_ai_laws.py`)
+
+Four-layer governance filter for Colorado AI Act, Illinois BIPA AI provisions, and Virginia CDPA AI rules:
+
+- `ColoradoSB205Filter` — Colorado AI Act 2024 (SB 24-205, effective Feb 1 2026): high-risk AI without impact assessment → DENIED (§6-1-1702); automated employment decisions without human oversight → DENIED (§6-1-1306); biometric in AI without written consent → DENIED (§6-1-1704); high-risk AI without bias testing → REQUIRES_HUMAN_REVIEW (§6-1-1703)
+- `IllinoisBIPAAIFilter` — BIPA 740 ILCS 14/15: biometric without written consent → DENIED (§15(b)); no retention/destruction schedule → DENIED (§15(a)); AI video interview without 14-day consent → DENIED (Video Interview Act 820 ILCS 42); third-party sharing without consent → DENIED (§15(d))
+- `VirginiaAIProvisionsFilter` — Va. Code §59.1-577/578/579/581: child-directed data → DENIED first (§59.1-578(B)); sensitive data opt-in required (§59.1-578(A)); high-risk AI impact assessment (§59.1-581); automated profiling without opt-out → REQUIRES_HUMAN_REVIEW (§59.1-579)
+- `USStateAICrossBorderFilter` — IL biometric, CO high-risk AI, CA CPRA biometric → DENIED; VA/TX/CT opt-out → REQUIRES_HUMAN_REVIEW; 8 integration wrappers (LangChain, CrewAI, AutoGen, Semantic Kernel, LlamaIndex, Haystack, DSPy, MAF)
+
+97 new tests. Total: **1624 passed**.
+
+---
+
 ## [0.32.0] — 2026-04-13
 
 ### Added — GovernancePipeline base classes and public API foundation
