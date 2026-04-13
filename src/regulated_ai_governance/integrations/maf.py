@@ -138,7 +138,7 @@ class PolicyMiddleware:
         logger.warning(
             "[GOVERNANCE] MAF message blocked: action=%s actor=%s reason=%s",
             action_name,
-            self._guard.actor_id,
+            self._guard._actor_id,
             result,
         )
         return {"blocked": True, "reason": result, "action": action_name}
