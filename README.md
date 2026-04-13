@@ -239,8 +239,8 @@ JSON-serializable; suitable for compliance databases, SIEM ingestion, and regula
 
 ## Near-term roadmap
 
-- `23_india_ai_governance.py` — DPDP Act 2023 + MEITY AI Advisory
 - `24_south_korea_ai_governance.py` — AI Basic Act + PIPA
+- `25_middle_east_ai_governance.py` — UAE AI Strategy 2031 + Saudi NDS + Qatar NDCS
 - ISO 42001:2023 AI Management System compliance layer (standalone)
 - Async filter support for FastAPI/asyncio environments
 
