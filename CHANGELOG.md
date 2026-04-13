@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] — 2026-04-13
+
+### Added — UK AI Governance (UK GDPR Article 22 + ICO AI Auditing + Equality Act 2010 + DSIT Safety Principles)
+
+**`examples/17_uk_ai_governance.py`** — four-layer UK AI governance orchestrator for AI
+systems deployed in the United Kingdom, enforcing UK GDPR Article 22 Automated Decision-Making
+safeguards (lawful basis, human review, opt-out rights, special category consent), ICO AI
+Auditing Framework 2022 requirements (bias testing, explainability, accuracy validation),
+Equality Act 2010 protections (indirect discrimination assessment, reasonable adjustments,
+Public Sector Equality Duty for s.149), and DSIT AI White Paper 2023 cross-sector safety
+principles (Safety, Security, Accountability, Transparency, Contestability).
+
+**New classes:**
+- `UKAIRiskTier` — HIGH_RISK / MEDIUM_RISK / LOW_RISK
+- `UKAIDecision` — APPROVED / APPROVED_WITH_CONDITIONS / DENIED
+- `UKAIContext` (frozen) — 23-field context: system identity, risk tier, deploying sector,
+  UK GDPR ADM fields (is_solely_automated, decision_has_legal_effect,
+  processes_sensitive_categories, lawful_basis_documented, explicit_consent_obtained,
+  human_review_available, opt_out_mechanism_provided), ICO audit fields
+  (bias_testing_completed, explainability_mechanism_in_place, accuracy_validated),
+  Equality Act fields (disparate_impact_assessment_done, reasonable_adjustments_supported,
+  public_sector_equality_duty, equality_impact_documented), DSIT fields
+  (safety_testing_completed, adversarial_testing_done, responsible_officer_designated,
+  stakeholder_disclosure_made, contestability_mechanism_provided)
+- `UKAIGovernanceResult` — per-layer result with decision=APPROVED default, findings list,
+  conditions list; `is_denied` / `has_conditions` properties
+- `UKGDPRAutomatedDecisionFilter` — Article 22 ADM: non-automated or non-legal-effect →
+  APPROVED_WITH_CONDITIONS; solely-automated + legal-effect: checks lawful_basis,
+  human_review, opt_out, sensitive_category consent; violations → DENIED
+- `ICOAIAuditingFilter` — ICO AI Auditing Framework: checks bias_testing,
+  explainability_mechanism, accuracy_validated; any missing → DENIED with ICO reference
+- `UKEqualityActFilter` — Equality Act 2010: s.19 disparate impact assessment required;
+  s.20/21 reasonable adjustments required; s.149 PSED equality impact assessment required
+  for public sector only (private sector exempt)
+- `DSITAISafetyPrinciplesFilter` — DSIT White Paper 2023 five principles: safety testing
+  (Safety), adversarial testing (Security), responsible officer (Accountability),
+  stakeholder disclosure (Transparency), contestability mechanism (Contestability)
+- `UKAIGovernanceOrchestrator` — sequential four-layer evaluation; any DENIED → DENIED;
+  all pass with conditions → APPROVED_WITH_CONDITIONS
+- `UKAIGovernanceReport` — `summary()` returns dict with system metadata, final_decision,
+  and per-layer results list
+
+**Tests:** 32 tests in `tests/test_uk_ai_governance.py`
+
+---
+
 ## [0.18.0] — 2026-04-13
 
 ### Added — EU AI Act Governance (Articles 5–7, 9–10, 13–14, 43–49, 61–62, 73)
