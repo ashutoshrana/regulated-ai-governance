@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] — 2026-04-13
+
+### Added — Comprehensive Governance Architecture
+
+**Multi-Framework Orchestrator** (`orchestrator.py`):
+- `GovernanceOrchestrator`: evaluates agent actions against multiple compliance frameworks simultaneously with deny-all aggregation — if any framework denies, the overall decision is DENY. Suitable for regulated environments requiring simultaneous FERPA + HIPAA + GDPR + ISO 42001 enforcement.
+- `FrameworkGuard`: associates a `GovernedActionGuard` with a regulation label and enabled/disabled state.
+- `FrameworkResult`: per-framework evaluation result (regulation, permitted, denial_reason, escalation_target, skipped).
+- `MultiFrameworkDecision`: aggregated decision across all frameworks with framework-level attribution.
+- `ComprehensiveAuditReport`: unified compliance audit record capturing every framework's decision, denial reasons, escalation targets, tamper-evident SHA-256 hash, `to_log_entry()` (SIEM-ready JSON), `to_compliance_summary()` (human-readable GRC report).
+- `GovernanceOrchestrator.audit_only`: shadow mode — evaluate all frameworks and log outcomes without blocking any action. For progressive rollout and compliance posture assessment.
+
+**ISO/IEC 42001:2023 AI Management System** (`regulations/iso42001.py`):
+- `ISO42001OperatingScope`: defines permitted/prohibited use cases, deployment approval status, and human oversight requirements per the ISO 42001 operating scope (A.6.2.10).
+- `ISO42001GovernancePolicy.evaluate_action()`: three-step evaluation — A.6.2.5 deployment gate → A.6.2.10 prohibited/permitted use → A.9.5 human oversight routing.
+- `ISO42001DataProvenanceRecord`: documents chain of custody for AI training/knowledge data (A.7.2/A.7.5/A.7.6).
+- `ISO42001DeploymentRecord`: formal deployment approval record with risk assessment and impact assessment outcomes (A.5.2/A.5.3/A.6.2.5).
+- `ISO42001AuditRecord`: structured audit record per governance evaluation with SHA-256 tamper evidence.
+- `ISO42001PolicyDecision`: decision with `human_oversight_required` flag for A.9.5 routing.
+
+**Governance Audit Skill** (`skill.py`):
+- `GovernanceAuditSkill`: high-level skill wrapping `GovernanceOrchestrator` with framework-aware factory constructors and multi-channel adapters.
+- `GovernanceAuditSkill.for_education()`: FERPA-compliant skill factory for educational AI systems.
+- `GovernanceAuditSkill.for_healthcare()`: HIPAA-compliant skill factory for healthcare AI systems.
+- `GovernanceAuditSkill.for_enterprise()`: multi-regulation skill factory (FERPA + HIPAA + GDPR + GLBA + SOC2 simultaneously) for enterprise AI agents.
+- `GovernanceAuditSkill.audit_action()`: evaluate and execute with per-call framework scoping — restrict evaluation to a subset of configured frameworks for individual actions.
+- `GovernanceAuditSkill.audit_retrieval()`: action-level authorization gate for document retrieval. Returns all documents if actor is authorized; empty list if denied. Content-level filtering remains in `enterprise-rag-patterns`.
+- `GovernanceAuditSkill._framework_scope`: context manager for per-call framework restriction; automatically restores disabled frameworks on exit.
+- Channel adapters: `as_langchain_handler()`, `as_crewai_tool()`, `as_llama_index_postprocessor()`, `as_haystack_component()`, `as_maf_middleware()` — all lazy imports.
+- `GovernanceConfig`, `FrameworkConfig`: declarative configuration dataclasses.
+
+**Examples**:
+- `examples/03_multi_framework_orchestration.py`: FERPA + HIPAA + ISO 42001 simultaneous orchestration with `ComprehensiveAuditReport`.
+- `examples/04_governance_audit_skill.py`: all five scenarios — education/healthcare/enterprise factories, per-call framework scoping, audit-only shadow mode.
+
+**Tests** (+80 new, 282 total):
+- `tests/test_orchestrator.py` (42 tests): `FrameworkGuard`, `FrameworkResult`, orchestrator evaluate/guard, `ComprehensiveAuditReport` JSON/hash/summary, add/remove/enable/disable framework.
+- `tests/test_iso42001.py` (27 tests): `ISO42001OperatingScope`, `ISO42001GovernancePolicy` evaluate_action (deployment gate, prohibited, permitted, human oversight), all three record types, orchestrator integration test.
+- `tests/test_skill.py` (29 tests): factory constructors, `audit_action`, `audit_retrieval`, channel adapter ImportError, `_framework_scope` context manager.
+
+**Top-level exports** (added to `__init__.py`):
+`FrameworkGuard`, `FrameworkResult`, `MultiFrameworkDecision`, `ComprehensiveAuditReport`, `GovernanceOrchestrator`, `FrameworkConfig`, `GovernanceConfig`, `GovernanceAuditSkill`.
+
+---
+
 ## [0.4.1] — 2026-04-13
 
 ### Added

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "regulated-ai-governance"
-version = "0.4.1"
-description = "Governance patterns for AI agents operating in FERPA, HIPAA, and GLBA regulated environments"
+version = "0.5.0"
+description = "Comprehensive governance framework for AI agents operating in FERPA, HIPAA, GDPR, GLBA, ISO 42001, and 10+ regulated environments"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -36,6 +36,13 @@ keywords = [
     "semantic-kernel",
     "haystack",
     "llama-index",
+    "iso42001",
+    "eu-ai-act",
+    "dora",
+    "nist-ai-rmf",
+    "owasp-llm",
+    "multi-framework",
+    "governance-orchestrator",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
