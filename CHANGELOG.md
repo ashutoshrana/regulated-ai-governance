@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0] — 2026-04-13
+
+### Added — Singapore AI Governance (PDPC Model AI Governance Framework + PDPA + MAS FEAT + IMDA Testing)
+
+**`examples/20_singapore_ai_governance.py`** — four-layer Singapore AI governance orchestrator
+covering the PDPC Model AI Governance Framework v2 (2020) for responsible AI deployment,
+Personal Data Protection Act 2012 (PDPA) consent and cross-border transfer requirements,
+Monetary Authority of Singapore FEAT Principles (Fairness, Ethics, Accountability,
+Transparency) for financial services AI, and IMDA AI Testing Framework for model
+registration and bias validation.
+
+**New classes:**
+- `SingaporeAIRiskLevel` — HIGH / MEDIUM / LOW
+- `SingaporeAIDecision` — APPROVED / DENIED / REQUIRES_HUMAN_REVIEW / REDACTED
+- `SingaporeSector` — FINANCIAL_SERVICES / HEALTHCARE / GOVERNMENT / GENERAL
+- `SingaporeAIContext` — frozen dataclass (19 fields): PDPC/PDPA/MAS/IMDA compliance state, sector, automated decision flags, cross-border transfer, DPO presence
+- `SingaporeAIDocument` — frozen dataclass (7 fields): personal data, financial, health, government flags, human decision requirement
+- `SingaporeAIFilterResult` — filter output with `is_denied` property and regulation citation
+- `PDPCModelAIGovernanceFilter` — PDPC Framework v2 Section 2.3/2.4/2.5: human oversight, explainability, audit trail, AI impact assessment
+- `PDPADataProtectionFilter` — PDPA Section 13 consent, Section 26 cross-border transfer adequacy, DPO requirements
+- `MASFEATFilter` — MAS FEAT Principles F.1 (bias testing), T.1 (transparency/explainability), A.2 (accountability/approval) for financial institutions
+- `IMDATestingFilter` — IMDA model registration for high-risk AI, bias testing, human decision pathway validation
+- `SingaporeAIGovernanceOrchestrator` — runs all four filters
+- `SingaporeAIGovernanceReport` — `overall_decision`, `is_compliant`, `compliance_summary` properties
+
+**Tests:** 32 tests — all passing.
+
+---
+
 ## [0.21.0] — 2026-04-13
 
 ### Added — Australian AI Governance (AI Ethics Framework + Privacy Act APPs + DTA ADM + AHRC Guidelines)
