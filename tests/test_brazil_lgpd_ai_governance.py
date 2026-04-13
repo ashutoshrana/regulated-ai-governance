@@ -14,6 +14,7 @@ covering:
 from __future__ import annotations
 
 import importlib.util
+from pathlib import Path
 import sys
 import types
 
@@ -27,7 +28,7 @@ _MOD_NAME = "mod_brazil"
 
 spec = importlib.util.spec_from_file_location(
     _MOD_NAME,
-    "/tmp/oss_work/regulated-ai-governance/examples/36_brazil_lgpd_ai_governance.py",
+    str(Path(__file__).parent.parent / "examples" / "36_brazil_lgpd_ai_governance.py"),
 )
 mod = types.ModuleType(_MOD_NAME)
 sys.modules[_MOD_NAME] = mod

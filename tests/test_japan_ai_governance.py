@@ -15,6 +15,7 @@ covering:
 from __future__ import annotations
 
 import importlib.util
+from pathlib import Path
 import sys
 import types
 
@@ -28,7 +29,7 @@ _MOD_NAME = "japan_mod"
 
 spec = importlib.util.spec_from_file_location(
     _MOD_NAME,
-    "/tmp/oss_work/regulated-ai-governance/examples/34_japan_ai_governance.py",
+    str(Path(__file__).parent.parent / "examples" / "34_japan_ai_governance.py"),
 )
 japan_mod = types.ModuleType(_MOD_NAME)
 sys.modules[_MOD_NAME] = japan_mod
