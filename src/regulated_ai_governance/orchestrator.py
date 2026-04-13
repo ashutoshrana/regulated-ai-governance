@@ -391,9 +391,7 @@ class GovernanceOrchestrator:
             overall_permitted = len(denial_frameworks) == 0
         else:
             # any-permit semantics: at least one enabled framework must permit
-            any_permitted = any(
-                r.permitted for r in results.values() if not r.skipped
-            )
+            any_permitted = any(r.permitted for r in results.values() if not r.skipped)
             overall_permitted = any_permitted
 
         return MultiFrameworkDecision(
@@ -414,13 +412,9 @@ class GovernanceOrchestrator:
         framework_results = [r.to_dict() for r in decision.framework_results.values()]
         all_regulations = [fg.regulation for fg in self._framework_guards]
         permitted_regulations = [
-            r for r, result in decision.framework_results.items()
-            if result.permitted and not result.skipped
+            r for r, result in decision.framework_results.items() if result.permitted and not result.skipped
         ]
-        skipped_regulations = [
-            r for r, result in decision.framework_results.items()
-            if result.skipped
-        ]
+        skipped_regulations = [r for r, result in decision.framework_results.items() if result.skipped]
 
         return ComprehensiveAuditReport(
             action_name=action_name,
@@ -506,9 +500,7 @@ class GovernanceOrchestrator:
             True if a matching guard was found and removed, False otherwise.
         """
         before = len(self._framework_guards)
-        self._framework_guards = [
-            fg for fg in self._framework_guards if fg.regulation != regulation
-        ]
+        self._framework_guards = [fg for fg in self._framework_guards if fg.regulation != regulation]
         return len(self._framework_guards) < before
 
     def enable_framework(self, regulation: str) -> None:

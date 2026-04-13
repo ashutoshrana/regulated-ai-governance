@@ -89,19 +89,23 @@ class TestOrchestratorEvaluate:
         assert "FERPA" in decision.denial_frameworks
 
     def test_multi_framework_all_permit(self):
-        orch = _make_orchestrator([
-            _make_guard({"read_transcript"}, "FERPA"),
-            _make_guard({"read_transcript"}, "HIPAA"),
-        ])
+        orch = _make_orchestrator(
+            [
+                _make_guard({"read_transcript"}, "FERPA"),
+                _make_guard({"read_transcript"}, "HIPAA"),
+            ]
+        )
         decision = orch.evaluate("read_transcript")
         assert decision.overall_permitted is True
 
     def test_multi_framework_one_denies(self):
         """Deny-all: one deny means overall deny."""
-        orch = _make_orchestrator([
-            _make_guard({"read_transcript"}, "FERPA"),
-            _make_guard({"other_action"}, "HIPAA"),  # HIPAA whitelist excludes read_transcript
-        ])
+        orch = _make_orchestrator(
+            [
+                _make_guard({"read_transcript"}, "FERPA"),
+                _make_guard({"other_action"}, "HIPAA"),  # HIPAA whitelist excludes read_transcript
+            ]
+        )
         decision = orch.evaluate("read_transcript")
         assert decision.overall_permitted is False
         assert "HIPAA" in decision.denial_frameworks
@@ -123,10 +127,12 @@ class TestOrchestratorEvaluate:
         assert "FERPA" in decision.denial_reasons[0]
 
     def test_framework_results_keys(self):
-        orch = _make_orchestrator([
-            _make_guard({"x"}, "FERPA"),
-            _make_guard({"x"}, "HIPAA"),
-        ])
+        orch = _make_orchestrator(
+            [
+                _make_guard({"x"}, "FERPA"),
+                _make_guard({"x"}, "HIPAA"),
+            ]
+        )
         decision = orch.evaluate("x")
         assert "FERPA" in decision.framework_results
         assert "HIPAA" in decision.framework_results
@@ -202,9 +208,16 @@ class TestComprehensiveAuditReport:
     def test_to_log_entry_contains_required_fields(self):
         report = self._make_report()
         parsed = json.loads(report.to_log_entry())
-        for key in ("report_id", "action_name", "actor_id", "overall_permitted",
-                    "frameworks_evaluated", "frameworks_permitted", "frameworks_denied",
-                    "timestamp_utc"):
+        for key in (
+            "report_id",
+            "action_name",
+            "actor_id",
+            "overall_permitted",
+            "frameworks_evaluated",
+            "frameworks_permitted",
+            "frameworks_denied",
+            "timestamp_utc",
+        ):
             assert key in parsed, f"Missing field: {key}"
 
     def test_content_hash_is_stable(self):
@@ -285,18 +298,22 @@ class TestOrchestratorMutability:
         assert orch.evaluate("other_action").overall_permitted is False
 
     def test_active_regulations_excludes_disabled(self):
-        orch = _make_orchestrator([
-            _make_guard({"x"}, "FERPA"),
-            _make_guard({"x"}, "HIPAA"),
-        ])
+        orch = _make_orchestrator(
+            [
+                _make_guard({"x"}, "FERPA"),
+                _make_guard({"x"}, "HIPAA"),
+            ]
+        )
         orch.disable_framework("HIPAA")
         assert "FERPA" in orch.active_regulations
         assert "HIPAA" not in orch.active_regulations
 
     def test_configured_regulations_includes_disabled(self):
-        orch = _make_orchestrator([
-            _make_guard({"x"}, "FERPA"),
-            _make_guard({"x"}, "HIPAA"),
-        ])
+        orch = _make_orchestrator(
+            [
+                _make_guard({"x"}, "FERPA"),
+                _make_guard({"x"}, "HIPAA"),
+            ]
+        )
         orch.disable_framework("HIPAA")
         assert "HIPAA" in orch.configured_regulations

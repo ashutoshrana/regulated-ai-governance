@@ -28,7 +28,8 @@ def _make_scope(
     # human_oversight_required_for — it's allowed but requires human review (A.9.5)
     return ISO42001OperatingScope(
         system_id="test_ai_v1",
-        permitted_use_cases=permitted or {
+        permitted_use_cases=permitted
+        or {
             "read_transcript",
             "summarize_document",
             "answer_question",
@@ -281,9 +282,7 @@ class TestISO42001OrchestratorIntegration:
         policy = _make_policy(scope)
         guard = ISO42001Guard(iso_policy=policy)
 
-        orch = GovernanceOrchestrator(
-            framework_guards=[FrameworkGuard(regulation="ISO_42001", guard=guard)]
-        )
+        orch = GovernanceOrchestrator(framework_guards=[FrameworkGuard(regulation="ISO_42001", guard=guard)])
 
         # Permitted action
         result = orch.guard("read_transcript", execute_fn=lambda: "DATA")

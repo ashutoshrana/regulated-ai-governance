@@ -213,15 +213,11 @@ class ISO42001DataProvenanceRecord:
     source_id: str
     source_type: str
     lawful_basis: str
-    collection_timestamp_utc: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    collection_timestamp_utc: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     data_quality_validated: bool = False
     quality_validation_notes: str = ""
     processor_id: str = ""
-    annex_a_controls: list[str] = field(
-        default_factory=lambda: ["A.7.2", "A.7.5", "A.7.6"]
-    )
+    annex_a_controls: list[str] = field(default_factory=lambda: ["A.7.2", "A.7.5", "A.7.6"])
 
     def to_log_entry(self) -> str:
         """Serialize to a structured JSON log entry for AI system documentation."""
@@ -278,9 +274,7 @@ class ISO42001DeploymentRecord:
     system_id: str
     system_version: str
     approver_id: str
-    approval_timestamp_utc: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    approval_timestamp_utc: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     risk_level: str = "medium"
     risk_assessment_notes: str = ""
     impact_assessment_completed: bool = False
@@ -288,9 +282,7 @@ class ISO42001DeploymentRecord:
     intended_use: list[str] = field(default_factory=list)
     prohibited_use: list[str] = field(default_factory=list)
     third_party_components: list[dict[str, str]] = field(default_factory=list)
-    annex_a_controls: list[str] = field(
-        default_factory=lambda: ["A.5.2", "A.5.3", "A.6.2.5", "A.6.2.10", "A.10.2"]
-    )
+    annex_a_controls: list[str] = field(default_factory=lambda: ["A.5.2", "A.5.3", "A.6.2.5", "A.6.2.10", "A.10.2"])
 
     def to_log_entry(self) -> str:
         """Serialize to a structured JSON log entry for AI system documentation."""
@@ -349,12 +341,14 @@ class ISO42001AuditRecord:
     human_oversight_required: bool = False
     annex_a_controls: list[str] = field(
         default_factory=lambda: [
-            "A.5.2", "A.6.2.5", "A.6.2.6", "A.6.2.10", "A.9.5",
+            "A.5.2",
+            "A.6.2.5",
+            "A.6.2.6",
+            "A.6.2.10",
+            "A.9.5",
         ]
     )
-    timestamp_utc: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp_utc: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     session_id: str = ""
 
     def to_log_entry(self) -> str:
@@ -413,7 +407,11 @@ class ISO42001GovernancePolicy:
     """
 
     _DEFAULT_CONTROLS = [
-        "A.5.2", "A.6.2.5", "A.6.2.6", "A.6.2.10", "A.9.5",
+        "A.5.2",
+        "A.6.2.5",
+        "A.6.2.6",
+        "A.6.2.10",
+        "A.9.5",
     ]
 
     def __init__(

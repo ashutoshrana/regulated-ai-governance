@@ -280,6 +280,7 @@ class TestChannelAdapters:
     def test_langchain_handler_raises_import_error(self):
         """as_langchain_handler() raises ImportError if langchain not installed."""
         import sys
+
         # Temporarily hide langchain modules
         saved = {}
         for mod in list(sys.modules):
@@ -294,6 +295,7 @@ class TestChannelAdapters:
 
     def test_crewai_tool_raises_import_error(self):
         import sys
+
         saved = {}
         for mod in list(sys.modules):
             if "crewai" in mod:
@@ -307,6 +309,7 @@ class TestChannelAdapters:
 
     def test_llama_index_raises_import_error(self):
         import sys
+
         saved = {}
         for mod in list(sys.modules):
             if "llama" in mod:
@@ -320,6 +323,7 @@ class TestChannelAdapters:
 
     def test_haystack_raises_import_error(self):
         import sys
+
         saved = {}
         for mod in list(sys.modules):
             if "haystack" in mod:
