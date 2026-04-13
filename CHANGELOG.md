@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] — 2026-04-13
+
+### Added — Canadian AI Governance (AIDA Bill C-27 + CPPA + OPC AI Guidelines + Québec Law 25)
+
+**`examples/18_canada_ai_governance.py`** — four-layer Canadian AI governance orchestrator
+for AI systems deployed in Canada, enforcing Bill C-27 Artificial Intelligence and Data Act
+(AIDA) high-impact system requirements, Consumer Privacy Protection Act (CPPA, replacing
+PIPEDA) data governance obligations, OPC AI Guidelines 2023 cross-cutting principles, and
+Québec Law 25 (Act 25) algorithmic transparency and privacy impact assessment requirements
+(in force September 2023).
+
+**New classes:**
+- `CanadianAIRiskLevel` — HIGH_IMPACT / MEDIUM_IMPACT / LOW_IMPACT / EXEMPT
+- `CanadianAIDecision` — APPROVED / APPROVED_WITH_CONDITIONS / DENIED
+- `CanadaAIContext` (frozen) — 18-field context: system identity, risk level, deploying
+  province (QC triggers Law 25), AIDA fields (is_high_impact_system,
+  impact_assessment_completed, transparency_notice_provided, ministerial_order_compliant),
+  CPPA fields (meaningful_consent_obtained, purpose_limitation_documented,
+  data_minimization_applied, cross_border_transfer_safeguards), OPC fields
+  (human_oversight_available, accuracy_measures_in_place, accountability_framework_exists),
+  Québec Law 25 fields (privacy_impact_assessment_done, algorithmic_transparency_published,
+  data_governance_officer_designated)
+- `CanadaAIGovernanceResult` — per-layer result with is_denied / has_conditions properties
+- `AIDAComplianceFilter` — Bill C-27 AIDA s.6/9/10/11/35: HIGH_IMPACT system impact
+  assessment, transparency notice, ministerial order compliance; EXEMPT and LOW_IMPACT paths
+- `CPPADataGovernanceFilter` — CPPA s.12/13/15/24: meaningful consent, purpose limitation,
+  data minimization, cross-border transfer safeguards; s.62/63 portability conditions
+- `OPCGuidelinesFilter` — OPC AI Guidelines 2023 (1–5): consent, human oversight, accuracy,
+  accountability; conditions reference annual privacy audit
+- `QuebecLaw25Filter` — Act 25 s.3.1/12/63.3: PIA before deployment, algorithmic
+  transparency publication, CPO designation; non-QC provinces approved with monitoring note
+- `CanadaAIGovernanceOrchestrator` — sequential four-layer evaluation
+- `CanadaAIGovernanceReport` — `summary()` with system metadata, province, and per-layer results
+
+**Tests:** 34 tests in `tests/test_canada_ai_governance.py`
+
+---
+
 ## [0.19.0] — 2026-04-13
 
 ### Added — UK AI Governance (UK GDPR Article 22 + ICO AI Auditing + Equality Act 2010 + DSIT Safety Principles)
