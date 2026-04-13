@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+
+---
+
+## [0.28.0] — 2026-04-13
+
+### Added — Africa AI Governance (`26_africa_ai_governance.py`)
+
+Kenya, Nigeria, and South Africa AI governance as composable filters:
+
+- `KenyaAIFilter` (Kenya DPA 2019 §25/§30/§31 + Kenya National AI Strategy 2023) — significant automated decisions without human review → REQUIRES_HUMAN_REVIEW; sensitive data without explicit consent → DENIED; profiling without notice → DENIED
+- `NigeriaAIFilter` (Nigeria NDPA 2023 §25/§34 + NITDA AI Policy §3.2) — high-risk automated processing without DPIA → REQUIRES_HUMAN_REVIEW; sensitive data → DENIED; high-risk AI without NITDA registration → REQUIRES_HUMAN_REVIEW
+- `SouthAfricaAIFilter` (South Africa POPIA 2013 §26/§71 + FSCA AI Guidance 2023) — automated decisions without human review → REQUIRES_HUMAN_REVIEW; special information without consent → DENIED (research exemption applies); financial AI without FSCA notification → REQUIRES_HUMAN_REVIEW
+- `AfricaCrossBorderFilter` (AU Data Policy Framework 2022) — adequate jurisdictions (KE/NG/ZA/GH/MA/TN/EG); non-adequate without safeguards → DENIED (per source jurisdiction law); safeguards present → APPROVED
+
+72 new tests. Total: **1225 passed**.
+
+---
+
 ## [0.27.0] — 2026-04-13
 
 ### Added — Middle East (GCC) AI Governance (`25_middle_east_ai_governance.py`)
