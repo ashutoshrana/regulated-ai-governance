@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] — 2026-04-13
+
+### Added — Financial Model Risk Governance (FRB SR 11-7 + Basel III/IV + EU DORA + OCC 2011-12)
+
+**`examples/13_financial_ai_governance.py`** — four-layer governance framework for AI/ML models
+used in financial risk management contexts (credit risk, market risk, AML/BSA, capital calculation),
+enforcing FRB SR 11-7 Model Risk Management guidance (April 2011), Basel III/IV (BCBS 239 Principles
++ CRR III/FRTB IMA requirements), EU DORA (Regulation 2022/2554, effective January 2025), and
+OCC Bulletin 2011-12/2023-17 Third-Party Risk Management independently and simultaneously.
+
+New classes (self-contained in the example):
+- `ModelTier` — TIER_1 (capital/trading/AML; highest scrutiny), TIER_2 (credit scoring/pricing),
+  TIER_3 (operational/analytical; lowest scrutiny)
+- `ModelApprovalStatus` — APPROVED, CONDITIONAL_APPROVAL, PENDING_REVIEW, REJECTED, NOT_REQUIRED
+- `DORAClassification` — CRITICAL_ICT (full DORA requirements), IMPORTANT_ICT (lighter oversight),
+  NON_CRITICAL (Chapter II basic requirements only)
+- `ThirdPartyRiskLevel` — CRITICAL (full DD + audit rights + annual reassessment), HIGH (enhanced DD),
+  MODERATE (standard DD), LOW (simplified)
+- `FinancialGovernanceDecision` — APPROVED, APPROVED_WITH_CONDITIONS, DENIED
+- `FinancialModelContext` — frozen dataclass: model_id, model_name, tier, is_validated_independently,
+  validation_findings_resolved, ongoing_monitoring_active, last_performance_review_days_ago,
+  model_approval_status, is_capital_model, bcbs239_lineage_verified, frtb_backtesting_passed,
+  dora_classification, dora_resilience_documented, dora_incident_reporting_active, is_third_party,
+  third_party_risk_level, third_party_due_diligence_complete, third_party_contract_has_audit_rights,
+  intended_jurisdiction (tuple), model_inventory_registered
+- `FinancialFilterResult` — layer, decision, violations, conditions, notes; `is_denied` property
+- `SR117Filter` — Layer 1: `_MAX_REVIEW_AGE = {TIER_1: 365, TIER_2: 730, TIER_3: 1095}`; Tier 1/2:
+  independent validation required (developer ≠ validator), validation findings must be resolved,
+  ongoing monitoring required; all tiers: inventory registration + review age check; Tier 3 note
+  (recommended not required); Tier 1/2 approved with quarterly/semi-annual monitoring conditions
+- `Basel3Filter` — Layer 2: non-capital model → APPROVED pass-through; capital model: supervisor
+  approval required (CRR III Art. 143); BCBS 239 data lineage verification required; Tier 1 capital
+  model: FRTB IMA backtesting required (Basel IV §325bc); CONDITIONAL_APPROVAL → condition note
+- `DORAFilter` — Layer 3: non-EU jurisdiction → APPROVED pass-through; NON_CRITICAL → basic requirements;
+  CRITICAL/IMPORTANT: resilience documentation (Art. 11) + incident reporting (Art. 19) required;
+  CRITICAL third-party without Art. 28 contract → DENIED; CRITICAL approved → TLPT condition (Art. 26)
+- `OCC2011Filter` — Layer 4: non-third-party → APPROVED pass-through; `_DD_REQUIRED_LEVELS` =
+  {CRITICAL, HIGH, MODERATE}; `_AUDIT_RIGHTS_REQUIRED_LEVELS` = {CRITICAL, HIGH}; CRITICAL/HIGH
+  approved → annual reassessment condition
+- `FinancialGovernanceResult` — model_id, model_name, final_decision, layer_results, all_violations,
+  all_conditions, all_notes, review_id (UUID); `summary()` → formatted string
+- `FinancialModelGovernanceOrchestrator` — four-layer orchestrator (SR 11-7 → Basel → DORA → OCC);
+  any DENIED → overall DENIED; mix with APPROVED_WITH_CONDITIONS → overall APPROVED_WITH_CONDITIONS
+
+Four demo scenarios: (A) Tier 1 IRB credit model fully compliant → APPROVED_WITH_CONDITIONS;
+(B) Tier 1 VaR trading model with unresolved findings → DENIED (SR 11-7); (C) third-party AML
+screening AI with DORA Critical ICT and no resilience docs → DENIED (DORA); (D) Tier 3 internal
+operational model → APPROVED.
+
+**Tests:** `tests/test_financial_ai_governance.py` — 54 tests covering all four governance layers,
+all tier combinations, jurisdiction scoping, third-party risk levels, and orchestrator decision
+aggregation. Full suite: 690 passed.
+
+---
+
 ## [0.14.0] — 2026-04-13
 
 ### Added — Medical Device AI Governance (FDA SaMD + IEC 62304 + ISO 14971 + EU MDR/MDCG 2021-1)
