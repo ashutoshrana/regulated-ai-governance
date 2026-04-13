@@ -1,16 +1,25 @@
 """
-CrewAI adapter for regulated-ai-governance.
+adapters/crewai.py — Duck-typed CrewAI adapter (legacy compatibility path).
 
-Provides EnterpriseActionGuard — a CrewAI BaseTool wrapper that enforces
-ActionPolicy before any tool execution. Use this to prevent CrewAI agents
-from running tools outside their authorized policy boundary.
+.. deprecated::
+    For **CrewAI 1.14+**, use :class:`regulated_ai_governance.integrations.crewai.EnterpriseActionGuard`
+    instead. That implementation inherits from ``BaseTool``, satisfies CrewAI's
+    ``isinstance(tool, BaseTool)`` checks, and is compatible with ``args_schema``
+    (Pydantic v2).
+
+    This module's duck-typed ``EnterpriseActionGuard`` works for scenarios where
+    a ``BaseTool`` subclass is not strictly required, but will **fail silently**
+    when CrewAI internally calls ``isinstance(tool, BaseTool)`` in 1.14+.
+
+    Migration::
+
+        # Before (duck-typed, legacy):
+        from regulated_ai_governance.adapters.crewai import EnterpriseActionGuard
+
+        # After (BaseTool-inheriting, CrewAI 1.14+ compatible):
+        from regulated_ai_governance.integrations.crewai import EnterpriseActionGuard
 
 Regulatory basis: FERPA 34 CFR § 99.31(a)(1), HIPAA 45 CFR § 164.308(a)(4)
-
-Usage:
-    from regulated_ai_governance.adapters.crewai import EnterpriseActionGuard
-    # Wrap any CrewAI tool
-    guarded = EnterpriseActionGuard(tool=my_tool, policy=action_policy)
 """
 
 from __future__ import annotations
@@ -54,13 +63,18 @@ def _import_crewai() -> Any:
 
 class EnterpriseActionGuard:
     """
-    Wraps a CrewAI tool with enterprise policy enforcement.
+    Duck-typed CrewAI tool wrapper with enterprise policy enforcement.
+
+    .. deprecated::
+        Use :class:`regulated_ai_governance.integrations.crewai.EnterpriseActionGuard`
+        for CrewAI 1.14+ (proper ``BaseTool`` inheritance, ``args_schema`` support).
 
     Checks ActionPolicy.can_run(tool_name) before delegating to the
     underlying tool. If the action is not permitted, raises PolicyViolationError
     and emits a structured audit log entry.
 
     Duck-typed to CrewAI BaseTool interface — no hard import at class definition.
+    This means ``isinstance(tool, BaseTool)`` checks in CrewAI 1.14+ will fail.
 
     Args:
         tool: The CrewAI tool to guard (duck-typed, must have .name and ._run())

@@ -41,6 +41,7 @@ Quick start
     )
 """
 
+from regulated_ai_governance.agent_guard import GovernedActionGuard
 from regulated_ai_governance.audit import GovernanceAuditRecord
 from regulated_ai_governance.policy import ActionPolicy, EscalationRule, PolicyDecision
 
@@ -49,6 +50,7 @@ __all__ = [
     "EscalationRule",
     "PolicyDecision",
     "GovernanceAuditRecord",
+    "GovernedActionGuard",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.4.1"

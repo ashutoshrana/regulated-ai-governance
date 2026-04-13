@@ -61,11 +61,14 @@ Usage
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from typing import Any
 
 from regulated_ai_governance.audit import GovernanceAuditRecord
 from regulated_ai_governance.policy import ActionPolicy, PolicyDecision
+
+logger = logging.getLogger(__name__)
 
 
 class GovernedActionGuard:
@@ -195,12 +198,13 @@ class GovernedActionGuard:
                 raise PermissionError(message)
             return message
 
-        # Escalation logged but not blocking — print notice
+        # Escalation logged but not blocking — emit structured warning
         if decision.escalation is not None:
-            print(
-                f"[regulated-ai-governance] ESCALATION NOTICE: "
-                f"action='{action_name}' routed to '{decision.escalation.escalate_to}' "
-                f"(rule: '{decision.escalation.condition}'). Proceeding."
+            logger.warning(
+                "[regulated-ai-governance] ESCALATION NOTICE: action=%r routed to %r (rule: %r). Proceeding.",
+                action_name,
+                decision.escalation.escalate_to,
+                decision.escalation.condition,
             )
 
         return execute_fn(*args, **kwargs)
