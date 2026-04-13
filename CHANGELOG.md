@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] — 2026-04-13
+
+### Added — Japan AI Governance (APPI + METI AI Principles + MHLW Medical AI + Cabinet Office)
+
+**`examples/21_japan_ai_governance.py`** — four-layer Japan AI governance orchestrator covering
+the Act on Protection of Personal Information (APPI) 2022 amendments including sensitive
+personal information opt-in consent and cross-border transfer controls, METI AI Governance
+Guidelines v1.1 (2022) principles for human oversight, fairness, transparency, and
+accountability, Ministry of Health Labour and Welfare (MHLW) medical AI guidelines requiring
+physician oversight, and Cabinet Office Social Principles of Human-Centric AI (2019) for
+public sector deployments.
+
+**New classes:**
+- `JapanAIRiskLevel` — HIGH / MEDIUM / LOW
+- `JapanAIDecision` — APPROVED / DENIED / REQUIRES_HUMAN_REVIEW / REDACTED
+- `JapanSector` — HEALTHCARE / FINANCIAL_SERVICES / PUBLIC_SECTOR / MANUFACTURING / GENERAL
+- `JapanAIContext` — frozen dataclass (20 fields): APPI consent/transfer fields, medical AI flags, public sector flags, METI principle compliance fields
+- `JapanAIDocument` — frozen dataclass (7 fields): personal information, sensitive PI, medical, government flags
+- `JapanAIFilterResult` — filter output with `is_denied` property and regulation citation
+- `APPIDataProtectionFilter` — APPI Article 20-2 sensitive PI opt-in, Article 27 third-party provision basis, Article 28 cross-border transfer adequacy, data minimization
+- `METIAIPrinciplesFilter` — METI Guidelines v1.1 Principles 2/3/5/6/7: human oversight, fairness testing, explainability, accountability chain, safety assessment
+- `MHLWMedicalAIFilter` — physician oversight requirement for clinical AI; audit trail for medical data; medical explainability (applies only when is_medical_ai=True)
+- `CabinetOfficeAIStrategyFilter` — Social Principles 3/5/7: human oversight, security/audit trail, fairness for public sector AI
+- `JapanAIGovernanceOrchestrator` — runs all four filters
+- `JapanAIGovernanceReport` — `overall_decision`, `is_compliant`, `compliance_summary` properties
+
+**Tests:** 34 tests — all passing.
+
+---
+
 ## [0.22.0] — 2026-04-13
 
 ### Added — Singapore AI Governance (PDPC Model AI Governance Framework + PDPA + MAS FEAT + IMDA Testing)
