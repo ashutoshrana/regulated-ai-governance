@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] — 2026-04-13
+
+### Added — Cross-Industry AI Governance Regulation Modules
+
+**EU AI Act 2024/1689** (`regulations/eu_ai_act.py`):
+- `EUAIActRiskCategory`: UNACCEPTABLE / HIGH_RISK / LIMITED_RISK / MINIMAL_RISK.
+- `EUAIActSystemProfile`: declares system risk category, prohibited practices, high-risk domains, conformity assessment status, FRIA completion, transparency obligations.
+- `EUAIActGovernancePolicy.evaluate_action()`: six-step evaluation — Art. 5 prohibited practices → Art. 6–9 risk category check → Art. 43 conformity assessment gate (high-risk) → Art. 27 FRIA check → Art. 14 human oversight routing → Art. 12 logging requirement.
+- `EUAIActAuditRecord`: structured audit record with SHA-256 tamper evidence.
+- `make_eu_ai_act_minimal_risk_policy()` / `make_eu_ai_act_high_risk_policy()`: factory constructors.
+- `EU_AI_ACT_PROHIBITED_PRACTICES`, `EU_AI_ACT_HIGH_RISK_DOMAINS`: curated constant sets for Art. 5 and Annex III.
+- 58 tests in `tests/test_eu_ai_act.py`.
+
+**DORA EU 2022/2554** (`regulations/dora.py`):
+- `DORAICTRiskLevel`: CRITICAL / HIGH / MEDIUM / LOW.
+- `DORAICTCapabilityArea`: IDENTIFY / PROTECT / DETECT / RESPOND / RECOVER (Art. 9 five-function model).
+- `DORAThirdPartyRecord`: third-party ICT provider risk assessment (Art. 28).
+- `DORAICTIncidentRecord`: ICT incident report with impact, RTO, response timeline (Art. 17–18).
+- `make_dora_ict_management_policy()` / `make_dora_third_party_policy()`: factory constructors.
+- `DORA_HIGH_RISK_ICT_ACTIONS`: curated set of actions triggering DORA Art. 9 controls.
+- Tests in `tests/test_dora.py`.
+
+**NIST AI RMF 1.0 + AI 600-1 GenAI Profile** (`regulations/nist_ai_rmf.py`):
+- `NISTAIRMFFunction`: GOVERN / MAP / MEASURE / MANAGE.
+- `NISTAIRMFRiskCategory`: CONFABULATION / DATA_BIAS / HUMAN_AI_CONFIGURATION / HARMFUL_CONTENT / PRIVACY / SECURITY / ACCOUNTABILITY / TRANSPARENCY.
+- `NISTAIRMFRiskAssessment`: structured risk assessment across RMF functions with severity and likelihood.
+- `make_nist_ai_rmf_policy()`: factory constructor mapping GenAI profile controls.
+- `NIST_GENAI_HIGH_RISK_ACTIONS`: actions requiring MANAGE-function controls per AI 600-1.
+- Tests in `tests/test_nist_ai_rmf.py`.
+
+**OWASP LLM Top 10 (2025)** (`regulations/owasp_llm.py`):
+- `OWASPLLMRisk`: LLM01 Prompt Injection / LLM02 Sensitive Info Disclosure / LLM05 Output Handling / LLM06 Excessive Agency / LLM07 System Prompt Leakage / LLM09 Misinformation / LLM10 Unbounded Consumption.
+- `make_owasp_llm_policy()`: factory constructor blocking the 7 highest-severity OWASP LLM risks.
+- `OWASP_LLM_DENIED_ACTIONS`, `OWASP_LLM_2025_ALL_RISKS`: curated constants.
+- Tests in `tests/test_owasp_llm.py`.
+
+**`regulations/__init__.py`**: updated to export all symbols from the four new modules alongside existing `iso42001` exports.
+
+### Tests
+- +198 new tests (58 EU AI Act, 51 DORA, 49 NIST AI RMF, 40 OWASP LLM).
+- Total test count: **480 passing**.
+
+---
+
 ## [0.5.0] — 2026-04-13
 
 ### Added — Comprehensive Governance Architecture
