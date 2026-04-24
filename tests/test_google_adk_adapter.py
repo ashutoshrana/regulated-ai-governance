@@ -28,18 +28,11 @@ Run:
 from __future__ import annotations
 
 import json
-import os
-import sys
 from unittest.mock import MagicMock
 
 import pytest
 
-# ---------------------------------------------------------------------------
-# Ensure the adapter is importable from tests/
-# ---------------------------------------------------------------------------
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from adapter.google_adk_adapter import (
+from regulated_ai_governance.adapters.google_adk_adapter import (
     ADKMultiAgentGovernance,
     ADKPolicyGuard,
     AuditRecord,
