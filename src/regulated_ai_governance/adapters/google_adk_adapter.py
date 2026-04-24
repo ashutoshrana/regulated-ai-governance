@@ -38,13 +38,12 @@ import hashlib
 import json
 import logging
 import re
-import time
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 # Google ADK imports — guarded for environments without ADK installed
 try:
@@ -59,9 +58,9 @@ except ImportError:  # pragma: no cover
     ADK_AVAILABLE = False
     # Stub types so the module loads in test/CI environments without ADK
     CallbackContext = Any  # type: ignore[assignment,misc]
-    LlmRequest = Any       # type: ignore[assignment,misc]
-    LlmResponse = Any      # type: ignore[assignment,misc]
-    types = None           # type: ignore[assignment]
+    LlmRequest = Any  # type: ignore[assignment,misc]
+    LlmResponse = Any  # type: ignore[assignment,misc]
+    types = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -70,26 +69,27 @@ logger = logging.getLogger(__name__)
 # Regulation catalogue
 # ---------------------------------------------------------------------------
 
+
 class Regulation(str, Enum):
     """Supported regulatory frameworks."""
 
     # US Education
-    FERPA = "FERPA"          # 34 CFR § 99 — student education records
+    FERPA = "FERPA"  # 34 CFR § 99 — student education records
 
     # US Healthcare
-    HIPAA = "HIPAA"          # 45 CFR § 164 — protected health information
+    HIPAA = "HIPAA"  # 45 CFR § 164 — protected health information
 
     # US Financial
-    GLBA = "GLBA"            # 15 U.S.C. §§ 6801-6809 — consumer financial data
-    FCRA = "FCRA"            # 15 U.S.C. § 1681 — consumer credit information
+    GLBA = "GLBA"  # 15 U.S.C. §§ 6801-6809 — consumer financial data
+    FCRA = "FCRA"  # 15 U.S.C. § 1681 — consumer credit information
 
     # Global Privacy
-    GDPR = "GDPR"            # EU 2016/679 — personal data (EU/EEA)
-    CCPA = "CCPA"            # Cal. Civ. Code § 1798.100 — California consumers
-    LGPD = "LGPD"            # Brazil Lei 13.709/2018
-    PDPA = "PDPA"            # Singapore Personal Data Protection Act
-    APPI = "APPI"            # Japan Act on Protection of Personal Information 2022
-    DPDP = "DPDP"            # India Digital Personal Data Protection Act 2023
+    GDPR = "GDPR"  # EU 2016/679 — personal data (EU/EEA)
+    CCPA = "CCPA"  # Cal. Civ. Code § 1798.100 — California consumers
+    LGPD = "LGPD"  # Brazil Lei 13.709/2018
+    PDPA = "PDPA"  # Singapore Personal Data Protection Act
+    APPI = "APPI"  # Japan Act on Protection of Personal Information 2022
+    DPDP = "DPDP"  # India Digital Personal Data Protection Act 2023
 
     # AI-Specific
     EU_AI_ACT = "EU_AI_ACT"  # EU 2024/1689 — high-risk AI system requirements
@@ -103,14 +103,13 @@ class Regulation(str, Enum):
 # Audit infrastructure
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class AuditRecord:
     """Immutable compliance audit entry generated for every agent interaction."""
 
     record_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     # Agent identity
     agent_id: str = ""
@@ -118,11 +117,11 @@ class AuditRecord:
     session_id: str = ""
 
     # Interaction
-    event_type: str = ""          # before_model | before_agent | before_tool | blocked
+    event_type: str = ""  # before_model | before_agent | before_tool | blocked
     regulation_codes: list[str] = field(default_factory=list)
 
     # Decision
-    action: str = "allow"         # allow | block | redact | warn
+    action: str = "allow"  # allow | block | redact | warn
     reason: str = ""
     policy_refs: list[str] = field(default_factory=list)
 
@@ -134,7 +133,7 @@ class AuditRecord:
 
     # Tool governance (if applicable)
     tool_name: str = ""
-    tool_args_hash: str = ""      # SHA-256 of serialised args — no raw data in logs
+    tool_args_hash: str = ""  # SHA-256 of serialised args — no raw data in logs
 
     # OWASP Agentic AI classification (ASI-01 through ASI-10)
     owasp_controls_triggered: list[str] = field(default_factory=list)
@@ -213,6 +212,7 @@ class BigQueryAuditSink(AuditSink):
         if self._client is None:
             try:
                 from google.cloud import bigquery  # type: ignore[import]
+
                 self._client = bigquery.Client(project=self.project)
             except ImportError as exc:  # pragma: no cover
                 raise RuntimeError(
@@ -241,6 +241,7 @@ class BigQueryAuditSink(AuditSink):
 # Data classifiers
 # ---------------------------------------------------------------------------
 
+
 class _EducationRecordClassifier:
     """
     Detects FERPA-protected education record content.
@@ -255,14 +256,12 @@ class _EducationRecordClassifier:
         r"\b(grade|transcript|enrollment|financial[\s_-]aid)\b",
         r"\b(academic[\s_-]standing|disciplinary|probation)\b",
         r"\b(FERPA|education[\s_-]record)\b",
-        r"\b[A-Z]{2}\d{7,10}\b",          # student ID pattern
-        r"\b\d{3}-\d{2}-\d{4}\b",         # SSN (also HIPAA/GDPR)
+        r"\b[A-Z]{2}\d{7,10}\b",  # student ID pattern
+        r"\b\d{3}-\d{2}-\d{4}\b",  # SSN (also HIPAA/GDPR)
     ]
 
     def __init__(self) -> None:
-        self._re = re.compile(
-            "|".join(self._PATTERNS), re.IGNORECASE | re.MULTILINE
-        )
+        self._re = re.compile("|".join(self._PATTERNS), re.IGNORECASE | re.MULTILINE)
 
     def detect(self, text: str) -> bool:
         return bool(self._re.search(text))
@@ -290,8 +289,8 @@ class _PHIClassifier:
     """
 
     _PATTERNS = [
-        r"\b\d{3}-\d{2}-\d{4}\b",                     # SSN
-        r"\b\d{3}[.-]\d{3}[.-]\d{4}\b",               # Phone
+        r"\b\d{3}-\d{2}-\d{4}\b",  # SSN
+        r"\b\d{3}[.-]\d{3}[.-]\d{4}\b",  # Phone
         r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",  # Email
         r"\b(diagnosis|prescri\w+|medication|treatment|lab[\s_-]result)\b",
         r"\b(medical[\s_-]record|patient[\s_-]id|MRN|ICD-10)\b",
@@ -300,9 +299,7 @@ class _PHIClassifier:
     ]
 
     def __init__(self) -> None:
-        self._re = re.compile(
-            "|".join(self._PATTERNS), re.IGNORECASE | re.MULTILINE
-        )
+        self._re = re.compile("|".join(self._PATTERNS), re.IGNORECASE | re.MULTILINE)
 
     def detect(self, text: str) -> bool:
         return bool(self._re.search(text))
@@ -315,17 +312,15 @@ class _PIIClassifier:
 
     _PATTERNS = [
         r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",  # Email
-        r"\b\d{3}[.-]\d{3}[.-]\d{4}\b",               # Phone (US)
-        r"\b\d{3}-\d{2}-\d{4}\b",                     # SSN
+        r"\b\d{3}[.-]\d{3}[.-]\d{4}\b",  # Phone (US)
+        r"\b\d{3}-\d{2}-\d{4}\b",  # SSN
         r"\b(passport|national[\s_-]id|driver[\s_-]licen[sc]e)\b",
         r"\b(IP[\s_-]address|device[\s_-]id|cookie[\s_-]id)\b",
         r"\b(biometric|facial[\s_-]recognition|fingerprint)\b",
     ]
 
     def __init__(self) -> None:
-        self._re = re.compile(
-            "|".join(self._PATTERNS), re.IGNORECASE | re.MULTILINE
-        )
+        self._re = re.compile("|".join(self._PATTERNS), re.IGNORECASE | re.MULTILINE)
 
     def detect(self, text: str) -> bool:
         return bool(self._re.search(text))
@@ -334,6 +329,7 @@ class _PIIClassifier:
 # ---------------------------------------------------------------------------
 # OWASP Agentic AI Top 10 2026 guard
 # ---------------------------------------------------------------------------
+
 
 class OWASPAgenticGuard:
     """
@@ -362,20 +358,16 @@ class OWASPAgenticGuard:
     ]
 
     def __init__(self) -> None:
-        self._injection_re = re.compile(
-            "|".join(self._INJECTION_PATTERNS), re.IGNORECASE | re.MULTILINE
-        )
-        self._escalation_re = re.compile(
-            "|".join(self._ESCALATION_PATTERNS), re.IGNORECASE | re.MULTILINE
-        )
+        self._injection_re = re.compile("|".join(self._INJECTION_PATTERNS), re.IGNORECASE | re.MULTILINE)
+        self._escalation_re = re.compile("|".join(self._ESCALATION_PATTERNS), re.IGNORECASE | re.MULTILINE)
 
     def check(self, text: str) -> list[str]:
         """Return list of triggered OWASP ASI control codes."""
         triggered: list[str] = []
         if self._injection_re.search(text):
-            triggered.append("ASI-02")   # Prompt Injection
+            triggered.append("ASI-02")  # Prompt Injection
         if self._escalation_re.search(text):
-            triggered.append("ASI-03")   # Privilege Escalation
+            triggered.append("ASI-03")  # Privilege Escalation
         return triggered
 
     @staticmethod
@@ -388,6 +380,7 @@ class OWASPAgenticGuard:
 # ---------------------------------------------------------------------------
 # Main ADK Policy Guard
 # ---------------------------------------------------------------------------
+
 
 class ADKPolicyGuard:
     """
@@ -442,9 +435,7 @@ class ADKPolicyGuard:
     # Return types.Content → short-circuit; return that content directly.
     # ------------------------------------------------------------------
 
-    def before_agent_callback(
-        self, callback_context: CallbackContext
-    ) -> "Optional[types.Content]":
+    def before_agent_callback(self, callback_context: CallbackContext) -> types.Content | None:
         """Log agent invocation start and enforce EU AI Act transparency. (ASI-01, ASI-09)"""
 
         record = AuditRecord(
@@ -477,7 +468,7 @@ class ADKPolicyGuard:
         self,
         callback_context: CallbackContext,
         llm_request: LlmRequest,
-    ) -> "Optional[LlmResponse]":
+    ) -> LlmResponse | None:
         """
         Pre-LLM compliance gate.
 
@@ -510,8 +501,7 @@ class ADKPolicyGuard:
             record.policy_refs = ["OWASP Agentic AI Top 10 2026 — ASI-02"]
             self.audit_sink.write(record)
             return self._block_response(
-                "This request was blocked by the governance policy. "
-                "Reason: potential prompt injection detected."
+                "This request was blocked by the governance policy. Reason: potential prompt injection detected."
             )
 
         # --- FERPA: education records ---
@@ -560,8 +550,14 @@ class ADKPolicyGuard:
                     record.reason = "PHI detected — audit-only mode"
 
         # --- GDPR / CCPA: PII detection ---
-        privacy_regs = {Regulation.GDPR, Regulation.CCPA, Regulation.LGPD,
-                        Regulation.PDPA, Regulation.APPI, Regulation.DPDP}
+        privacy_regs = {
+            Regulation.GDPR,
+            Regulation.CCPA,
+            Regulation.LGPD,
+            Regulation.PDPA,
+            Regulation.APPI,
+            Regulation.DPDP,
+        }
         if self.regulations & privacy_regs:
             if self._pii.detect(request_text):
                 record.pii_detected = True
@@ -577,9 +573,7 @@ class ADKPolicyGuard:
             record.reason = "Privilege escalation pattern detected (OWASP ASI-03)"
             record.policy_refs.append("OWASP Agentic AI Top 10 2026 — ASI-03")
             self.audit_sink.write(record)
-            return self._block_response(
-                "This request was blocked: privilege escalation pattern detected."
-            )
+            return self._block_response("This request was blocked: privilege escalation pattern detected.")
 
         # --- OWASP ASI-09: Audit trail gap prevention ---
         # Always write an audit record, even for allowed requests
@@ -600,7 +594,7 @@ class ADKPolicyGuard:
         callback_context: CallbackContext,
         tool_name: str,
         tool_args: dict[str, Any],
-    ) -> "Optional[dict[str, Any]]":
+    ) -> dict[str, Any] | None:
         """
         Tool invocation governance gate.
 
@@ -632,8 +626,7 @@ class ADKPolicyGuard:
             record.education_records_detected = True
             record.action = "warn"
             record.reason = (
-                f"Tool '{tool_name}' invoked with education record data — "
-                "verify FERPA consent before executing."
+                f"Tool '{tool_name}' invoked with education record data — verify FERPA consent before executing."
             )
             record.owasp_controls_triggered.append("ASI-05")
             record.policy_refs.append("FERPA 34 CFR § 99.30 — consent required")
@@ -682,7 +675,7 @@ class ADKPolicyGuard:
         return refs
 
     @staticmethod
-    def _block_response(message: str) -> "LlmResponse":
+    def _block_response(message: str) -> LlmResponse:
         """Construct a governance block response for the ADK framework."""
         if not ADK_AVAILABLE:
             return message  # type: ignore[return-value]
@@ -697,6 +690,7 @@ class ADKPolicyGuard:
 # ---------------------------------------------------------------------------
 # Multi-agent governance wrapper
 # ---------------------------------------------------------------------------
+
 
 class ADKMultiAgentGovernance:
     """
