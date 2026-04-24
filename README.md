@@ -1,6 +1,7 @@
 # regulated-ai-governance
 
 [![CI](https://github.com/ashutoshrana/regulated-ai-governance/actions/workflows/ci.yml/badge.svg)](https://github.com/ashutoshrana/regulated-ai-governance/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/ashutoshrana/regulated-ai-governance/graph/badge.svg)](https://codecov.io/gh/ashutoshrana/regulated-ai-governance)
 [![PyPI](https://img.shields.io/pypi/v/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
 [![Python](https://img.shields.io/pypi/pyversions/regulated-ai-governance.svg)](https://pypi.org/project/regulated-ai-governance/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)

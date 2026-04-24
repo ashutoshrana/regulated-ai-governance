@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software in your research or production systems, please cite it as below."
+type: software
+title: "regulated-ai-governance"
+abstract: "Governance framework for AI agents and RAG systems in regulated environments. Policy enforcement, audit logging, and compliance orchestration for AI systems operating under FERPA, HIPAA, GDPR, EU AI Act, and 60+ additional regulatory frameworks across 25 jurisdictions."
+authors:
+  - family-names: "Rana"
+    given-names: "Ashutosh"
+    orcid: "https://orcid.org/0009-0007-5838-1204"
+    alias: "ashutoshrana"
+repository-code: "https://github.com/ashutoshrana/regulated-ai-governance"
+url: "https://pypi.org/project/regulated-ai-governance/"
+license: MIT
+version: "0.23.0"
+date-released: "2026-04-13"
+keywords:
+  - "AI governance"
+  - "FERPA"
+  - "HIPAA"
+  - "GDPR"
+  - "EU AI Act"
+  - "regulated AI"
+  - "compliance"
+  - "multi-agent systems"
+  - "enterprise AI"
+  - "agentic AI"
+  - "LangChain"
+  - "CrewAI"
+  - "AutoGen"
+  - "Google ADK"
