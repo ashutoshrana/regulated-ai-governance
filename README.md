@@ -13,6 +13,14 @@ Policy enforcement, audit logging, and compliance orchestration for AI systems t
 
 ---
 
+## Featured Article
+
+**[MACF: The 6-Component Framework Every Enterprise Multi-Agent AI System Needs](https://dev.to/ashutoshrana/macf-the-6-component-framework-every-enterprise-multi-agent-ai-system-needs-a0)**
+
+A complete architectural walkthrough of the Multi-Agent Collaborative Framework (MACF), showing how `regulated-ai-governance` powers the **ComplianceGate** and **PrivacyFilter** components — with working Python examples, Mermaid architecture and sequence diagrams, and a full end-to-end request trace across all six framework components.
+
+---
+
 ## The problem this solves
 
 AI agents in regulated environments can access and process data they are not authorized to see. Standard agent frameworks — CrewAI, AutoGen, LangChain, Semantic Kernel, Haystack — have no concept of regulated industry access control. When you deploy an agent in healthcare, financial services, or a government agency, the framework will not tell you whether the agent is allowed to access a record type, which decisions require human review, or how to produce the audit record the regulator requires.
