@@ -55,6 +55,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -64,18 +66,18 @@ dependencies = []
 
 [project.optional-dependencies]
 crewai = ["crewai>=1.14.0"]
-langchain = ["langchain-core>=0.3.0"]
-autogen = ["pyautogen>=0.4.0"]
-llama-index = ["llama-index-core>=0.12.0"]
+langchain = ["langchain-core>=0.3.0,<1.0.0"]
+autogen = ["pyautogen>=0.9.0"]
+llama-index = ["llama-index-core>=0.14.0"]
 semantic-kernel = ["semantic-kernel>=1.41.0"]
-haystack = ["haystack-ai>=2.20.0"]
-maf = ["microsoft-agent-framework>=1.0.0"]
+haystack = ["haystack-ai>=2.30.0"]
+maf = ["agent-framework>=1.11.0"]
 all = ["regulated-ai-governance[crewai,langchain,llama-index,semantic-kernel,haystack,maf]"]
 dev = [
-    "pytest>=8.0",
-    "pytest-cov>=4.0",
-    "ruff>=0.4",
-    "mypy>=1.9",
+    "pytest>=9.0",
+    "pytest-cov>=6.0",
+    "ruff>=0.10",
+    "mypy>=1.13",
 ]
 
 [project.urls]
