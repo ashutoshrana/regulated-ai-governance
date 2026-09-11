@@ -195,7 +195,8 @@ class GovernedActionGuard:
                 raise TypeError("Audit sinks must acknowledge delivery synchronously")
         except Exception as exc:
             raise AuditDeliveryError(
-                action_executed=outcome is not None, correlation_id=correlation_id,
+                action_executed=outcome is not None,
+                correlation_id=correlation_id,
             ) from exc
 
     def guard(

@@ -41,8 +41,7 @@ def test_preexecution_sink_failure_never_invokes_action():
     def unavailable(record):
         raise OSError("store unavailable")
 
-    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=unavailable,
-                               require_audit=True)
+    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=unavailable, require_audit=True)
     with pytest.raises(AuditDeliveryError) as error:
         guard.guard("write", lambda: calls.append("executed"))
     assert error.value.action_executed is False
@@ -51,8 +50,13 @@ def test_preexecution_sink_failure_never_invokes_action():
 
 def test_outcome_events_are_correlated_and_preserve_action_errors():
     events = []
-    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=events.append,
-                               require_audit=True, audit_execution=True, raise_on_deny=True)
+    guard = GovernedActionGuard(
+        ActionPolicy(allowed_actions={"write"}),
+        audit_sink=events.append,
+        require_audit=True,
+        audit_execution=True,
+        raise_on_deny=True,
+    )
     assert guard.guard("write", lambda: 42) == 42
     assert [event.event_type for event in events] == ["decision", "execution"]
     assert events[0].correlation_id == events[1].correlation_id
@@ -77,8 +81,7 @@ def test_postexecution_sink_failure_reports_side_effect_may_have_happened():
         if record.event_type == "execution":
             raise OSError("lost connection")
 
-    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=sink,
-                               audit_execution=True)
+    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=sink, audit_execution=True)
     with pytest.raises(AuditDeliveryError) as error:
         guard.guard("write", lambda: calls.append("executed"))
     assert error.value.action_executed is True
@@ -87,8 +90,7 @@ def test_postexecution_sink_failure_reports_side_effect_may_have_happened():
 
 def test_execution_audit_does_not_claim_async_completion():
     events = []
-    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=events.append,
-                               audit_execution=True)
+    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=events.append, audit_execution=True)
 
     async def async_action():
         return 1
@@ -108,8 +110,9 @@ def test_async_sinks_cannot_bypass_required_auditing():
     with pytest.raises(TypeError, match="synchronously"):
         GovernedActionGuard(ActionPolicy(), audit_sink=sink, require_audit=True)
     calls = []
-    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}),
-                               audit_sink=lambda record: sink(record), require_audit=True)
+    guard = GovernedActionGuard(
+        ActionPolicy(allowed_actions={"write"}), audit_sink=lambda record: sink(record), require_audit=True
+    )
     with pytest.raises(AuditDeliveryError) as error:
         guard.guard("write", lambda: calls.append(True))
     assert not error.value.action_executed
@@ -119,8 +122,7 @@ def test_async_sinks_cannot_bypass_required_auditing():
 def test_action_context_mutation_cannot_corrupt_execution_record():
     events = []
     context = {"request": ["original"]}
-    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=events.append,
-                               audit_execution=True)
+    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=events.append, audit_execution=True)
     guard.guard("write", lambda: context.update(request=object()), context)
     assert len(events) == 2
     assert events[-1].outcome == "succeeded"
