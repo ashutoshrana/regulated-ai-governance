@@ -61,14 +61,25 @@ Usage
 
 from __future__ import annotations
 
+import inspect
 import logging
-from collections.abc import Callable
+import uuid
+from collections.abc import Callable, Mapping
 from typing import Any
 
-from regulated_ai_governance.audit import GovernanceAuditRecord
+from regulated_ai_governance.audit import GovernanceAuditRecord, _freeze
 from regulated_ai_governance.policy import ActionPolicy, PolicyDecision
 
 logger = logging.getLogger(__name__)
+
+
+class AuditDeliveryError(RuntimeError):
+    """Audit delivery failed; inspect action_executed before considering a retry."""
+
+    def __init__(self, *, action_executed: bool, correlation_id: str) -> None:
+        self.action_executed = action_executed
+        self.correlation_id = correlation_id
+        super().__init__(f"Audit delivery failed (action_executed={action_executed})")
 
 
 class GovernedActionGuard:
@@ -99,7 +110,15 @@ class GovernedActionGuard:
         block_on_escalation: bool = True,
         policy_version: str = "1.0",
         raise_on_deny: bool = False,
+        require_audit: bool = False,
+        audit_execution: bool = False,
     ) -> None:
+        if (require_audit or audit_execution) and audit_sink is None:
+            raise ValueError("An audit_sink is required for mandatory or execution auditing")
+        if inspect.iscoroutinefunction(audit_sink) or inspect.iscoroutinefunction(
+            getattr(audit_sink, "__call__", None)
+        ):
+            raise TypeError("Audit sinks must acknowledge delivery synchronously")
         self._policy = policy
         self._regulation = regulation
         self._actor_id = actor_id
@@ -107,6 +126,7 @@ class GovernedActionGuard:
         self._block_on_escalation = block_on_escalation
         self._policy_version = policy_version
         self._raise_on_deny = raise_on_deny
+        self._audit_execution = audit_execution
 
     def evaluate(
         self,
@@ -148,21 +168,36 @@ class GovernedActionGuard:
         self,
         action_name: str,
         decision: PolicyDecision,
-        context: dict[str, Any] | None,
+        context: Mapping[str, Any] | None,
+        correlation_id: str = "",
+        outcome: str | None = None,
     ) -> None:
         if self._audit_sink is None:
             return
-        record = GovernanceAuditRecord(
-            regulation=self._regulation,
-            actor_id=self._actor_id,
-            action_name=action_name,
-            permitted=decision.permitted,
-            denial_reason=decision.denial_reason,
-            escalation_target=(decision.escalation.escalate_to if decision.escalation else None),
-            context=context or {},
-            policy_version=self._policy_version,
-        )
-        self._audit_sink(record)
+        try:
+            record = GovernanceAuditRecord(
+                regulation=self._regulation,
+                actor_id=self._actor_id,
+                action_name=action_name,
+                permitted=decision.permitted,
+                denial_reason=decision.denial_reason,
+                escalation_target=(decision.escalation.escalate_to if decision.escalation else None),
+                context=context or {},
+                policy_version=self._policy_version,
+                correlation_id=correlation_id,
+                event_type="execution" if outcome else "decision",
+                outcome=outcome,
+            )
+            delivered = self._audit_sink(record)
+            if inspect.isawaitable(delivered):
+                if inspect.iscoroutine(delivered):
+                    delivered.close()
+                raise TypeError("Audit sinks must acknowledge delivery synchronously")
+        except Exception as exc:
+            raise AuditDeliveryError(
+                action_executed=outcome is not None,
+                correlation_id=correlation_id,
+            ) from exc
 
     def guard(
         self,
@@ -175,7 +210,10 @@ class GovernedActionGuard:
         """
         Evaluate the policy for *action_name* and, if permitted, execute *execute_fn*.
 
-        Always emits an audit record regardless of the outcome.
+        Emits a decision record when a sink is configured. ``audit_execution``
+        additionally emits a correlated success/failure record. Sink failure
+        before execution prevents the action; failure after execution cannot
+        undo it and raises ``AuditDeliveryError(action_executed=True)``.
 
         :param action_name: Name of the action being guarded.
         :param execute_fn: Callable to invoke if the action is permitted.
@@ -187,8 +225,12 @@ class GovernedActionGuard:
             error string if ``raise_on_deny=False``.
         :raises PermissionError: If the action is denied and ``raise_on_deny=True``.
         """
+        if self._audit_execution and inspect.iscoroutinefunction(execute_fn):
+            raise TypeError("Execution auditing requires a synchronous callable")
         decision = self.evaluate(action_name, context)
-        self._emit_audit(action_name, decision, context)
+        snapshot = _freeze(context or {}) if self._audit_sink is not None else None
+        correlation_id = str(uuid.uuid4())
+        self._emit_audit(action_name, decision, snapshot, correlation_id)
 
         if not decision.permitted:
             message = f"[regulated-ai-governance] Action BLOCKED — {decision.denial_reason}"
@@ -207,4 +249,16 @@ class GovernedActionGuard:
                 decision.escalation.condition,
             )
 
-        return execute_fn(*args, **kwargs)
+        try:
+            result = execute_fn(*args, **kwargs)
+            if self._audit_execution and inspect.isawaitable(result):
+                if inspect.iscoroutine(result):
+                    result.close()
+                raise TypeError("Execution auditing requires a synchronous result")
+        except Exception:
+            if self._audit_execution:
+                self._emit_audit(action_name, decision, snapshot, correlation_id, "failed")
+            raise
+        if self._audit_execution:
+            self._emit_audit(action_name, decision, snapshot, correlation_id, "succeeded")
+        return result

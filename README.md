@@ -25,7 +25,7 @@ A complete architectural walkthrough of the Multi-Agent Collaborative Framework 
 
 AI agents in regulated environments can access and process data they are not authorized to see. Standard agent frameworks — CrewAI, AutoGen, LangChain, Semantic Kernel, Haystack — have no concept of regulated industry access control. When you deploy an agent in healthcare, financial services, or a government agency, the framework will not tell you whether the agent is allowed to access a record type, which decisions require human review, or how to produce the audit record the regulator requires.
 
-This library provides those answers as composable Python filters: each filter enforces one regulatory framework, each context object is a frozen dataclass of verifiable compliance state, and every decision produces a structured audit record with a regulation citation.
+This library provides those answers as composable Python filters: filters evaluate encoded rules against caller-supplied context. Context values are assertions until independently verified. Configure an audit sink to retain decisions; a permitted result does not establish legal compliance. See [control evidence](docs/CONTROL_EVIDENCE.md) and [audit guarantees](docs/AUDIT_GUARANTEES.md).
 
 ---
 
@@ -216,7 +216,7 @@ print(report.compliance_summary)  # human-readable for audit file
 | Google ADK | `ADKPolicyGuard` | `before_model_callback` / `before_tool_callback` — BigQuery audit sink |
 | AutoGen | `PolicyEnforcingAgent` (maintenance mode — prefer MAF) | Message interceptor |
 | Semantic Kernel | `PolicyKernelPlugin` (maintenance mode — prefer MAF) | SK Plugin interface |
-| Haystack 2.x | `FERPAMetadataFilter` | Standalone: [`ferpa-haystack`](https://github.com/ashutoshrana/ferpa-haystack) on PyPI |
+| Haystack 2.x | `FERPAMetadataFilter` | Standalone: [`ferpa-haystack`](https://github.com/ashutoshrana/haystack-ferpa-filter) on PyPI |
 | DSPy | `ComplianceModule` | DSPy module wrapper |
 | Microsoft Agent Framework (MAF) | `GovernanceMAFMiddleware` | Successor to AutoGen + Semantic Kernel |
 
@@ -271,7 +271,7 @@ JSON-serializable; suitable for compliance databases, SIEM ingestion, and regula
 
 ## Standalone Haystack Package
 
-**[ferpa-haystack](https://github.com/ashutoshrana/ferpa-haystack)** — `FERPAMetadataFilter` as a standalone Haystack 2.x custom component. Install with `pip install ferpa-haystack`. Adds FERPA identity-scope enforcement to any Haystack pipeline in two lines:
+**[ferpa-haystack](https://github.com/ashutoshrana/haystack-ferpa-filter)** — `FERPAMetadataFilter` as a standalone Haystack 2.x custom component. Install with `pip install ferpa-haystack`. Adds FERPA identity-scope enforcement to any Haystack pipeline in two lines:
 
 ```python
 pipeline.add_component("ferpa_filter", FERPAMetadataFilter(student_id="stu_001"))
@@ -291,14 +291,15 @@ agent = LlmAgent(before_model_callback=guard.before_model_callback, ...)
 
 ---
 
-## Near-term roadmap
+## Reliability and adoption
 
-- Google ADK adapter: stable release after `google-adk>=1.0` GA
-- `29_latam_ai_governance.py` — Argentina AAIP + Chile SII + Colombia SIC AI enforcement
-- Async filter support for FastAPI/asyncio environments
-- Submit `regulated_compliance_agent` example to google/adk-samples
+The source version and released distribution are separate artifacts. See
+[CHANGELOG.md](CHANGELOG.md) for unreleased changes; install a published version
+for reproducibility and record its version in deployment evidence.
 
----
+- [Audit guarantees and failure semantics](docs/AUDIT_GUARANTEES.md)
+- [Control provenance and applicability checklist](docs/CONTROL_EVIDENCE.md)
+- [Current roadmap](ROADMAP.md)
 
 ## Contributing
 
@@ -326,7 +327,7 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
 | Library | Focus | Coverage |
 |---------|-------|---------|
 | [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | What to retrieve | 50 sectors · 65 regulations · 1,901 tests |
-| [ferpa-haystack](https://github.com/ashutoshrana/ferpa-haystack) | Haystack-native FERPA filter | Standalone Haystack 2.x component · 25 tests |
+| [ferpa-haystack](https://github.com/ashutoshrana/haystack-ferpa-filter) | Haystack-native FERPA filter | Standalone Haystack 2.x component · 25 tests |
 | **regulated-ai-governance** | What agents may do | 41 governance examples · 25 jurisdictions · 2,631 tests |
 | [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | How data flows | 43 patterns · schema registry · GraphQL · 1,865 tests |
 

@@ -5,8 +5,8 @@ Structured audit record for regulated AI governance.
 the action was permitted, denied, or escalated — in a format suitable for
 compliance log stores.
 
-The design satisfies the record-keeping requirements across the three core
-regulations this library targets:
+The record supplies fields relevant to audit controls in the following domains;
+this data structure alone does not establish legal compliance:
 
 - **FERPA**: 34 CFR § 99.32 — institutions must maintain a record of each
   disclosure of education records, including who accessed them and when.
@@ -22,13 +22,39 @@ regulation-appropriate store using the ``audit_sink`` callable.
 
 from __future__ import annotations
 
+import math
 import uuid
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from types import MappingProxyType
 from typing import Any
 
 
-@dataclass
+def _freeze(value: Any) -> Any:
+    """Snapshot JSON-compatible context without retaining caller-owned objects."""
+    if isinstance(value, Mapping):
+        if not all(isinstance(key, str) for key in value):
+            raise TypeError("Audit context keys must be strings")
+        return MappingProxyType({key: _freeze(item) for key, item in value.items()})
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze(item) for item in value)
+    if value is None or isinstance(value, (str, bool, int)):
+        return value
+    if isinstance(value, float) and math.isfinite(value):
+        return value
+    raise TypeError("Audit context must contain finite JSON-compatible values")
+
+
+def _thaw(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _thaw(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_thaw(item) for item in value]
+    return value
+
+
+@dataclass(frozen=True)
 class GovernanceAuditRecord:
     """
     A single compliance audit event produced when ``GovernedActionGuard``
@@ -56,10 +82,16 @@ class GovernanceAuditRecord:
     permitted: bool
     denial_reason: str | None = None
     escalation_target: str | None = None
-    context: dict[str, Any] = field(default_factory=dict)
+    context: Mapping[str, Any] = field(default_factory=dict)
     policy_version: str = "1.0"
     record_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    event_type: str = "decision"
+    correlation_id: str = ""
+    outcome: str | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "context", _freeze(self.context))
 
     def to_log_entry(self) -> dict[str, Any]:
         """
@@ -82,5 +114,8 @@ class GovernanceAuditRecord:
             "escalation_target": self.escalation_target,
             "policy_version": self.policy_version,
             "timestamp": self.timestamp.isoformat(),
-            **{f"ctx_{k}": v for k, v in self.context.items()},
+            "event_type": self.event_type,
+            "correlation_id": self.correlation_id,
+            "outcome": self.outcome,
+            **{f"ctx_{k}": _thaw(v) for k, v in self.context.items()},
         }
