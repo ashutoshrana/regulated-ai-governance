@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased — reliability and adoption
+## [0.45.0] — prepared 2026-09-11 (not yet published)
+
+- Gate publishing on stable release identity, tagged-commit tests, validated wheel/sdist
+  metadata and a clean installed-wheel import.
 
 - Freeze nested audit context and return independent JSON exports.
 - Add mandatory sink configuration and opt-in correlated execution outcomes.
