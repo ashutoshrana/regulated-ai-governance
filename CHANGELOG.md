@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — reliability and adoption
+
+- Freeze nested audit context and return independent JSON exports.
+- Add mandatory sink configuration and opt-in correlated execution outcomes.
+- Distinguish audit failure before invocation from failure after a possible side effect.
+- Document supplied evidence, applicability, audit storage assumptions and migration.
+- These changes are not a claim of a new PyPI or GitHub release.
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

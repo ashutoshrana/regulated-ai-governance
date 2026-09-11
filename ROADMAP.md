@@ -1,41 +1,22 @@
 # Roadmap
 
-This roadmap lists near-term development direction for `regulated-ai-governance`.
-Items are listed in rough priority order. Dates are targets, not commitments.
+This roadmap supersedes historical future-version labels that fell behind source
+releases. Source versions do not imply PyPI or GitHub release publication.
 
----
+## Implemented in the reliability branch
 
-## v0.4.0 — Expanded Framework Coverage
+- Immutable audit snapshots and independent serialization.
+- Required audit sink configuration and optional execution outcome records.
+- Correlated failure semantics with regression checks.
+- Explicit control evidence and applicability guidance.
 
-- LangGraph adapter — policy enforcement node for stateful multi-agent graphs
-- Pydantic v2 migration across all internal data models
-- Async policy evaluation (`evaluate_async`) for FastAPI and asyncio workloads
-- Improve `ConsentStore` with pluggable database backend example (SQLAlchemy)
+## Adoption validation
 
-## v0.5.0 — Audit & Observability
+- Run the cross-repository synthetic service workflow on supported dependencies.
+- Validate application-specific durable audit sinks and redaction requirements.
+- Collect reproducible external integration reports; no external adoption is claimed.
 
-- Structured JSONL audit log writer (rotation, async flush)
-- OpenTelemetry span export for policy evaluation events
-- Lineage graph export to DOT format for compliance review workflows
-- HIPAA Minimum Necessary standard implementation (field-level filtering)
+## Expansion gate
 
-## v0.6.0 — Regulation Depth
-
-- FERPA: parental consent override workflow
-- GDPR: Right to erasure (Article 17) consent revocation propagation
-- SOC 2 Type II: automated control evidence collection helpers
-- ISO 27001 policy module
-
-## Ongoing
-
-- Example notebooks (Jupyter) for each regulation
-- Published blog posts and implementation notes in `docs/`
-- Framework adapter updates as CrewAI, AutoGen, Semantic Kernel APIs evolve
-
----
-
-## Completed
-
-- ✅ v0.1.0 — Core policy engine (ActionPolicy, PolicyViolationError, AuditRecord)
-- ✅ v0.2.0 — GDPR, CCPA, SOC 2, FERPA, HIPAA, GLBA regulation modules; PII detector; consent store; lineage tracker; LangChain, LlamaIndex, Haystack, CrewAI, AutoGen, Semantic Kernel adapters
-- ✅ v0.3.0 — CrewAI EnterpriseActionGuard, AutoGen PolicyEnforcingAgent, Semantic Kernel PolicyKernelPlugin; runnable examples; full CI; PyPI publish
+Add a framework or jurisdiction only with a concrete use case, authoritative
+control mapping, real integration tests, and a maintainer for version drift.
