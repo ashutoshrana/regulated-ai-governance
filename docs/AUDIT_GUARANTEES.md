@@ -25,6 +25,8 @@ assert records[0].correlation_id == records[1].correlation_id
 
 - `require_audit=True` rejects construction without a sink. Any configured sink
   must acknowledge the decision before the action is invoked; exceptions stop it.
+  Async sinks and awaitable return values are rejected; dispatching a background
+  task does not constitute acknowledged durable delivery.
 - `audit_execution=True` adds succeeded/failed events for synchronous callables.
   It requires a sink and rejects async callables/results; it cannot audit awaited
   completion. Existing response-only behavior remains available by default.
@@ -34,6 +36,8 @@ assert records[0].correlation_id == records[1].correlation_id
   retry; reconcile by application idempotency key. A post-action audit failure
   cannot roll back external systems. Sink exceptions remain chained as causes.
 - Direct `evaluate()` is a policy preview, not execution and not an audit write.
+- Decision and outcome reuse the same pre-action context snapshot, even when the
+  action mutates its caller's context.
 - Sink durability, retention, authentication, and access restrictions belong to
   the application. A list or ordinary file append is not an acknowledged remote
   compliance store.

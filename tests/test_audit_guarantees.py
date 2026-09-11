@@ -99,3 +99,30 @@ def test_execution_audit_does_not_claim_async_completion():
     with pytest.raises(TypeError, match="synchronous result"):
         guard.guard("write", lambda: async_action())
     assert events[-1].outcome == "failed"
+
+
+def test_async_sinks_cannot_bypass_required_auditing():
+    async def sink(record):
+        pytest.fail("Unawaited sink should be rejected")
+
+    with pytest.raises(TypeError, match="synchronously"):
+        GovernedActionGuard(ActionPolicy(), audit_sink=sink, require_audit=True)
+    calls = []
+    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}),
+                               audit_sink=lambda record: sink(record), require_audit=True)
+    with pytest.raises(AuditDeliveryError) as error:
+        guard.guard("write", lambda: calls.append(True))
+    assert not error.value.action_executed
+    assert not calls
+
+
+def test_action_context_mutation_cannot_corrupt_execution_record():
+    events = []
+    context = {"request": ["original"]}
+    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=events.append,
+                               audit_execution=True)
+    guard.guard("write", lambda: context.update(request=object()), context)
+    assert len(events) == 2
+    assert events[-1].outcome == "succeeded"
+    assert events[0].context == events[1].context
+    assert events[-1].to_log_entry()["ctx_request"] == ["original"]
