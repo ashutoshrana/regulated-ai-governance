@@ -79,7 +79,46 @@ pip install "regulated-ai-governance[haystack]"
 
 ---
 
-## Quick start: CrewAI + FERPA
+## Quick start: core policy checks
+
+After installing the package, save this as `quickstart.py` and run `python quickstart.py`.
+The core package has no runtime dependencies; no API key or AI framework is needed.
+
+```python
+from regulated_ai_governance.policy import ActionPolicy
+
+policy = ActionPolicy(allowed_actions={"read_transcript"})
+
+permitted, reason = policy.permits("read_transcript")
+assert permitted is True
+assert reason == ""
+print(f"read_transcript: permitted={permitted}")
+
+permitted, reason = policy.permits("export_records")
+assert permitted is False
+assert "not in the allowed actions set" in reason
+print(f"export_records: permitted={permitted}")
+print(reason)
+```
+
+Expected output:
+
+```text
+read_transcript: permitted=True
+export_records: permitted=False
+Action 'export_records' is not in the allowed actions set. Allowed: ['read_transcript']
+```
+
+`permits()` evaluates action names only; it does not execute actions or emit audit
+records. This example uses a non-empty allowlist: unlisted actions are denied with
+`require_all_allowed=True` (the default). An empty allowlist permits all actions
+except those explicitly listed in `denied_actions`.
+
+## Integration sketch: CrewAI + FERPA
+
+This sketch requires the `crewai` extra, your own `MyTranscriptTool` implementation
+and `write_to_db` audit sink, and an imported/configured CrewAI `Agent`. Replace the
+placeholders and `...` with your application's configuration before running it.
 
 ```python
 from regulated_ai_governance.integrations.crewai import EnterpriseActionGuard
