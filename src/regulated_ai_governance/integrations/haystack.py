@@ -68,13 +68,15 @@ class GovernedHaystackComponent:
         actor_id: str,
         audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
         block_on_escalation: bool = True,
+        require_audit: bool = False,
     ) -> None:
         self.action_name = action_name
         self._guard = GovernedActionGuard(
             policy=policy,
             regulation=regulation,
             actor_id=actor_id,
-            audit_sink=audit_sink or (lambda _: None),
+            audit_sink=audit_sink,
+            require_audit=require_audit,
             block_on_escalation=block_on_escalation,
             raise_on_deny=True,
         )
@@ -147,6 +149,7 @@ def make_haystack_policy_guard(
     action_name: str = "haystack_pipeline_step",
     audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
     block_on_escalation: bool = True,
+    require_audit: bool = False,
 ) -> type:
     """
     Factory that returns a Haystack 2.x ``@component``-decorated class enforcing
@@ -208,7 +211,8 @@ def make_haystack_policy_guard(
         policy=policy,
         regulation=regulation,
         actor_id=actor_id,
-        audit_sink=audit_sink or (lambda _: None),
+        audit_sink=audit_sink,
+        require_audit=require_audit,
         block_on_escalation=block_on_escalation,
         raise_on_deny=True,
     )

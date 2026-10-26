@@ -47,3 +47,49 @@ Serialize custom objects and redact sensitive values before creating a record.
 Use a new record for a correction rather than mutating historical data.
 
 Check: `pytest -q tests/test_audit_guarantees.py`.
+
+Integration factories accept `require_audit=True` and pass it to the shared
+action guard. Missing sinks reject construction; configured sinks must
+acknowledge delivery synchronously before guarded actions execute. These
+adapters emit decision records; they do not claim awaited execution outcomes.
+
+LangChain `GovernanceCallbackHandler` checks tools and the `retrieval` action
+in start callbacks with propagated exceptions. Attach it to the actual
+invocation. `FERPAComplianceCallbackHandler` filters the native result list in
+place because callback return values are ignored. That filter runs after the
+retrieval read; use the governance start handler to block retrieval itself. An
+empty allowed-category set permits no category. The skill's LangChain handler
+uses its existing `document_retrieval` action and configured framework rules.
+
+For LlamaIndex protect the query engine with `GovernedQueryEngine.wrap(...)`.
+For Haystack protect the whole pipeline through
+`GovernedHaystackComponent.guard_callable(pipeline.run, ...)` before retrieval.
+A guard inserted after a retriever only controls downstream document use; it
+cannot prevent a read that already happened. Likewise `PolicyWorkflowGuard`
+checks its received event, after any earlier workflow steps.
+
+`GovernanceAuditSkill` convenience factories delegate the same configured
+frameworks and audit sink as `audit_action` and `audit_retrieval`:
+
+- `as_crewai_tool` returns a native tool with the callable's input signature and
+  checks its configured action before invoking the callable.
+- `as_llama_index_postprocessor` and `as_haystack_component` return native SDK
+  objects that apply `document_retrieval` rules to already retrieved content.
+  Denial returns an empty collection; these do not prevent the earlier read or
+  independently verify document identity.
+- `as_maf_middleware` returns native Microsoft `FunctionMiddleware` for
+  `Agent(..., middleware=[...])`; it checks `context.function.name` before
+  calling the next middleware. It does not intercept model calls or arbitrary
+  agent messages. Install the `maf` extra (`agent-framework-core`, Python 3.10+).
+  The concrete `integrations.maf.PolicyMiddleware` keeps its legacy `on_message`
+  interface; register `policy_middleware.as_native()` to use its existing action
+  policy through native function middleware.
+
+The skill's existing `audit_only=True` intentionally permits actions and content
+while recording denials. Configured synchronous sink failures propagate before
+tool calls or downstream content delivery; async sink delivery is not supported
+by these skill convenience adapters. No adapter establishes legal compliance.
+Native factory tests live in `tests/test_skill.py::test_native_skill_factory`.
+
+Native regression checks: `tests/test_native_langchain_boundary.py` and
+`tests/test_native_retrieval_wrappers.py`; SDK installation is required.

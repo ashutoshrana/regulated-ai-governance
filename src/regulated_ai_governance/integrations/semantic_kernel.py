@@ -72,6 +72,7 @@ class GovernedKernelPlugin:
         actor_id: str,
         audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
         block_on_escalation: bool = True,
+        require_audit: bool = False,
     ) -> GovernedKernelPlugin:
         """
         Factory: create a ``GovernedKernelPlugin`` from any object.
@@ -92,7 +93,8 @@ class GovernedKernelPlugin:
             policy=policy,
             regulation=regulation,
             actor_id=actor_id,
-            audit_sink=audit_sink or (lambda _: None),
+            audit_sink=audit_sink,
+            require_audit=require_audit,
             block_on_escalation=block_on_escalation,
             raise_on_deny=True,
         )
