@@ -128,3 +128,80 @@ def test_action_context_mutation_cannot_corrupt_execution_record():
     assert events[-1].outcome == "succeeded"
     assert events[0].context == events[1].context
     assert events[-1].to_log_entry()["ctx_request"] == ["original"]
+
+
+@pytest.mark.parametrize("cancel", [False, True])
+@pytest.mark.parametrize("sink_fails", [False, True])
+def test_original_action_error_and_cancellation_survive_terminal_audit(cancel, sink_fails):
+    from asyncio import CancelledError
+
+    records = []
+    failure = CancelledError("cancelled") if cancel else ValueError("original action error")
+
+    def sink(record):
+        records.append(record)
+        if sink_fails and record.event_type == "execution":
+            raise OSError("terminal audit unavailable")
+
+    def action():
+        raise failure
+
+    guard = GovernedActionGuard(
+        ActionPolicy(allowed_actions={"write"}), audit_sink=sink, require_audit=True, audit_execution=True
+    )
+    with pytest.raises(type(failure)) as error:
+        guard.guard("write", action)
+    assert error.value is failure
+    assert [r.event_type for r in records] == ["decision", "execution"]
+    assert records[-1].outcome == ("cancelled" if cancel else "failed")
+    assert records[0].correlation_id == records[-1].correlation_id
+    if sink_fails:
+        assert isinstance(error.value.__cause__, AuditDeliveryError)
+        assert error.value.__cause__.action_executed is True
+        assert isinstance(error.value.__cause__.__cause__, OSError)
+
+
+def test_terminal_sink_cancellation_does_not_mask_original_action_error():
+    from asyncio import CancelledError
+
+    original = ValueError("original action error")
+    sink_error = CancelledError("sink cancelled")
+
+    def sink(record):
+        if record.event_type == "execution":
+            raise sink_error
+
+    def action():
+        raise original
+
+    guard = GovernedActionGuard(ActionPolicy(allowed_actions={"write"}), audit_sink=sink, audit_execution=True)
+    with pytest.raises(ValueError) as error:
+        guard.guard("write", action)
+    assert error.value is original
+    assert error.value.__cause__ is sink_error
+    assert sink_error.action_executed is True
+    assert sink_error.correlation_id
+
+
+@pytest.mark.parametrize("after_action", [False, True])
+def test_sink_cancellation_preserves_identity_and_execution_markers(after_action):
+    from asyncio import CancelledError
+
+    failure = CancelledError("audit cancelled")
+    records = []
+    effects = []
+
+    def sink(record):
+        records.append(record)
+        if (record.event_type == "execution") == after_action:
+            raise failure
+
+    guard = GovernedActionGuard(
+        ActionPolicy(allowed_actions={"write"}), audit_sink=sink, require_audit=True, audit_execution=True
+    )
+    with pytest.raises(CancelledError) as error:
+        guard.guard("write", lambda: effects.append("completed"))
+    assert error.value is failure
+    assert failure.action_executed is after_action
+    assert failure.correlation_id == records[-1].correlation_id
+    assert effects == (["completed"] if after_action else [])

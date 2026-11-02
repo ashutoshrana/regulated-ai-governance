@@ -64,6 +64,7 @@ from __future__ import annotations
 import inspect
 import logging
 import uuid
+from asyncio import CancelledError
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -193,6 +194,10 @@ class GovernedActionGuard:
                 if inspect.iscoroutine(delivered):
                     delivered.close()
                 raise TypeError("Audit sinks must acknowledge delivery synchronously")
+        except CancelledError as exc:
+            setattr(exc, "action_executed", outcome is not None)
+            setattr(exc, "correlation_id", correlation_id)
+            raise
         except Exception as exc:
             raise AuditDeliveryError(
                 action_executed=outcome is not None,
@@ -213,7 +218,9 @@ class GovernedActionGuard:
         Emits a decision record when a sink is configured. ``audit_execution``
         additionally emits a correlated success/failure record. Sink failure
         before execution prevents the action; failure after execution cannot
-        undo it and raises ``AuditDeliveryError(action_executed=True)``.
+        undo it and raises ``AuditDeliveryError(action_executed=True)`` for ordinary
+        sink errors. Sink cancellation is re-raised unchanged with action_executed
+        and correlation_id markers, preserving task cancellation semantics.
 
         :param action_name: Name of the action being guarded.
         :param execute_fn: Callable to invoke if the action is permitted.
@@ -255,9 +262,13 @@ class GovernedActionGuard:
                 if inspect.iscoroutine(result):
                     result.close()
                 raise TypeError("Execution auditing requires a synchronous result")
-        except Exception:
+        except BaseException as action_error:
             if self._audit_execution:
-                self._emit_audit(action_name, decision, snapshot, correlation_id, "failed")
+                outcome = "cancelled" if isinstance(action_error, CancelledError) else "failed"
+                try:
+                    self._emit_audit(action_name, decision, snapshot, correlation_id, outcome)
+                except BaseException as audit_error:
+                    raise action_error from audit_error
             raise
         if self._audit_execution:
             self._emit_audit(action_name, decision, snapshot, correlation_id, "succeeded")

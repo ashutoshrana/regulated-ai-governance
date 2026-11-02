@@ -55,6 +55,7 @@ handler = GovernanceCallbackHandler(
 if scenario in ("filter", "empty_categories"):
     filter_handler = FERPAComplianceCallbackHandler(
         "a", "x", allowed_categories=set() if scenario == "empty_categories" else None,
+        unrestricted_categories=scenario == "filter",
     )
     result = Retriever().invoke("fixture", config={"callbacks":[filter_handler]})
     expected = [] if scenario == "empty_categories" else ["a"]
@@ -81,3 +82,63 @@ else:
         text=True,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("mode", ["omitted", "none", "empty", "grant", "unrestricted"])
+def test_native_category_contract_at_prompt(mode):
+    try:
+        version("langchain-core")
+    except PackageNotFoundError:
+        pytest.skip("langchain-core is not installed")
+    code = r"""
+from langchain_core.documents import Document
+from langchain_core.retrievers import BaseRetriever
+from langchain_core.runnables import RunnableLambda
+from regulated_ai_governance.integrations.langchain import FERPAComplianceCallbackHandler
+class Retriever(BaseRetriever):
+    def _get_relevant_documents(self, query, *, run_manager):
+        return [
+            Document(page_content="PRIVATE_CANARY", metadata={
+                "student_id":"s","institution_id":"i","category":"academic_record"}),
+            Document(page_content="OTHER_CANARY", metadata={
+                "student_id":"other","institution_id":"i","category":"academic_record"})
+        ]
+mode = MODE
+args = {}
+if mode != "omitted":
+    args["allowed_categories"] = None if mode == "none" else {"academic_record"} if mode == "grant" else set()
+if mode == "unrestricted": args["unrestricted_categories"] = True
+handler = FERPAComplianceCallbackHandler("s", "i", **args)
+seen = []
+chain = Retriever() | RunnableLambda(lambda docs: seen.append(" ".join(d.page_content for d in docs)))
+chain.invoke("fixture", config={"callbacks":[handler]})
+assert ("PRIVATE_CANARY" in seen[-1]) == (mode in ("grant", "unrestricted"))
+assert "OTHER_CANARY" not in seen[-1]
+"""
+    result = subprocess.run([sys.executable, "-c", code.replace("MODE", repr(mode))], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
+
+def test_native_empty_scope_error_does_not_expose_identifiers():
+    try:
+        version("langchain-core")
+    except PackageNotFoundError:
+        pytest.skip("langchain-core is not installed")
+    code = r"""
+from langchain_core.documents import Document
+from langchain_core.retrievers import BaseRetriever
+from regulated_ai_governance.integrations.langchain import FERPAComplianceCallbackHandler
+class Retriever(BaseRetriever):
+    def _get_relevant_documents(self, query, *, run_manager):
+        return [Document(page_content="fixture", metadata={
+            "student_id":"PRIVATE_STUDENT", "institution_id":"PRIVATE_INSTITUTION", "category":"academic_record"})]
+handler = FERPAComplianceCallbackHandler("PRIVATE_STUDENT", "PRIVATE_INSTITUTION", raise_on_empty=True)
+try:
+    Retriever().invoke("fixture", config={"callbacks":[handler]})
+except PermissionError as error:
+    assert "PRIVATE_STUDENT" not in str(error) and "PRIVATE_INSTITUTION" not in str(error)
+else:
+    raise AssertionError("Empty scope did not block")
+"""
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr

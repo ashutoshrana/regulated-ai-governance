@@ -6,10 +6,10 @@ against an ``ActionPolicy`` before execution. Denied actions raise
 ``PermissionError``; escalated actions route to the configured escalation
 sink while still permitting or blocking according to ``block_on_escalation``.
 
-Compatible with AutoGen 0.4+ (ag2 / pyautogen ≥ 0.4.0).
+Legacy object-wrapper API retained; native AutoGen SDK installation is security quarantined.
 
 Installation:
-    pip install regulated-ai-governance[autogen]
+    See SECURITY.md and MIGRATION.md; no supported AutoGen installation extra.
 
 Usage::
 

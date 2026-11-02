@@ -155,7 +155,7 @@ def _check_llama_index_workflow_available() -> None:
         import llama_index.core.workflow  # noqa: F401
     except ImportError as exc:
         raise ImportError(
-            "llama-index-core>=0.12.0 is required for PolicyWorkflowGuard. "
+            "llama-index-core>=0.13.0 is required for PolicyWorkflowGuard. "
             "Install it with: pip install 'regulated-ai-governance[llama-index]'"
         ) from exc
 
