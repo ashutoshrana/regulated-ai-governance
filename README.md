@@ -120,7 +120,7 @@ assert executed == []
 assert len(records) == 2  # One decision record for each attempted action.
 ```
 
-Your application must send every protected action through the guard and authenticate the actor. The in-memory list illustrates audit delivery; production retention needs an appropriate durable sink. A policy decision or regulation label does not establish legal compliance. See [audit guarantees](docs/AUDIT_GUARANTEES.md) for acknowledgment and failure semantics.
+Your application must send every protected action through the guard and authenticate the actor. The in-memory list illustrates audit delivery; production retention needs an appropriate durable sink. A policy decision or regulation label does not establish legal compliance. See [0.47.0 release notes](CHANGELOG.md#0470--2026-11-02) and [audit guarantees](docs/AUDIT_GUARANTEES.md) for acknowledgment, cancellation markers and failure semantics.
 
 For supported framework integration, install the corresponding extra. CrewAI and legacy AutoGen integrations are security quarantined: their extras are removed because their SDK graphs include outstanding ChromaDB / DiskCache advisories. Existing adapter APIs remain for compatibility, but native CrewAI support is suspended. See [security policy](SECURITY.md). The [CrewAI source example](examples/02_crewai_guard.py) uses a mock tool and can patch an absent SDK; it is an illustration, not proof of a native CrewAI agent run. Native SDK checks are tracked in [CI](.github/workflows/ci.yml). Sector patterns such as [Singapore governance](examples/20_singapore_ai_governance.py) are repository examples, not modules under `regulated_ai_governance.examples`; follow each example's configuration and dependency requirements.
 
@@ -310,7 +310,7 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
   author  = {Rana, Ashutosh},
   title   = {regulated-ai-governance: Policy enforcement for AI agents in regulated environments},
   year    = {2026},
-  version = {0.44.0},
+  version = {0.47.0},
   url     = {https://github.com/ashutoshrana/regulated-ai-governance},
   license = {MIT}
 }

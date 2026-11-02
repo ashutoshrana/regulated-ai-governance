@@ -1,13 +1,20 @@
 # Changelog
 
-## [0.47.0] — Unreleased
+## [0.47.0] — 2026-11-02
 
-- Quarantine the legacy AutoGen install extra while retaining object wrappers; its old SDK graph brings an unresolved DiskCache advisory.
+### Fixed
 
-- Deny private categories when grants are omitted, None or empty; unrestricted access requires an explicit boolean choice.
-- Record terminal cancellation/failure outcomes for synchronous actions and re-raise the original error, chaining terminal audit delivery failure.
-- Apply explicit category grants/unrestricted choice to the LangChain FERPA callback.
+- Deny private categories in the LangChain FERPA callback when grants are omitted, `None` or empty; an intentional wildcard requires the strict boolean `unrestricted_categories=True`.
+- Record correlated terminal cancellation/failure outcomes for guarded synchronous actions and re-raise the original action error. If terminal audit delivery also fails, keep the action error primary and chain the delivery failure.
+- Re-raise a sink's `CancelledError` unchanged, with `action_executed` and `correlation_id` markers identifying whether the action was invoked. Ordinary sink errors remain `AuditDeliveryError`; neither outcome implies rollback or safe automatic retry. See [audit guarantees](docs/AUDIT_GUARANTEES.md).
+- Remove requested student/institution identifiers from the FERPA callback's empty-result error text.
 
+### Compatibility
+
+- Quarantine the legacy AutoGen install extra while retaining object wrappers; its old SDK graph brings an unresolved DiskCache advisory. Native installation remains unsupported; do not substitute the newer AgentChat API without a reviewed migration.
+- Raise security-supported floors to LangChain Core 1.3.3 and LlamaIndex Core 0.13.0.
+- On 2026-11-02, native checks covered minimum/current snapshots: Haystack 2.20.0/3.4.1, LangChain Core 1.3.3/1.7.4 and LlamaIndex Core 0.13.0/0.14.25. These snapshots do not guarantee every intermediate or future SDK release.
+- Preserve Python 3.10 core compatibility. Native SDK CI covers Python 3.11/3.12 separately from newer-interpreter core checks; the existing Python 3.11+ extra requirements and CrewAI quarantine remain in effect. Review [migration guidance](MIGRATION.md).
 
 ## [0.46.0] — 2026-11-02
 
