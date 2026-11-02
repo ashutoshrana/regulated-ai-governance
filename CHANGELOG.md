@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.46.0] — Unreleased
+
+- Repair native LangChain enforcement and result filtering, skill factories and the Microsoft Agent Framework middleware bridge.
+- Forward required audit-sink configuration through integration factories and retain fail-closed sink failures.
+- Add the Microsoft Agent Framework SDK extra and native adapter coverage.
+
 ## [0.45.0] — prepared 2026-09-11 (not yet published)
 
 - Gate publishing on stable release identity, tagged-commit tests, validated wheel/sdist
