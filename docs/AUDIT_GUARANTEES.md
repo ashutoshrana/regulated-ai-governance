@@ -27,7 +27,7 @@ assert records[0].correlation_id == records[1].correlation_id
   must acknowledge the decision before the action is invoked; exceptions stop it.
   Async sinks and awaitable return values are rejected; dispatching a background
   task does not constitute acknowledged durable delivery.
-- `audit_execution=True` adds succeeded/failed events for synchronous callables.
+- `audit_execution=True` adds succeeded/failed/cancelled events for synchronous callables.
   It requires a sink and rejects async callables/results; it cannot audit awaited
   completion. Existing response-only behavior remains available by default.
 - A denied action emits a decision, never an execution event.
@@ -93,3 +93,5 @@ Native factory tests live in `tests/test_skill.py::test_native_skill_factory`.
 
 Native regression checks: `tests/test_native_langchain_boundary.py` and
 `tests/test_native_retrieval_wrappers.py`; SDK installation is required.
+
+Cancellation delivery is deliberately distinct from ordinary sink errors: a synchronous sink raising `asyncio.CancelledError` re-raises that same cancellation object, with `action_executed` and `correlation_id` attached. Before the action it carries `False`; after a completed or failed action it carries `True`. This preserves task cancellation while exposing whether effects may have occurred; it is not an automatic-retry instruction. Ordinary sink errors remain `AuditDeliveryError`. If an action already failed, that original action exception stays primary and terminal sink cancellation is chained with the same markers.

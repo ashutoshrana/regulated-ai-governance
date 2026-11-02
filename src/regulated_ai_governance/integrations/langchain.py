@@ -99,7 +99,8 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
     :param student_id: Authenticated student identifier from the session.
     :param institution_id: Authenticated institution identifier from the session.
     :param allowed_categories: Optional set of permitted document category values.
-        If None, no category filtering is applied (identity check only).
+        Omitted, None and empty collections deny private categories.
+    :param unrestricted_categories: Explicit trusted wildcard; identity checks remain.
     :param audit_sink: Callable that receives a ``GovernanceAuditRecord`` for
         each retrieval event. Wire to a durable compliance log store.
     :param student_id_field: Metadata field name for the student identifier.
@@ -123,10 +124,14 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
         category_field: str = "category",
         raise_on_empty: bool = False,
         require_audit: bool = False,
+        unrestricted_categories: bool = False,
     ) -> None:
         super().__init__()
         self.student_id = student_id
         self.institution_id = institution_id
+        if not isinstance(unrestricted_categories, bool):
+            raise ValueError("unrestricted_categories must be a bool")
+        self.unrestricted_categories = unrestricted_categories
         self.allowed_categories = allowed_categories
         self.audit_sink = audit_sink
         self._audit_guard = GovernedActionGuard(
@@ -154,9 +159,9 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
 
     def _apply_category_filter(self, documents: list[Document]) -> list[Document]:
         """Layer 2: filter by allowed_categories."""
-        if self.allowed_categories is None:
+        if self.unrestricted_categories:
             return documents
-        return [doc for doc in documents if doc.metadata.get(self.category_field) in self.allowed_categories]
+        return [doc for doc in documents if doc.metadata.get(self.category_field) in (self.allowed_categories or set())]
 
     def on_retriever_end(
         self,
@@ -204,7 +209,8 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
                     "parent_run_id": str(parent_run_id) if parent_run_id else None,
                     "student_id": self.student_id,
                     "institution_id": self.institution_id,
-                    "allowed_categories": (sorted(self.allowed_categories) if self.allowed_categories else None),
+                    "allowed_categories": sorted(self.allowed_categories or set()),
+                    "unrestricted_categories": self.unrestricted_categories,
                 },
             )
             self._audit_guard.guard("retrieval", lambda: None, context=dict(record.context))
@@ -212,8 +218,7 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
         if self.raise_on_empty and not authorized:
             raise PermissionError(
                 f"FERPAComplianceCallbackHandler: all {raw_count} retrieved documents "
-                f"were filtered out for student_id='{self.student_id}' "
-                f"institution_id='{self.institution_id}'. "
+                "were filtered out by the requested identity/category scope. "
                 "Verify that the document store contains records for this identity."
             )
 

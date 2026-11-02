@@ -102,6 +102,7 @@ class TestFERPAComplianceCallbackHandler:
             allowed_categories=allowed_categories,
             audit_sink=audit_sink,
             raise_on_empty=raise_on_empty,
+            unrestricted_categories=allowed_categories is None,
         )
 
     def test_allows_authorized_document(self) -> None:
@@ -148,7 +149,7 @@ class TestFERPAComplianceCallbackHandler:
         assert len(result) == 1
         assert result[0].metadata["category"] == "academic_record"
 
-    def test_no_category_filter_when_none(self) -> None:
+    def test_explicit_unrestricted_categories(self) -> None:
         handler = self._make_handler(allowed_categories=None)
         docs = [
             _FakeDocument(
@@ -182,7 +183,7 @@ class TestFERPAComplianceCallbackHandler:
     def test_raise_on_empty_raises_permission_error(self) -> None:
         handler = self._make_handler(raise_on_empty=True)
         docs = [_FakeDocument("Bob", {"student_id": "stu_bob", "institution_id": "univ_east"})]
-        with pytest.raises(PermissionError, match="stu_alice"):
+        with pytest.raises(PermissionError, match="requested identity/category scope"):
             handler.on_retriever_end(docs, run_id=_run_id())
 
     def test_raise_on_empty_false_does_not_raise(self) -> None:
@@ -234,6 +235,7 @@ class TestFERPAComplianceCallbackHandler:
             institution_id="univ_east",
             student_id_field="learner_id",
             institution_id_field="school_id",
+            unrestricted_categories=True,
         )
         docs = [
             _FakeDocument("Alice", {"learner_id": "stu_alice", "school_id": "univ_east"}),
@@ -420,3 +422,9 @@ class TestGovernanceCallbackHandler:
         handler.on_tool_start(self._serialized("tool_b"), "", run_id=_run_id())
         assert len(audit_log) == 2
         assert {r.action_name for r in audit_log} == {"tool_a", "tool_b"}
+
+
+@pytest.mark.parametrize("value", ["false", 1, None])
+def test_unrestricted_category_flag_is_strict(value):
+    with pytest.raises(ValueError, match="bool"):
+        FERPAComplianceCallbackHandler("s", "i", unrestricted_categories=value)

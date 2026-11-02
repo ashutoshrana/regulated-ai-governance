@@ -21,3 +21,9 @@
 | Python 3.10 optional installs select vulnerable dependencies while Python 3.12 scans clear | Fixed dependency releases require Python 3.11, so the resolver falls back to affected older versions | Keep core 3.10 support, add unconditional patched floors to affected extras, document 3.11 SDK contracts and treat 3.10 rejection as an excluded support cell |
 
 | README describes an available release as unpublished or labels an older release current | A release-time version snapshot was kept as permanent project status prose | Link to the stable PyPI project and changelog instead of embedding current-release assertions; preserve historical published artifact text |
+
+| A cancelled action has no terminal audit or a sink failure masks its original error | Execution auditing caught Exception and terminal delivery errors replaced the active action exception | Emit correlated cancellation/failure outcomes, re-raise the original BaseException and chain delivery failure without replacing it |
+
+| A missing LangChain category collection admits private records | None implied identity-only access while empty sets meant no grants | Deny omitted/None/empty grants and require an explicit strict boolean wildcard |
+
+| A legacy install extra looks safe in direct advisory queries | Its old SDK transitively requires affected DiskCache while newer releases expose a different agent API | Quarantine the install extra, retain legacy object wrappers and distinguish direct-package scans from full graph qualification |

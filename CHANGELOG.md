@@ -1,6 +1,15 @@
 # Changelog
 
-## [0.46.0] — Unreleased
+## [0.47.0] — Unreleased
+
+- Quarantine the legacy AutoGen install extra while retaining object wrappers; its old SDK graph brings an unresolved DiskCache advisory.
+
+- Deny private categories when grants are omitted, None or empty; unrestricted access requires an explicit boolean choice.
+- Record terminal cancellation/failure outcomes for synchronous actions and re-raise the original error, chaining terminal audit delivery failure.
+- Apply explicit category grants/unrestricted choice to the LangChain FERPA callback.
+
+
+## [0.46.0] — 2026-11-02
 
 - Preserve Python 3.10 core support while requiring Python 3.11+ patched dependencies for affected SDK extras; reject unsafe older fallback resolution.
 
