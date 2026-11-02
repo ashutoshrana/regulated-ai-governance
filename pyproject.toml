@@ -63,14 +63,13 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-crewai = ["crewai>=1.14.0"]
 langchain = ["langchain-core>=0.3.0"]
-autogen = ["pyautogen>=0.4.0"]
-llama-index = ["llama-index-core>=0.12.0"]
-semantic-kernel = ["semantic-kernel>=1.41.0"]
+autogen = ["pyautogen>=0.4.0", "pillow>=13.0.0"]
+llama-index = ["llama-index-core>=0.12.0", "pillow>=13.0.0"]
+semantic-kernel = ["semantic-kernel>=1.41.0", "werkzeug>=3.1.9", "dnspython>=2.9.0"]
 haystack = ["haystack-ai>=2.20.0"]
 maf = ["agent-framework-core>=1.23.0,<2; python_version >= '3.10'"]
-all = ["regulated-ai-governance[crewai,langchain,llama-index,semantic-kernel,haystack,maf]"]
+all = ["regulated-ai-governance[langchain,llama-index,semantic-kernel,haystack,maf]"]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=4.0",

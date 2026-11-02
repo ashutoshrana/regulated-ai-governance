@@ -6,7 +6,7 @@ before the underlying tool executes. Produces a ``GovernanceAuditRecord`` for
 every tool invocation.
 
 Installation:
-    pip install regulated-ai-governance[crewai]
+    CrewAI support is security quarantined; see SECURITY.md
 
 Usage:
     from crewai.tools import BaseTool
@@ -42,9 +42,7 @@ try:
     from crewai.tools import BaseTool
     from pydantic import PrivateAttr
 except ImportError as exc:
-    raise ImportError(
-        "crewai is required for this integration. Install it with: pip install regulated-ai-governance[crewai]"
-    ) from exc
+    raise ImportError("CrewAI integration is security quarantined; see SECURITY.md.") from exc
 
 from regulated_ai_governance.agent_guard import GovernedActionGuard
 from regulated_ai_governance.audit import GovernanceAuditRecord

@@ -2,6 +2,13 @@
 
 ## [0.46.0] — Unreleased
 
+- Preserve Python 3.10 core support while requiring Python 3.11+ patched dependencies for affected SDK extras; reject unsafe older fallback resolution.
+
+- Security quarantine: remove CrewAI extras and all-extras membership while preserving legacy adapter APIs; see SECURITY.md.
+
+- Make the installed core quick start executable without optional SDKs or repository-only imports.
+- Require patched Werkzeug in the Semantic Kernel extra; upstream ChromaDB audit findings remain unresolved.
+
 - Repair native LangChain enforcement and result filtering, skill factories and the Microsoft Agent Framework middleware bridge.
 - Forward required audit-sink configuration through integration factories and retain fail-closed sink failures.
 - Add the Microsoft Agent Framework SDK extra and native adapter coverage.

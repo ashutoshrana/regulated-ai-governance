@@ -441,7 +441,7 @@ class GovernanceAuditSkill:
         Return a CrewAI-compatible tool that wraps *execute_fn* with governance
         enforcement from this skill.
 
-        Requires: ``pip install 'regulated-ai-governance[crewai]'``
+        Requires: ``CrewAI support is security quarantined; see SECURITY.md``
 
         Args:
             action_name: Governance action name for policy evaluation.
@@ -459,9 +459,7 @@ class GovernanceAuditSkill:
         try:
             from crewai.tools import tool
         except ImportError as exc:
-            raise ImportError(
-                "CrewAI integration requires crewai. Install with: pip install 'regulated-ai-governance[crewai]'"
-            ) from exc
+            raise ImportError("CrewAI integration is security quarantined; see SECURITY.md.") from exc
 
         from functools import wraps
 

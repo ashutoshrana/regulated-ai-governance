@@ -56,9 +56,7 @@ def _import_crewai() -> Any:
 
         return crewai
     except ImportError as exc:
-        raise ImportError(
-            "crewai is required for this integration. Install with: pip install 'regulated-ai-governance[crewai]'"
-        ) from exc
+        raise ImportError("CrewAI integration is security quarantined; see SECURITY.md.") from exc
 
 
 class EnterpriseActionGuard:
