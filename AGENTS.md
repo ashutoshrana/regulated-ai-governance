@@ -27,3 +27,5 @@
 | A missing LangChain category collection admits private records | None implied identity-only access while empty sets meant no grants | Deny omitted/None/empty grants and require an explicit strict boolean wildcard |
 
 | A legacy install extra looks safe in direct advisory queries | Its old SDK transitively requires affected DiskCache while newer releases expose a different agent API | Quarantine the install extra, retain legacy object wrappers and distinguish direct-package scans from full graph qualification |
+
+| Release notes omit native boundary fixes added during review | Notes were drafted before final source and SDK qualification were frozen | Reconcile the dated release entry against the final diff, native regression cases and qualification manifest before closing the release |
