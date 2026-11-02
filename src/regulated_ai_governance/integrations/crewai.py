@@ -94,6 +94,7 @@ class EnterpriseActionGuard(BaseTool):
         audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
         block_on_escalation: bool = True,
         context: dict[str, Any] | None = None,
+        require_audit: bool = False,
         **data: Any,
     ) -> None:
         super().__init__(
@@ -108,6 +109,7 @@ class EnterpriseActionGuard(BaseTool):
             regulation=regulation,
             actor_id=actor_id,
             audit_sink=audit_sink,
+            require_audit=require_audit,
             block_on_escalation=block_on_escalation,
         )
 

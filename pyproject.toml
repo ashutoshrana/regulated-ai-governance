@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "regulated-ai-governance"
-version = "0.45.0"
+version = "0.46.0"
 description = "Comprehensive governance framework for AI agents operating in FERPA, HIPAA, GDPR, GLBA, ISO 42001, and 10+ regulated environments"
 readme = "README.md"
 license = "MIT"
@@ -69,7 +69,7 @@ autogen = ["pyautogen>=0.4.0"]
 llama-index = ["llama-index-core>=0.12.0"]
 semantic-kernel = ["semantic-kernel>=1.41.0"]
 haystack = ["haystack-ai>=2.20.0"]
-maf = ["microsoft-agent-framework>=1.0.0"]
+maf = ["agent-framework-core>=1.23.0,<2; python_version >= '3.10'"]
 all = ["regulated-ai-governance[crewai,langchain,llama-index,semantic-kernel,haystack,maf]"]
 dev = [
     "pytest>=8.0",

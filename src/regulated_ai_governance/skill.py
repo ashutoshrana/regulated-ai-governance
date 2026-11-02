@@ -385,15 +385,15 @@ class GovernanceAuditSkill:
     # Channel adapters
     # ------------------------------------------------------------------
 
-    def as_langchain_handler(self) -> Any:
+    def as_langchain_handler(self, actor_id: str = "") -> Any:
         """
         Return a LangChain ``BaseCallbackHandler`` that intercepts retrieval
         events and evaluates them against all configured governance frameworks.
 
         Requires: ``pip install 'regulated-ai-governance[langchain]'``
 
-        The handler intercepts ``on_retriever_end`` events to apply governance
-        controls before documents reach the chain.
+        The handler checks retrieval and tool actions before execution. It does
+        not apply document-level identity filtering to retrieved content.
 
         Returns:
             A ``GovernanceCallbackHandler`` instance (lazy import).
@@ -402,14 +402,32 @@ class GovernanceAuditSkill:
             ImportError: If ``langchain-core`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.langchain import GovernanceCallbackHandler  # type: ignore[import]
-
-            return GovernanceCallbackHandler(skill=self)  # type: ignore[call-arg]
+            from langchain_core.callbacks import BaseCallbackHandler
         except ImportError as exc:
             raise ImportError(
                 "LangChain integration requires langchain-core. "
                 "Install with: pip install 'regulated-ai-governance[langchain]'"
             ) from exc
+
+        skill = self
+
+        class SkillCallbackHandler(BaseCallbackHandler):
+            raise_error = True
+            run_inline = True
+
+            def _check(self, action_name: str) -> None:
+                permitted = object()
+                result = skill.audit_action(action_name, lambda: permitted, actor_id=actor_id)
+                if result is not permitted:
+                    raise PermissionError(str(result))
+
+            def on_retriever_start(self, serialized: Any, query: str, **kwargs: Any) -> None:
+                self._check("document_retrieval")
+
+            def on_tool_start(self, serialized: dict[str, Any], input_str: str, **kwargs: Any) -> None:
+                self._check(serialized.get("name", "unknown_tool"))
+
+        return SkillCallbackHandler()
 
     def as_crewai_tool(
         self,
@@ -439,22 +457,20 @@ class GovernanceAuditSkill:
             ImportError: If ``crewai`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.crewai import (  # type: ignore[attr-defined]
-                GovernedCrewAITool,
-            )
-
-            return GovernedCrewAITool(
-                skill=self,
-                action_name=action_name,
-                execute_fn=execute_fn,
-                actor_id=actor_id,
-                name=tool_name or action_name,
-                description=tool_description or f"Governed action: {action_name}",
-            )
+            from crewai.tools import tool
         except ImportError as exc:
             raise ImportError(
                 "CrewAI integration requires crewai. Install with: pip install 'regulated-ai-governance[crewai]'"
             ) from exc
+
+        from functools import wraps
+
+        @wraps(execute_fn)
+        def governed(*args: Any, **kwargs: Any) -> Any:
+            return self.audit_action(action_name, lambda: execute_fn(*args, **kwargs), actor_id=actor_id)
+
+        governed.__doc__ = tool_description or execute_fn.__doc__ or f"Governed action: {action_name}"
+        return tool(tool_name or action_name)(governed)
 
     def as_llama_index_postprocessor(self, actor_id: str = "") -> Any:
         """
@@ -464,22 +480,31 @@ class GovernanceAuditSkill:
         Requires: ``pip install 'regulated-ai-governance[llama-index]'``
 
         Returns:
-            A ``GovernanceNodePostprocessor`` instance (lazy import).
+            A native ``BaseNodePostprocessor`` instance (lazy import).
 
         Raises:
             ImportError: If ``llama-index-core`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.llama_index import (  # type: ignore[attr-defined]
-                GovernanceNodePostprocessor,
-            )
-
-            return GovernanceNodePostprocessor(skill=self, actor_id=actor_id)
+            from llama_index.core.postprocessor.types import BaseNodePostprocessor
         except ImportError as exc:
             raise ImportError(
                 "LlamaIndex integration requires llama-index-core. "
                 "Install with: pip install 'regulated-ai-governance[llama-index]'"
             ) from exc
+
+        skill = self
+
+        class SkillNodePostprocessor(BaseNodePostprocessor):
+            def _postprocess_nodes(self, nodes: list[Any], query_bundle: Any = None) -> list[Any]:
+                permitted, _ = skill.audit_retrieval(
+                    nodes,
+                    actor_id=actor_id,
+                    context={"query": str(query_bundle) if query_bundle else ""},
+                )
+                return permitted
+
+        return SkillNodePostprocessor()
 
     def as_haystack_component(self, actor_id: str = "") -> Any:
         """
@@ -489,46 +514,62 @@ class GovernanceAuditSkill:
         Requires: ``pip install 'regulated-ai-governance[haystack]'``
 
         Returns:
-            A ``GovernanceFilter`` Haystack component (lazy import).
+            A native Haystack component (lazy import).
 
         Raises:
             ImportError: If ``haystack-ai`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.haystack import (  # type: ignore[attr-defined]
-                GovernanceFilter,
-            )
-
-            return GovernanceFilter(skill=self, actor_id=actor_id)
+            from haystack import component
         except ImportError as exc:
             raise ImportError(
                 "Haystack integration requires haystack-ai. "
                 "Install with: pip install 'regulated-ai-governance[haystack]'"
             ) from exc
 
+        skill = self
+
+        @component
+        class SkillDocumentFilter:
+            @component.output_types(documents=list[Any])
+            def run(self, documents: list[Any], query: str = "") -> dict[str, Any]:
+                permitted, _ = skill.audit_retrieval(documents, actor_id=actor_id, context={"query": query})
+                return {"documents": permitted}
+
+        return SkillDocumentFilter()
+
     def as_maf_middleware(self, actor_id: str = "") -> Any:
         """
-        Return a Microsoft Agent Framework ``AgentMiddleware`` that evaluates
-        governance policies before each agent action.
+        Return native ``FunctionMiddleware`` that checks configured governance
+        rules before function tools execute. This does not intercept model calls.
 
         Requires: ``pip install 'regulated-ai-governance[maf]'``
 
         Returns:
-            A ``GovernanceMAFMiddleware`` instance (lazy import).
+            A native ``FunctionMiddleware`` instance (lazy import).
 
         Raises:
-            ImportError: If ``microsoft-agents`` is not installed.
+            ImportError: If ``agent-framework-core`` is not installed.
         """
         try:
-            from regulated_ai_governance.integrations.maf import (  # type: ignore[attr-defined]
-                GovernanceMAFMiddleware,
-            )
-
-            return GovernanceMAFMiddleware(skill=self, actor_id=actor_id)
+            from agent_framework import FunctionMiddleware
         except ImportError as exc:
             raise ImportError(
-                "MAF integration requires microsoft-agents. Install with: pip install 'regulated-ai-governance[maf]'"
+                "MAF integration requires agent-framework-core. "
+                "Install with: pip install 'regulated-ai-governance[maf]'"
             ) from exc
+
+        skill = self
+
+        class SkillFunctionMiddleware(FunctionMiddleware):
+            async def process(self, context: Any, call_next: Any) -> None:
+                permitted = object()
+                result = skill.audit_action(context.function.name, lambda: permitted, actor_id=actor_id)
+                if result is not permitted:
+                    raise PermissionError(str(result))
+                await call_next()
+
+        return SkillFunctionMiddleware()
 
     # ------------------------------------------------------------------
     # Convenience factories

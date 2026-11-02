@@ -90,6 +90,38 @@ jobs:
       - name: Run mypy
         run: mypy src/
 
+  real-sdk-boundaries:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+        dependencies: [minimum, latest]
+    env:
+      HAYSTACK_TELEMETRY_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e '.[dev,langchain,haystack,llama-index]'
+      - if: matrix.dependencies == 'minimum'
+        run: pip install 'langchain-core==0.3.0' 'haystack-ai==2.20.0' 'llama-index-core==0.12.0'
+      - run: pytest tests/test_native_langchain_boundary.py tests/test_adapter_audit_policy.py tests/test_native_retrieval_wrappers.py tests/test_skill.py::test_native_skill_factory
+
+  native-skill-factories:
+    runs-on: ubuntu-latest
+    env:
+      CREWAI_TELEMETRY_ENABLED: "false"
+      OTEL_SDK_DISABLED: "true"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - run: pip install -e '.[dev,crewai,maf]'
+      - run: pytest tests/test_skill.py::test_native_skill_factory
+
   build-check:
     name: Build Check
     runs-on: ubuntu-latest

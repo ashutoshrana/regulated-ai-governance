@@ -80,6 +80,7 @@ class GovernedQueryEngine:
         audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
         block_on_escalation: bool = True,
         query_action: str = _QUERY_ACTION,
+        require_audit: bool = False,
     ) -> GovernedQueryEngine:
         """
         Factory: create a ``GovernedQueryEngine`` from an existing query engine.
@@ -100,7 +101,8 @@ class GovernedQueryEngine:
             policy=policy,
             regulation=regulation,
             actor_id=actor_id,
-            audit_sink=audit_sink or (lambda _: None),
+            audit_sink=audit_sink,
+            require_audit=require_audit,
             block_on_escalation=block_on_escalation,
             raise_on_deny=True,
         )
@@ -240,13 +242,15 @@ class PolicyWorkflowGuard:
         actor_id: str,
         audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
         block_on_escalation: bool = True,
+        require_audit: bool = False,
     ) -> None:
         _check_llama_index_workflow_available()
         self._guard = GovernedActionGuard(
             policy=policy,
             regulation=regulation,
             actor_id=actor_id,
-            audit_sink=audit_sink or (lambda _: None),
+            audit_sink=audit_sink,
+            require_audit=require_audit,
             block_on_escalation=block_on_escalation,
             raise_on_deny=True,
         )

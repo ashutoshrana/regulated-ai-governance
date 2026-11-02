@@ -102,6 +102,7 @@ class GovernedDSPyModule:
         block_on_escalation: bool = True,
         action_name: str | None = None,
         context: dict[str, Any] | None = None,
+        require_audit: bool = False,
     ) -> None:
         self._wrapped = wrapped_module
         self._action_name = action_name or type(wrapped_module).__name__
@@ -111,6 +112,7 @@ class GovernedDSPyModule:
             regulation=regulation,
             actor_id=actor_id,
             audit_sink=audit_sink,
+            require_audit=require_audit,
             block_on_escalation=block_on_escalation,
             raise_on_deny=True,
         )
@@ -208,6 +210,7 @@ class GovernedDSPyPipeline:
         actor_id: str = "",
         audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
         block_on_escalation: bool = True,
+        require_audit: bool = False,
     ) -> None:
         self._steps = [
             GovernedDSPyModule(
@@ -216,6 +219,7 @@ class GovernedDSPyPipeline:
                 regulation=regulation,
                 actor_id=actor_id,
                 audit_sink=audit_sink,
+                require_audit=require_audit,
                 block_on_escalation=block_on_escalation,
             )
             for mod in modules

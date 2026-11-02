@@ -277,63 +277,148 @@ class TestAuditRetrieval:
 
 
 class TestChannelAdapters:
-    def test_langchain_handler_raises_import_error(self):
-        """as_langchain_handler() raises ImportError if langchain not installed."""
+    def test_langchain_handler_raises_import_error(self, monkeypatch):
+        """An installed SDK must also be hidden explicitly, not just evicted."""
         import sys
 
-        # Temporarily hide langchain modules
-        saved = {}
-        for mod in list(sys.modules):
-            if "langchain" in mod:
-                saved[mod] = sys.modules.pop(mod)
-        try:
-            skill = _education_skill()
-            with pytest.raises(ImportError, match="langchain"):
-                skill.as_langchain_handler()
-        finally:
-            sys.modules.update(saved)
+        monkeypatch.setitem(sys.modules, "langchain_core.callbacks", None)
+        with pytest.raises(ImportError, match="langchain"):
+            _education_skill().as_langchain_handler()
 
-    def test_crewai_tool_raises_import_error(self):
+    @pytest.mark.parametrize(
+        "module,factory",
+        [
+            ("crewai.tools", lambda skill: skill.as_crewai_tool("read", lambda: None)),
+            ("llama_index.core.postprocessor.types", lambda skill: skill.as_llama_index_postprocessor()),
+            ("haystack", lambda skill: skill.as_haystack_component()),
+            ("agent_framework", lambda skill: skill.as_maf_middleware()),
+        ],
+    )
+    def test_missing_optional_sdk(self, monkeypatch, module, factory):
         import sys
 
-        saved = {}
-        for mod in list(sys.modules):
-            if "crewai" in mod:
-                saved[mod] = sys.modules.pop(mod)
-        try:
-            skill = _education_skill()
-            with pytest.raises(ImportError, match="crewai"):
-                skill.as_crewai_tool("read", execute_fn=lambda: None)
-        finally:
-            sys.modules.update(saved)
+        monkeypatch.setitem(sys.modules, module, None)
+        with pytest.raises(ImportError):
+            factory(_education_skill())
 
-    def test_llama_index_raises_import_error(self):
-        import sys
 
-        saved = {}
-        for mod in list(sys.modules):
-            if "llama" in mod:
-                saved[mod] = sys.modules.pop(mod)
-        try:
-            skill = _education_skill()
-            with pytest.raises(ImportError, match="llama"):
-                skill.as_llama_index_postprocessor()
-        finally:
-            sys.modules.update(saved)
+@pytest.mark.parametrize(
+    "framework,distribution",
+    [
+        ("crewai", "crewai"),
+        ("llama", "llama-index-core"),
+        ("haystack", "haystack-ai"),
+        ("maf", "agent-framework-core"),
+        ("maf_policy", "agent-framework-core"),
+    ],
+)
+@pytest.mark.parametrize("mode", ["allow", "deny", "audit_only", "sink_failure"])
+def test_native_skill_factory(framework, distribution, mode, tmp_path):
+    """Native SDK execution runs outside the legacy suite's global SDK stubs."""
+    import os
+    import subprocess
+    import sys
+    from importlib.metadata import PackageNotFoundError, version
 
-    def test_haystack_raises_import_error(self):
-        import sys
-
-        saved = {}
-        for mod in list(sys.modules):
-            if "haystack" in mod:
-                saved[mod] = sys.modules.pop(mod)
-        try:
-            skill = _education_skill()
-            with pytest.raises(ImportError, match="haystack"):
-                skill.as_haystack_component()
-        finally:
-            sys.modules.update(saved)
+    if framework == "maf_policy" and mode == "audit_only":
+        pytest.skip("The single-policy adapter has no skill audit-only mode")
+    try:
+        version(distribution)
+    except PackageNotFoundError:
+        pytest.skip(f"{distribution} is not installed")
+    code = '''
+import asyncio
+from regulated_ai_governance.skill import GovernanceAuditSkill
+framework = FRAMEWORK
+mode = MODE
+effects = []
+records = []
+def sink(record):
+    records.append(record)
+    if mode == "sink_failure":
+        raise OSError("audit unavailable")
+action = "write" if framework in ("crewai", "maf", "maf_policy") else "document_retrieval"
+skill = GovernanceAuditSkill.for_education(
+    actor_id="fixture", allowed_actions={"other"} if mode in ("deny", "audit_only") else {action},
+    audit_only=mode == "audit_only", audit_sink=sink,
+)
+if framework == "crewai":
+    import appdirs
+    import os
+    # CrewAI initializes credential storage during import; keep test writes temporary.
+    appdirs.user_data_dir = lambda *args, **kwargs: os.environ["CREWAI_STORAGE_DIR"]
+    from pathlib import Path
+    from crewai_core.token_manager import TokenManager
+    storage = Path(os.environ["CREWAI_STORAGE_DIR"])
+    storage.mkdir(parents=True, exist_ok=True)
+    TokenManager._get_secure_storage_path = staticmethod(lambda: storage)
+    from crewai.tools import BaseTool
+    def write(value: str) -> str:
+        """Write a synthetic value."""
+        effects.append(value)
+        return value
+    tool = skill.as_crewai_tool("write", write, tool_name="record", tool_description="Synthetic fixture")
+    assert isinstance(tool, BaseTool)
+    assert tool.name == "record"
+    invoke = lambda: tool.run(value="done")
+elif framework == "llama":
+    from llama_index.core.schema import NodeWithScore, TextNode
+    from llama_index.core.postprocessor.types import BaseNodePostprocessor
+    processor = skill.as_llama_index_postprocessor(actor_id="fixture")
+    assert isinstance(processor, BaseNodePostprocessor)
+    nodes = [NodeWithScore(node=TextNode(text="fixture"))]
+    invoke = lambda: processor.postprocess_nodes(nodes, query_str="fixture")
+elif framework == "haystack":
+    from haystack import Pipeline, Document
+    pipeline = Pipeline()
+    pipeline.add_component("governance", skill.as_haystack_component(actor_id="fixture"))
+    documents = [Document(content="fixture")]
+    invoke = lambda: pipeline.run({"governance": {"documents": documents}})["governance"]["documents"]
+else:
+    from agent_framework import FunctionMiddleware, FunctionInvocationContext, tool
+    if framework == "maf_policy":
+        from regulated_ai_governance.integrations.maf import PolicyMiddleware
+        from regulated_ai_governance.policy import ActionPolicy
+        middleware = PolicyMiddleware(
+            policy=ActionPolicy(allowed_actions={"other"} if mode == "deny" else {"write"}),
+            audit_sink=sink, require_audit=True,
+        ).as_native()
+    else:
+        middleware = skill.as_maf_middleware(actor_id="fixture")
+    assert isinstance(middleware, FunctionMiddleware)
+    @tool
+    def write(value: str) -> str:
+        """Write a synthetic value."""
+        effects.append(value)
+        return value
+    context = FunctionInvocationContext(function=write, arguments={"value":"done"})
+    async def invoke_middleware():
+        async def call_next():
+            context.result = await write.invoke(arguments=context.arguments)
+        await middleware.process(context, call_next)
+        return context.result
+    invoke = lambda: asyncio.run(invoke_middleware())
+try:
+    result = invoke()
+except Exception as exc:
+    assert mode == "sink_failure" or (mode == "deny" and framework in ("maf", "maf_policy")), repr(exc)
+else:
+    assert mode != "sink_failure"
+    if framework in ("llama", "haystack"):
+        assert len(result) == (0 if mode == "deny" else 1)
+assert effects == ([] if framework in ("llama", "haystack") or mode in ("deny", "sink_failure") else ["done"])
+assert len(records) == 1
+assert records[0].action_name == action
+'''
+    code = code.replace("FRAMEWORK", repr(framework)).replace("MODE", repr(mode))
+    env = dict(
+        os.environ,
+        CREWAI_STORAGE_DIR=str(tmp_path),
+        CREWAI_TELEMETRY_OPTOUT="true",
+        OTEL_SDK_DISABLED="true",
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=env)
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 # ---------------------------------------------------------------------------

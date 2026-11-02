@@ -1,13 +1,9 @@
 """
 integrations/maf.py — Microsoft Agent Framework (MAF) integration.
 
-Provides ``PolicyMiddleware``, a MAF ``MiddlewareBase`` that intercepts every
-agent message, evaluates the configured ``ActionPolicy``, and emits a
-``GovernanceAuditRecord`` for each intercepted call.
-
-Microsoft Agent Framework (MAF) is the enterprise successor to AutoGen and
-Semantic Kernel (released 2026). Both legacy frameworks are in maintenance
-mode; new agentic AI workloads on Microsoft Azure should use MAF.
+``PolicyMiddleware.on_message`` retains the legacy message/next-handler
+contract. Use ``as_native()`` to obtain Microsoft Agent Framework's native
+``FunctionMiddleware`` and check function policy before execution.
 
 Installation::
 
@@ -32,7 +28,7 @@ Usage::
         audit_sink=lambda rec: write_to_log(rec.to_log_entry()),
     )
 
-    runtime = AgentRuntime(middlewares=[middleware])
+    agent = Agent(client=client, middleware=[middleware.as_native()])
 """
 
 from __future__ import annotations
@@ -49,23 +45,23 @@ logger = logging.getLogger(__name__)
 
 
 def _check_maf_available() -> None:
-    """Verify microsoft-agent-framework is installed."""
+    """Verify the native agent_framework namespace is installed."""
     try:
-        import microsoft_agent_framework  # noqa: F401
+        import agent_framework  # noqa: F401
     except ImportError as exc:
         raise ImportError(
-            "microsoft-agent-framework is required for the MAF integration. "
+            "agent-framework-core is required for the MAF integration. "
             "Install it with: pip install 'regulated-ai-governance[maf]'"
         ) from exc
 
 
 class PolicyMiddleware:
     """
-    MAF middleware enforcing ``ActionPolicy`` on every agent message.
+    Policy checks for legacy messages and native function middleware.
 
-    Implements MAF ``MiddlewareBase`` via duck typing. The MAF SDK is
-    checked lazily at instantiation time — not at module import — so
-    the module is importable in environments without the MAF SDK.
+    ``on_message`` is an application-level compatibility interface, not an SDK
+    middleware base class. Register ``as_native()`` with the native Agent.
+    The SDK is checked lazily at instantiation time.
 
     Enforcement flow per message:
       1. Extract ``action_name`` from the message (``message.action`` or
@@ -94,6 +90,7 @@ class PolicyMiddleware:
         audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
         block_on_escalation: bool = True,
         context: dict[str, Any] | None = None,
+        require_audit: bool = False,
     ) -> None:
         _check_maf_available()
         self._guard = GovernedActionGuard(
@@ -101,9 +98,27 @@ class PolicyMiddleware:
             regulation=regulation,
             actor_id=actor_id,
             audit_sink=audit_sink,
+            require_audit=require_audit,
             block_on_escalation=block_on_escalation,
         )
         self._context = context or {}
+
+    def as_native(self) -> Any:
+        """Return SDK FunctionMiddleware; decision and audit precede the tool call."""
+        from agent_framework import FunctionMiddleware
+
+        guard = self._guard
+        context_metadata = self._context
+
+        class NativePolicyMiddleware(FunctionMiddleware):
+            async def process(self, context: Any, call_next: Any) -> None:
+                permitted = object()
+                result = guard.guard(context.function.name, lambda: permitted, context=context_metadata)
+                if result is not permitted:
+                    raise PermissionError(str(result))
+                await call_next()
+
+        return NativePolicyMiddleware()
 
     async def on_message(self, message: Any, next_handler: Any) -> Any:
         """

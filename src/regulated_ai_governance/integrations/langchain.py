@@ -59,7 +59,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any
 
 try:
@@ -109,6 +109,9 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
         are filtered out. Defaults to False.
     """
 
+    raise_error = True
+    run_inline = True
+
     def __init__(
         self,
         student_id: str,
@@ -119,12 +122,20 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
         institution_id_field: str = "institution_id",
         category_field: str = "category",
         raise_on_empty: bool = False,
+        require_audit: bool = False,
     ) -> None:
         super().__init__()
         self.student_id = student_id
         self.institution_id = institution_id
         self.allowed_categories = allowed_categories
         self.audit_sink = audit_sink
+        self._audit_guard = GovernedActionGuard(
+            ActionPolicy(allowed_actions={"retrieval"}),
+            regulation="FERPA",
+            actor_id=f"{student_id}@{institution_id}",
+            audit_sink=audit_sink,
+            require_audit=require_audit,
+        )
         self.student_id_field = student_id_field
         self.institution_id_field = institution_id_field
         self.category_field = category_field
@@ -143,13 +154,13 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
 
     def _apply_category_filter(self, documents: list[Document]) -> list[Document]:
         """Layer 2: filter by allowed_categories."""
-        if not self.allowed_categories:
+        if self.allowed_categories is None:
             return documents
         return [doc for doc in documents if doc.metadata.get(self.category_field) in self.allowed_categories]
 
     def on_retriever_end(
         self,
-        documents: list[Document],
+        documents: Sequence[Document],
         *,
         run_id: uuid.UUID,
         parent_run_id: uuid.UUID | None = None,
@@ -159,8 +170,9 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
         Intercept retrieval results and apply FERPA identity filtering.
 
         Called by the LangChain callback system immediately after a retriever
-        returns results. The filtered list is returned to replace the original
-        result in the chain.
+        returns results. The supplied result list is filtered in place because LangChain ignores
+        callback return values. Retrieval has already happened; attach a
+        GovernanceCallbackHandler to enforce the retrieval action beforehand.
 
         :param documents: Raw documents returned by the retriever.
         :param run_id: LangChain run identifier for this retrieval event.
@@ -169,6 +181,8 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
         :raises PermissionError: If ``raise_on_empty=True`` and all documents
             are filtered out.
         """
+        if not isinstance(documents, list):
+            raise TypeError("FERPA result filtering requires a mutable document list")
         raw_count = len(documents)
 
         # Two-layer enforcement
@@ -193,7 +207,7 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
                     "allowed_categories": (sorted(self.allowed_categories) if self.allowed_categories else None),
                 },
             )
-            self.audit_sink(record)
+            self._audit_guard.guard("retrieval", lambda: None, context=dict(record.context))
 
         if self.raise_on_empty and not authorized:
             raise PermissionError(
@@ -203,6 +217,7 @@ class FERPAComplianceCallbackHandler(BaseCallbackHandler):
                 "Verify that the document store contains records for this identity."
             )
 
+        documents[:] = authorized
         return authorized
 
 
@@ -238,6 +253,9 @@ class GovernanceCallbackHandler(BaseCallbackHandler):
         blocked even if the policy would otherwise permit them.
     """
 
+    raise_error = True
+    run_inline = True
+
     def __init__(
         self,
         policy: ActionPolicy,
@@ -246,6 +264,7 @@ class GovernanceCallbackHandler(BaseCallbackHandler):
         audit_sink: Callable[[GovernanceAuditRecord], None] | None = None,
         tool_name_field: str = "name",
         block_on_escalation: bool = True,
+        require_audit: bool = False,
     ) -> None:
         super().__init__()
         self.regulation = regulation
@@ -256,7 +275,9 @@ class GovernanceCallbackHandler(BaseCallbackHandler):
             regulation=regulation,
             actor_id=actor_id,
             audit_sink=audit_sink,
+            require_audit=require_audit,
             block_on_escalation=block_on_escalation,
+            raise_on_deny=True,
         )
         self.tool_name_field = tool_name_field
 
@@ -283,44 +304,35 @@ class GovernanceCallbackHandler(BaseCallbackHandler):
         :raises PermissionError: If the tool name is not permitted by the policy.
         """
         tool_name = serialized.get(self.tool_name_field, "unknown_tool")
-        decision = self._guard.evaluate(tool_name)
-
-        # Emit audit record for every tool invocation (permitted or denied)
-        if self._audit_sink is not None:
-            record = GovernanceAuditRecord(
-                regulation=self.regulation,
-                actor_id=self.actor_id,
-                action_name=tool_name,
-                permitted=decision.permitted,
-                denial_reason=decision.denial_reason,
-                escalation_target=(decision.escalation.escalate_to if decision.escalation else None),
+        try:
+            self._guard.guard(
+                tool_name,
+                lambda: None,
                 context={
                     "run_id": str(run_id),
                     "parent_run_id": str(parent_run_id) if parent_run_id else None,
                     "input": input_str,
                 },
             )
-            self._audit_sink(record)
-
-        if not decision.permitted:
-            logger.warning(
-                "[GOVERNANCE] Tool blocked: tool=%r actor=%r regulation=%r reason=%r",
-                tool_name,
-                self.actor_id,
-                self.regulation,
-                decision.denial_reason,
-            )
+        except PermissionError as exc:
             raise PermissionError(
-                f"GovernanceCallbackHandler: tool '{tool_name}' is not permitted "
-                f"for actor '{self.actor_id}' under {self.regulation} policy. "
-                f"Reason: {decision.denial_reason}"
-            )
+                f"Tool '{tool_name}' blocked for actor '{self.actor_id}' under {self.regulation}: {exc}"
+            ) from exc
 
-        logger.debug(
-            "[GOVERNANCE] Tool permitted: tool=%r actor=%r regulation=%r",
-            tool_name,
-            self.actor_id,
-            self.regulation,
+    def on_retriever_start(
+        self,
+        serialized: dict[str, Any] | None,
+        query: str,
+        *,
+        run_id: uuid.UUID,
+        parent_run_id: uuid.UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Check the retrieval action before the retriever reads any documents."""
+        self._guard.guard(
+            "retrieval",
+            lambda: None,
+            context={"query": query, "run_id": str(run_id)},
         )
 
     def on_tool_end(self, output: str, *, run_id: uuid.UUID, **kwargs: Any) -> None:
