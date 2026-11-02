@@ -65,70 +65,61 @@ GovernanceOrchestrator.evaluate(context, document)
 ## Installation
 
 ```bash
-pip install regulated-ai-governance
+pip install 'regulated-ai-governance>=0.46.0'
 ```
 
 With AI framework extras:
 
 ```bash
-pip install "regulated-ai-governance[crewai]"
-pip install "regulated-ai-governance[langchain]"
-pip install "regulated-ai-governance[autogen]"
-pip install "regulated-ai-governance[llama-index]"
-pip install "regulated-ai-governance[semantic-kernel]"
-pip install "regulated-ai-governance[haystack]"
+pip install 'regulated-ai-governance[langchain]>=0.46.0'
+pip install 'regulated-ai-governance[autogen]>=0.46.0'
+pip install 'regulated-ai-governance[llama-index]>=0.46.0'
+pip install 'regulated-ai-governance[semantic-kernel]>=0.46.0'
+pip install 'regulated-ai-governance[haystack]>=0.46.0'
 ```
 
 ---
 
-## Quick start: CrewAI + FERPA
+The `all` installation requires Python 3.11+ and excludes security-quarantined CrewAI. Use the release floor to prevent backtracking to an older package with different support/security contracts:
 
-```python
-from regulated_ai_governance.integrations.crewai import EnterpriseActionGuard
-from regulated_ai_governance.regulations.ferpa import make_ferpa_student_policy
-
-guard = EnterpriseActionGuard(
-    wrapped_tool=MyTranscriptTool(),
-    policy=make_ferpa_student_policy(
-        allowed_record_categories={"academic_record"}
-    ),
-    regulation="FERPA",
-    actor_id="stu-alice",
-    audit_sink=lambda rec: write_to_db(rec),
-    block_on_escalation=True,
-)
-agent = Agent(tools=[guard], ...)  # drop-in replacement
+```bash
+pip install 'regulated-ai-governance[all]>=0.46.0'
 ```
 
-Every evaluation emits a `GovernanceAuditRecord` — whether permitted or denied — with a regulation citation, suitable for a 34 CFR §99.32 disclosure log.
+**Python support:** core Python 3.10+; `llama-index`, `autogen`, `semantic-kernel` and `all` extras require Python 3.11+ for patched dependencies and reject Python 3.10 resolution. See [migration notes](MIGRATION.md) for the installation matrix.
 
----
+## Quick start: an installed core guard
 
-## Quick start: Singapore Financial AI (MAS FEAT)
+This example uses only the installed package; no framework SDK, API key or repository checkout is needed.
 
 ```python
-from regulated_ai_governance.examples import singapore_ai_governance as sg
+from regulated_ai_governance import ActionPolicy, GovernedActionGuard
 
-context = sg.SingaporeAIContext(
-    user_id="credit-model-v3",
-    sector=sg.SingaporeSector.FINANCIAL_SERVICES,
-    ai_risk_level=sg.SingaporeAIRiskLevel.HIGH,
-    is_automated_decision=True,
-    involves_personal_data=True,
-    has_pdpa_consent=True,
-    is_financial_institution=True,
-    has_mas_approval=True,         # MAS FEAT Accountability A.2
-    explainability_available=True, # MAS FEAT Transparency T.1
-    bias_testing_done=True,        # MAS FEAT Fairness F.1
-    human_review_available=True,   # PDPC Framework §2.3
-    # ... other fields
+records = []
+executed = []
+guard = GovernedActionGuard(
+    policy=ActionPolicy(allowed_actions={"read_record"}),
+    regulation="application-policy",
+    actor_id="authenticated-user",  # Supply from your verified session.
+    audit_sink=records.append,
+    require_audit=True,
+    raise_on_deny=True,
 )
-orch = sg.SingaporeAIGovernanceOrchestrator()
-results = orch.evaluate(context, document)
-report = sg.SingaporeAIGovernanceReport(context=context, document=document, filter_results=results)
-print(report.overall_decision)    # SingaporeAIDecision.APPROVED
-print(report.compliance_summary)  # human-readable for audit file
+
+assert guard.guard("read_record", lambda: "synthetic record") == "synthetic record"
+try:
+    guard.guard("export_records", lambda: executed.append("export"))
+except PermissionError:
+    pass
+else:
+    raise AssertionError("Unlisted action was permitted")
+assert executed == []
+assert len(records) == 2  # One decision record for each attempted action.
 ```
+
+Your application must send every protected action through the guard and authenticate the actor. The in-memory list illustrates audit delivery; production retention needs an appropriate durable sink. A policy decision or regulation label does not establish legal compliance. See [audit guarantees](docs/AUDIT_GUARANTEES.md) for acknowledgment and failure semantics.
+
+For supported framework integration, install the corresponding extra. CrewAI integration is security quarantined: its extra is removed and excluded from `[all]` because its SDK graph includes outstanding ChromaDB advisories. Existing adapter APIs remain for compatibility, but native CrewAI support is suspended. See [security policy](SECURITY.md). The [CrewAI source example](examples/02_crewai_guard.py) uses a mock tool and can patch an absent SDK; it is an illustration, not proof of a native CrewAI agent run. Native SDK checks are tracked in [CI](.github/workflows/ci.yml). Sector patterns such as [Singapore governance](examples/20_singapore_ai_governance.py) are repository examples, not modules under `regulated_ai_governance.examples`; follow each example's configuration and dependency requirements.
 
 ---
 
@@ -212,14 +203,14 @@ print(report.compliance_summary)  # human-readable for audit file
 
 | Framework | Adapter | Notes |
 |-----------|---------|-------|
-| CrewAI | `EnterpriseActionGuard` | Tool wrapper — drop-in replacement |
+| CrewAI | `EnterpriseActionGuard` | Security quarantined; native support suspended |
 | LangChain | `GovernanceCallbackHandler` | `callbacks.on_retriever_end` |
 | LlamaIndex | `ComplianceNodePostprocessor` | Post-processor for retrieved nodes |
 | Google ADK | `ADKPolicyGuard` | `before_model_callback` / `before_tool_callback` — BigQuery audit sink |
 | AutoGen | `PolicyEnforcingAgent` (maintenance mode — prefer MAF) | Message interceptor |
 | Semantic Kernel | `PolicyKernelPlugin` (maintenance mode — prefer MAF) | SK Plugin interface |
 | Haystack 2.x | `FERPAMetadataFilter` | Standalone: [`ferpa-haystack`](https://github.com/ashutoshrana/haystack-ferpa-filter) on PyPI |
-| DSPy | `ComplianceModule` | DSPy module wrapper |
+| DSPy | `ComplianceModule` | Legacy wrapper; native SDK support not qualified |
 | Microsoft Agent Framework (MAF) | `GovernanceMAFMiddleware` | Successor to AutoGen + Semantic Kernel |
 
 ---
@@ -273,7 +264,7 @@ JSON-serializable; suitable for compliance databases, SIEM ingestion, and regula
 
 ## Standalone Haystack Package
 
-**[ferpa-haystack](https://github.com/ashutoshrana/haystack-ferpa-filter)** — `FERPAMetadataFilter` as a standalone Haystack 2.x custom component. Install with `pip install ferpa-haystack`. Adds FERPA identity-scope enforcement to any Haystack pipeline in two lines:
+**[ferpa-haystack](https://github.com/ashutoshrana/haystack-ferpa-filter)** — `FERPAMetadataFilter` as a standalone Haystack 2.x custom component. Install with `pip install 'ferpa-haystack>=0.3.3'`. Adds FERPA identity-scope enforcement to any Haystack pipeline in two lines:
 
 ```python
 pipeline.add_component("ferpa_filter", FERPAMetadataFilter(student_id="stu_001"))
