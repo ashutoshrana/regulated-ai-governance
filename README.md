@@ -65,16 +65,16 @@ GovernanceOrchestrator.evaluate(context, document)
 ## Installation
 
 ```bash
-pip install 'regulated-ai-governance>=0.47.0'
+pip install 'regulated-ai-governance>=0.47.1'
 ```
 
 With AI framework extras:
 
 ```bash
-pip install 'regulated-ai-governance[langchain]>=0.47.0'
-pip install 'regulated-ai-governance[llama-index]>=0.47.0'
-pip install 'regulated-ai-governance[semantic-kernel]>=0.47.0'
-pip install 'regulated-ai-governance[haystack]>=0.47.0'
+pip install 'regulated-ai-governance[langchain]>=0.47.1'
+pip install 'regulated-ai-governance[llama-index]>=0.47.1'
+pip install 'regulated-ai-governance[semantic-kernel]>=0.47.1'
+pip install 'regulated-ai-governance[haystack]>=0.47.1'
 ```
 
 ---
@@ -82,7 +82,7 @@ pip install 'regulated-ai-governance[haystack]>=0.47.0'
 The `all` installation requires Python 3.11+ and excludes security-quarantined CrewAI and legacy AutoGen. Use the release floor to prevent backtracking to an older package with different support/security contracts:
 
 ```bash
-pip install 'regulated-ai-governance[all]>=0.47.0'
+pip install 'regulated-ai-governance[all]>=0.47.1'
 ```
 
 **Python support:** core Python 3.10+; `llama-index`, `semantic-kernel` and `all` extras require Python 3.11+ for patched dependencies and reject Python 3.10 resolution. See [migration notes](MIGRATION.md) for the installation matrix.
@@ -317,7 +317,7 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [GOVERNANCE.md](./GOVERNANCE.md). 
   author  = {Rana, Ashutosh},
   title   = {regulated-ai-governance: Policy enforcement for AI agents in regulated environments},
   year    = {2026},
-  version = {0.47.0},
+  version = {0.47.1},
   url     = {https://github.com/ashutoshrana/regulated-ai-governance},
   license = {MIT}
 }

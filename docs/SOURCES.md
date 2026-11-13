@@ -10,7 +10,7 @@ license, provenance or security audit of every regulation module.
 | EU AI Act registration | [Article 49](https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-49) | Roles, scope and exceptions matter. |
 | EU AI Act transparency | [Article 13](https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-13), [Article 50](https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-50) | Deployer information and direct-interaction disclosure are different duties. |
 | EU AI Act penalties/timing | [Article 99](https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-99), [Article 113](https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-113) | Commission explorer identifies July 27, 2026 consolidated version; check applicable transitional provisions. |
-| Citation release metadata | [v0.47.0 release](https://github.com/ashutoshrana/regulated-ai-governance/releases/tag/v0.47.0) | Released November 2, 2026. Unreleased corrections do not constitute a new release. |
+| Prior release metadata checked during source review | [v0.47.0 release](https://github.com/ashutoshrana/regulated-ai-governance/releases/tag/v0.47.0) | Released November 2, 2026. This historical source review is distinct from the current version in CITATION.cff. |
 
 No OWASP, regulator or framework-vendor endorsement is implied. The MIT software
 license does not grant rights to third-party publications, marks or logos.

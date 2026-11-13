@@ -11,8 +11,8 @@ authors:
 repository-code: "https://github.com/ashutoshrana/regulated-ai-governance"
 url: "https://pypi.org/project/regulated-ai-governance/"
 license: MIT
-version: "0.47.0"
-date-released: "2026-11-02"
+version: "0.47.1"
+date-released: "2026-11-13"
 keywords:
   - "AI governance"
   - "FERPA"

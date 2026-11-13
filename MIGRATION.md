@@ -24,7 +24,7 @@ The `autogen` extra is removed: the advertised pyautogen 0.4 minimum brings Disk
 
 Sink cancellation keeps the original `CancelledError` identity and task semantics. It now carries `action_executed` and `correlation_id` (False before action invocation, True at terminal delivery) instead of being wrapped as an ordinary sink error. Inspect these markers and reconcile application state; do not assume cancellation means no side effect or automatically retry it.
 
-## Unreleased: corrected OWASP example citations
+## Corrected OWASP example citations (0.47.1)
 
 Example 39 retains class names, metadata inputs and allow/deny/review predicates,
 but its `regulation` and `reason` strings now use corrected category references.

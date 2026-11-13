@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.47.1] — 2026-11-13
+
+Documentation and example-attribution correction release; core runtime policy behavior is unchanged.
+
 - Complete integration-documentation reconciliation in the README tree, package module index and LlamaIndex API example; regression-test the documented query-wrapper example. No runtime behavior changed.
 
 - Correct OWASP Agentic 2026 category mappings, distinguish supplemental local controls, and document metadata/review limitations without changing example decision predicates. Citation/reason strings changed; see MIGRATION.md.
