@@ -8,7 +8,7 @@ any framework dependency installed.
 Available integrations
 ----------------------
 - ``EnterpriseActionGuard``     — CrewAI ``BaseTool`` wrapper (crewai>=1.14)
-- ``GovernedDSPyModule``        — DSPy ``Module`` wrapper (dspy>=2.5, Pydantic v2)
+- ``GovernedDSPyModule``        — DSPy ``Module`` wrapper (native DSPy SDK compatibility not qualified)
 - ``GovernedDSPyPipeline``      — DSPy sequential pipeline with per-step enforcement
 - ``PolicyEnforcingAgent``      — AutoGen agent with inline policy enforcement
 - ``PolicyKernelPlugin``        — Semantic Kernel function plugin

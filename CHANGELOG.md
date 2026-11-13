@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+- Reconcile DSPy documentation: source wrappers and stub-based tests exist, but native SDK support is not qualified and no DSPy install extra is provided.
+- Distinguish downloads and maintainer-reported project contexts from independent adoption evidence; remove unsupported production and comparative claims from the adoption page.
+
 ## [0.47.0] — 2026-11-02
 
 ### Fixed

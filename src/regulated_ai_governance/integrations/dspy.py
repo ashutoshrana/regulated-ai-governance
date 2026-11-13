@@ -6,10 +6,10 @@ against an ``ActionPolicy`` before execution.  Denied actions raise
 ``PermissionError``; escalated actions route to the configured escalation
 sink while still permitting or blocking according to ``block_on_escalation``.
 
-Compatible with DSPy ≥ 2.5.0 (requires Pydantic v2).
-
-Installation:
-    pip install regulated-ai-governance[dspy]
+Source-level wrapper with stub-based tests; native DSPy SDK compatibility is
+not currently qualified. The package does not provide a ``dspy`` install extra.
+The following sketch requires a caller-managed DSPy environment and is not
+a verified native SDK quick start.
 
 Usage::
 

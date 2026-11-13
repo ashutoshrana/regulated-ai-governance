@@ -37,12 +37,14 @@
 | LlamaIndex | ≥ 0.12.0 | `GovernedQueryEngine` | ✅ Implemented |
 | Semantic Kernel | ≥ 1.0.0 | `GovernedKernelPlugin` | ✅ Implemented |
 | Haystack | ≥ 2.0.0 | `GovernedHaystackComponent` | ✅ Implemented |
-| DSPy | ≥ 2.5.0 | Module guard | 🔲 Planned |
+| DSPy | Native SDK version not qualified | `GovernedDSPyModule`, `GovernedDSPyPipeline` | Source implemented; stub-tested, not production-qualified |
 | PydanticAI | ≥ 0.3.0 | Agent wrapper | 🔲 Planned |
 | Smolagents | ≥ 1.0.0 | Tool guard | 🔲 Planned |
 | LangGraph | ≥ 0.2.0 | Node guard | 🔲 Planned |
 
 ---
+
+DSPy has no supported install extra in the current package metadata. See [ADOPTION.md](ADOPTION.md#framework-integrations) for the distinction between source implementation, native SDK qualification, and production adoption. Other integration support may be restricted by the current [README](README.md#ai-framework-integrations) and [security policy](SECURITY.md).
 
 ## Cross-Cutting Compliance Primitives
 
