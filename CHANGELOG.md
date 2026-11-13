@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Complete integration-documentation reconciliation in the README tree, package module index and LlamaIndex API example; regression-test the documented query-wrapper example. No runtime behavior changed.
+
 - Correct OWASP Agentic 2026 category mappings, distinguish supplemental local controls, and document metadata/review limitations without changing example decision predicates. Citation/reason strings changed; see MIGRATION.md.
 - Correct the archived EU AI Act developer guide with a dated notice, preserved history, current source links, and qualified classification, timing, transparency, registration and penalty guidance.
 - Reconcile integration names/support boundaries and released citation metadata; add a scoped source/attribution register.

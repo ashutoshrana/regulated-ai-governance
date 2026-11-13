@@ -233,16 +233,16 @@ src/regulated_ai_governance/
 └── integrations/
     ├── crewai.py             # EnterpriseActionGuard
     ├── langchain.py          # GovernanceCallbackHandler
-    ├── autogen.py            # PolicyEnforcingAgent
-    ├── llama_index.py        # ComplianceNodePostprocessor
-    ├── semantic_kernel.py    # PolicyKernelPlugin
-    ├── haystack.py           # FERPAMetadataFilter
-    ├── dspy.py               # ComplianceModule
-    └── maf.py                # GovernanceMAFMiddleware
-examples/                     # 29 runnable governance examples (see catalog above)
-tests/                        # 983 passing tests
-docs/
-└── ECOSYSTEM.md              # Full regulation and framework coverage matrix
+    ├── autogen.py            # GovernedAutoGenAgent
+    ├── llama_index.py        # GovernedQueryEngine
+    ├── semantic_kernel.py    # GovernedKernelPlugin
+    ├── haystack.py           # GovernedHaystackComponent
+    ├── dspy.py               # GovernedDSPyModule, GovernedDSPyPipeline
+    └── maf.py                # PolicyMiddleware
+examples/                     # Governance demonstrations (see catalog above)
+tests/                        # Regression tests; see CI for current results
+ECOSYSTEM.md                  # Selected regulation/framework support boundaries
+docs/                         # Design, API and evidence documentation
 ```
 
 ---
@@ -267,10 +267,17 @@ JSON-serializable; suitable for compliance databases, SIEM ingestion, and regula
 
 ## Standalone Haystack Package
 
-**[ferpa-haystack](https://github.com/ashutoshrana/haystack-ferpa-filter)** — `FERPAMetadataFilter` as a standalone Haystack 2.x custom component. Install with `pip install 'ferpa-haystack>=0.4.0'`. Adds FERPA identity-scope enforcement to any Haystack pipeline in two lines:
+**[ferpa-haystack](https://github.com/ashutoshrana/haystack-ferpa-filter)** — `FERPAMetadataFilter` as a standalone Haystack 2.x custom component. Install with `pip install 'ferpa-haystack>=0.4.0'`. Adds identity-scope filtering to a configured Haystack pipeline. This separate package exports `FERPAMetadataFilter`, not this repository’s `GovernedHaystackComponent`. Supply identities and category grants from your authenticated authorization context; the values below are synthetic:
 
 ```python
-pipeline.add_component("ferpa_filter", FERPAMetadataFilter(student_id="stu_001"))
+from haystack_integrations.components.filters.ferpa_filter import FERPAMetadataFilter
+
+# Assumes a Haystack pipeline with a retriever already configured.
+pipeline.add_component("ferpa_filter", FERPAMetadataFilter(
+    student_id="stu_001",
+    institution_id="inst_001",
+    authorized_categories=["academic_record"],
+))
 pipeline.connect("retriever.documents", "ferpa_filter.documents")
 ```
 

@@ -5,26 +5,21 @@ Provides policy-enforcement bridge components for popular agentic AI frameworks.
 All framework-specific imports are lazy so the package is importable without
 any framework dependency installed.
 
-Available integrations
-----------------------
-- ``EnterpriseActionGuard``     — CrewAI ``BaseTool`` wrapper (crewai>=1.14)
-- ``GovernedDSPyModule``        — DSPy ``Module`` wrapper (native DSPy SDK compatibility not qualified)
-- ``GovernedDSPyPipeline``      — DSPy sequential pipeline with per-step enforcement
-- ``PolicyEnforcingAgent``      — AutoGen agent with inline policy enforcement
-- ``PolicyKernelPlugin``        — Semantic Kernel function plugin
-- ``PolicyMiddleware``          — Microsoft Agent Framework (MAF) middleware (NEW — MAF 2026)
-- ``LangChainPolicyGuard``      — LangChain tool wrapper
-- ``GovernedHaystackComponent`` — Haystack 2.x pipeline component (duck-typed)
-- ``make_haystack_policy_guard``— Haystack 2.27 ``@component`` factory (NEW)
-- ``GovernedQueryEngine``       — LlamaIndex ``QueryEngine`` wrapper
-- ``PolicyWorkflowGuard``       — LlamaIndex 0.12+ Workflow guard step (NEW)
-- ``PolicyWorkflowEvent``       — LlamaIndex Workflow event type (NEW)
+Integration modules (import from the named submodule unless exported below)
+-------------------------------------------------------------------------
+- ``crewai.EnterpriseActionGuard`` — legacy wrapper; native SDK quarantined
+- ``autogen.GovernedAutoGenAgent`` — legacy object wrapper; SDK extra quarantined
+- ``dspy.GovernedDSPyModule`` / ``GovernedDSPyPipeline`` — no qualified native SDK extra
+- ``semantic_kernel.GovernedKernelPlugin`` — SK integration
+- ``maf.PolicyMiddleware`` — MAF middleware with ``as_native()`` bridge
+- ``langchain.GovernanceCallbackHandler`` / ``FERPAComplianceCallbackHandler``
+- ``haystack.GovernedHaystackComponent`` / ``make_haystack_policy_guard``
+- ``llama_index.GovernedQueryEngine`` / ``PolicyWorkflowGuard`` / ``PolicyWorkflowEvent``
 
-Note on AutoGen and Semantic Kernel:
-Both AutoGen and Semantic Kernel are in maintenance mode as of 2026. Microsoft
-recommends migrating to Microsoft Agent Framework (MAF). The AutoGen and
-Semantic Kernel integrations remain available for backward compatibility, but
-new projects should use the MAF integration (``PolicyMiddleware``).
+See ECOSYSTEM.md, SECURITY.md and package metadata for current version/Python
+boundaries. Source availability does not establish native SDK qualification.
+The separate ``adapters.semantic_kernel.PolicyKernelPlugin`` is not this
+package's ``integrations.semantic_kernel.GovernedKernelPlugin``.
 """
 
 from .dspy import GovernedDSPyModule, GovernedDSPyPipeline

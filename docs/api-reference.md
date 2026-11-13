@@ -309,11 +309,34 @@ guard = ADKPolicyGuard(
 
 ### LlamaIndex — `regulated_ai_governance.integrations.llama_index`
 
-```python
-from regulated_ai_governance.integrations.llama_index import ComplianceNodePostprocessor
+This self-contained example uses a synthetic query engine, not a native SDK
+qualification test. Replace it with your configured query engine in an application.
 
-postprocessor = ComplianceNodePostprocessor(policy=policy, actor_id="advisor_007")
+```python
+from regulated_ai_governance import ActionPolicy
+from regulated_ai_governance.integrations.llama_index import GovernedQueryEngine
+
+class SyntheticEngine:
+    def query(self, text):
+        return f"Synthetic result: {text}"
+
+records = []
+engine = GovernedQueryEngine.wrap(
+    engine=SyntheticEngine(),
+    policy=ActionPolicy(allowed_actions={"query"}),
+    regulation="application-policy",
+    actor_id="authenticated-user",
+    query_action="query",
+    audit_sink=records.append,
+    require_audit=True,
+)
+assert engine.query("example") == "Synthetic result: example"
+assert len(records) == 1
 ```
+
+This wrapper gates query execution; it is not a retrieved-node postprocessor.
+Actor authentication, retrieval authorization and durable audit retention remain
+application responsibilities. No legal compliance is implied by the label.
 
 ---
 
