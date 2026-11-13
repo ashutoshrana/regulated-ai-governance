@@ -208,13 +208,13 @@ For supported framework integration, install the corresponding extra. CrewAI and
 |-----------|---------|-------|
 | CrewAI | `EnterpriseActionGuard` | Security quarantined; native support suspended |
 | LangChain | `GovernanceCallbackHandler` | `callbacks.on_retriever_end` |
-| LlamaIndex | `ComplianceNodePostprocessor` | Post-processor for retrieved nodes |
+| LlamaIndex | `GovernedQueryEngine` | Policy checks around query execution |
 | Google ADK | `ADKPolicyGuard` | `before_model_callback` / `before_tool_callback` — BigQuery audit sink |
 | AutoGen | Legacy object wrapper/API retained | Security quarantined; native SDK install unsupported |
-| Semantic Kernel | `PolicyKernelPlugin` (maintenance mode — prefer MAF) | SK Plugin interface |
-| Haystack 2.x | `FERPAMetadataFilter` | Standalone: [`ferpa-haystack`](https://github.com/ashutoshrana/haystack-ferpa-filter) on PyPI |
-| DSPy | `ComplianceModule` | Legacy wrapper; native SDK support not qualified |
-| Microsoft Agent Framework (MAF) | `GovernanceMAFMiddleware` | Successor to AutoGen + Semantic Kernel |
+| Semantic Kernel | `GovernedKernelPlugin` | SK Plugin interface |
+| Haystack 2.x | `GovernedHaystackComponent` | Related standalone filter: [`ferpa-haystack`](https://github.com/ashutoshrana/haystack-ferpa-filter) on PyPI |
+| DSPy | `GovernedDSPyModule`, `GovernedDSPyPipeline` | Legacy wrapper; native SDK support not qualified |
+| Microsoft Agent Framework (MAF) | `PolicyMiddleware` (`as_native()` bridge) | Successor to AutoGen + Semantic Kernel |
 
 ---
 

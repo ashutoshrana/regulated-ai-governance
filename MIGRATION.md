@@ -23,3 +23,20 @@ The security-supported SDK floors are now LangChain Core 1.3.3 and LlamaIndex Co
 The `autogen` extra is removed: the advertised pyautogen 0.4 minimum brings DiskCache with unresolved advisories, while current pyautogen releases target a different AgentChat API. A direct-package advisory lookup returning no findings does not clear that transitive graph. Existing object wrappers and callable APIs remain for compatibility, but native SDK installation/support is quarantined. Do not treat an unknown-extra pip warning as SDK installation or migrate silently to a different agent API. No licenses or third-party history are removed. Restoration requires a reviewed clean dependency graph and native boundary tests for the actual supported API.
 
 Sink cancellation keeps the original `CancelledError` identity and task semantics. It now carries `action_executed` and `correlation_id` (False before action invocation, True at terminal delivery) instead of being wrapped as an ordinary sink error. Inspect these markers and reconcile application state; do not assume cancellation means no side effect or automatically retry it.
+
+## Unreleased: corrected OWASP example citations
+
+Example 39 retains class names, metadata inputs and allow/deny/review predicates,
+but its `regulation` and `reason` strings now use corrected category references.
+Consumers that parsed these display strings must update mappings: old ASI04
+poisoning -> ASI06; old ASI05 privilege -> ASI03; old ASI06 supply chain -> ASI04;
+old ASI07 trust -> ASI09; old ASI10 composition -> ASI07. Output DLP and audit
+checks use `LOCAL-DLP` and `LOCAL-AUDIT`; memory isolation uses ASI06.
+The taxonomy constant now contains the official ten categories, including ASI05
+code execution and ASI10 rogue agents, for which this example has no dedicated
+check. It must not be represented as full Top 10 enforcement.
+
+Existing missing-metadata and review behavior is unchanged: wrappers raise only
+on `DENIED`. Explicitly stop and route `REQUIRES_HUMAN_REVIEW` before executing
+an action. These duck-typed examples are not qualified SDK integrations or a
+production security boundary. See [scope](docs/agentic-security-trends-2026.md).

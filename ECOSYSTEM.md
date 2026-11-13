@@ -5,7 +5,7 @@
 
 | Repo | Domain |
 |------|--------|
-| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | FERPA/GDPR-compliant RAG retrieval |
+| [enterprise-rag-patterns](https://github.com/ashutoshrana/enterprise-rag-patterns) | RAG retrieval and access-control patterns |
 | [integration-automation-patterns](https://github.com/ashutoshrana/integration-automation-patterns) | Enterprise integration, messaging, and workflow |
 | **regulated-ai-governance** ← you are here | Cross-regulation AI policy enforcement |
 
@@ -23,24 +23,27 @@
 | SOC 2 TSC | AICPA standard | `make_soc2_agent_policy()` | Control test evidence | ✅ Implemented |
 | PDPA (Thailand) | Thailand | — | — | 🔲 Planned |
 | PIPEDA (Canada) | Canada | — | — | 🔲 Planned |
-| AI Act (EU 2024/1689) | EU | High-risk AI system guard | Conformity assessment | 🔲 Planned |
+| AI Act (EU 2024/1689) | EU | `EUAIActGovernancePolicy` | Selected metadata checks; not conformity assessment | Implemented subset; applicability requires review |
 
 ---
 
 ## AI Framework Integrations
 
-| Framework | Version | Integration Class | Status |
-|-----------|---------|------------------|--------|
-| CrewAI | ≥ 1.0.0 | `EnterpriseActionGuard` (BaseTool wrapper) | ✅ Implemented |
-| LangChain | ≥ 0.3.0 | `FERPAComplianceCallbackHandler` | ✅ Implemented |
-| AutoGen / AG2 | ≥ 0.4.0 | `GovernedAutoGenAgent` | ✅ Implemented |
-| LlamaIndex | ≥ 0.12.0 | `GovernedQueryEngine` | ✅ Implemented |
-| Semantic Kernel | ≥ 1.0.0 | `GovernedKernelPlugin` | ✅ Implemented |
-| Haystack | ≥ 2.0.0 | `GovernedHaystackComponent` | ✅ Implemented |
-| DSPy | Native SDK version not qualified | `GovernedDSPyModule`, `GovernedDSPyPipeline` | Source implemented; stub-tested, not production-qualified |
-| PydanticAI | ≥ 0.3.0 | Agent wrapper | 🔲 Planned |
-| Smolagents | ≥ 1.0.0 | Tool guard | 🔲 Planned |
-| LangGraph | ≥ 0.2.0 | Node guard | 🔲 Planned |
+| Framework | Adapter | Current support boundary |
+|-----------|---------|--------------------------|
+| CrewAI | `EnterpriseActionGuard` | Security quarantined; native support suspended |
+| AutoGen / AG2 | `GovernedAutoGenAgent` | Legacy object wrapper retained; native extra quarantined |
+| LangChain | `GovernanceCallbackHandler`, `FERPAComplianceCallbackHandler` | Core >=1.3.3; see qualification matrix |
+| LlamaIndex | `GovernedQueryEngine` | Core >=0.13.0; see qualification matrix |
+| Semantic Kernel | `GovernedKernelPlugin` | >=1.41.0 plus security dependency floors |
+| Haystack | `GovernedHaystackComponent` | >=2.20.0; see qualification matrix |
+| Microsoft Agent Framework | `PolicyMiddleware` | `as_native()` bridge; core >=1.23.0,<2 |
+| DSPy | `GovernedDSPyModule`, `GovernedDSPyPipeline` | Source/stub-tested only; no qualified SDK extra |
+
+Version floors are package constraints, not proof that all later versions work.
+Consult [package metadata](pyproject.toml), [migration guidance](MIGRATION.md),
+[security policy](SECURITY.md), and [CI](.github/workflows/ci.yml) for Python and
+native SDK boundaries. Implementation and tests are not production adoption.
 
 ---
 

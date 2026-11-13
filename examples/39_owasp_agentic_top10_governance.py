@@ -1,82 +1,15 @@
-"""
-39_owasp_agentic_top10_governance.py — OWASP Top 10 for Agentic Applications 2026
+"""OWASP-related local policy examples, not an OWASP compliance implementation.
 
-Implements governance filters for the OWASP Top 10 for Agentic Applications
-2026 (published December 2025 after review by 100+ security practitioners and
-red teamers).  This standard is specifically designed for autonomous AI agents
-with tool access, memory, and multi-step execution — distinct from the earlier
-OWASP LLM Top 10 (2025) which targets LLM inference endpoints.
-
-Demonstrates a four-layer governance framework where four independent filters
-enforce distinct requirements of the OWASP Agentic Top 10:
-
-    Layer 1  — ASI01 Goal Hijack + ASI04 Data Poisoning
-               (OWASPAgenticInjectionFilter):
-
-               ASI01 Injection — external input without injection detection
-                   in agent context is denied;
-               ASI04 Data Poisoning — retrieved document without integrity/
-                   checksum verification is denied;
-               ASI01 Indirect — tool output routed back to agent without
-                   sanitisation is denied;
-               ASI04 Anomaly — retrieved content with anomaly score above
-                   0.7 threshold triggers REQUIRES_HUMAN_REVIEW.
-
-    Layer 2  — ASI02 Unsafe Tool Use + ASI05 Privilege Misuse + ASI06
-               Supply Chain (OWASPAgenticToolSafetyFilter):
-
-               ASI02 Tool Allowlist — tool invoked without allowlist
-                   verification is denied;
-               ASI05 Privilege Misuse — agent operating with persistent
-                   cross-session privileges is denied;
-               ASI06 Supply Chain — tool/plugin without cryptographic
-                   signature verification is denied;
-               ASI02 Approval Gate — tool requiring approval invoked
-                   without human confirmation triggers
-                   REQUIRES_HUMAN_REVIEW.
-
-    Layer 3  — ASI03 Data Leakage + ASI07 Human-Agent Trust Exploitation
-               (OWASPAgenticDataLeakageFilter):
-
-               ASI03 DLP — agent output containing PII/sensitive data
-                   without DLP scan is denied;
-               ASI03 Memory — agent memory not session-scoped is denied;
-               ASI07 Trust — agent claiming capabilities beyond its actual
-                   scope is denied;
-               ASI07 Confidence — agent output below confidence threshold
-                   without disclosure triggers REQUIRES_HUMAN_REVIEW.
-
-    Layer 4  — ASI08 Cascading Failures + ASI09 Monitoring + ASI10
-               Unvalidated Composition (OWASPAgenticGovernanceFilter):
-
-               ASI08 Irreversible — irreversible action without rollback
-                   capability is denied;
-               ASI09 Audit Trail — agent action without audit trail is
-                   denied;
-               ASI10 Composition — multi-agent message without sender
-                   identity verification is denied;
-               ASI08 HITL — high-impact action without human-in-the-loop
-                   gate triggers REQUIRES_HUMAN_REVIEW.
-
-Commercial use cases
---------------------
-+----------------------------------------------+-----------------------------+
-| Use case                                     | Primary filters applied     |
-+----------------------------------------------+-----------------------------+
-| RAG-augmented customer support agent         | OWASPAgenticInjectionFilter |
-| Autonomous code-generation agent             | OWASPAgenticToolSafetyFilter|
-| Multi-agent financial workflow               | OWASPAgenticGovernanceFilter|
-| Document processing pipeline with LLM       | OWASPAgenticInjectionFilter |
-| Healthcare diagnostic AI agent              | OWASPAgenticDataLeakageFilter|
-| Agentic DevOps pipeline                     | OWASPAgenticToolSafetyFilter|
-| Agent-to-agent delegation workflow          | OWASPAgenticGovernanceFilter|
-| Public-facing GenAI chatbot                 | OWASPAgenticDataLeakageFilter|
-+----------------------------------------------+-----------------------------+
-
-No external dependencies required.
-
-Run:
-    python examples/39_owasp_agentic_top10_governance.py
+Taxonomy: OWASP Top 10 for Agentic Applications 2026, checked 2026-11-13.
+See docs/agentic-security-trends-2026.md for sources, attribution and limits.
+Class names and input/decision behavior are retained for compatibility; citation
+strings were corrected. LOCAL-DLP and LOCAL-AUDIT are supplemental controls,
+not OWASP category IDs. ASI05 and ASI10 have no dedicated checks here.
+All checks trust caller-supplied metadata, not independent detection or proof.
+Wrappers are duck-typed demonstrations, not qualified native SDK integrations.
+REQUIRES_HUMAN_REVIEW is returned but NOT blocked by these wrappers; applications
+must route it explicitly before executing an action. Missing metadata may pass.
+No external dependencies. Run: python examples/39_owasp_agentic_top10_governance.py
 """
 
 from __future__ import annotations
@@ -91,20 +24,7 @@ from typing import Any
 
 @dataclass
 class FilterResult:
-    """
-    Result returned by each OWASP Agentic Top 10 governance filter.
-
-    Attributes
-    ----------
-    decision : str
-        One of ``"PERMITTED"``, ``"DENIED"``, ``"REQUIRES_HUMAN_REVIEW"``.
-    regulation : str
-        Authoritative citation for the standard/category that drove the decision.
-    reason : str
-        Human-readable description of the compliance finding.
-    filter_name : str
-        Identifier for the filter that produced this result.
-    """
+    """FilterResult: illustrative metadata policy; see module limitations."""
 
     decision: str
     regulation: str
@@ -123,20 +43,19 @@ class FilterResult:
 
 OWASP_AGENTIC_TOP10_2026: dict[str, str] = {
     "ASI01": "Agent Goal Hijack",
-    "ASI02": "Unsafe Tool Use",
-    "ASI03": "Data Leakage",
-    "ASI04": "Data Poisoning",
-    "ASI05": "Privilege Misuse",
-    "ASI06": "Supply Chain Risks",
-    "ASI07": "Human-Agent Trust Exploitation",
+    "ASI02": "Tool Misuse",
+    "ASI03": "Identity & Privilege Abuse",
+    "ASI04": "Agentic Supply Chain Vulnerabilities",
+    "ASI05": "Unexpected Code Execution",
+    "ASI06": "Memory & Context Poisoning",
+    "ASI07": "Insecure Inter-Agent Communication",
     "ASI08": "Cascading Failures",
-    "ASI09": "Inadequate Monitoring & Audit",
-    "ASI10": "Unvalidated Agent Composition",
+    "ASI09": "Human-Agent Trust Exploitation",
+    "ASI10": "Rogue Agents",
 }
 
 # Anomaly score threshold above which retrieved content triggers human review.
-# Scores are expected in the range [0.0, 1.0]; content above this threshold
-# has statistically anomalous semantic distance from known-good documents.
+# Demonstration-only threshold; no statistical calibration is performed here.
 _ANOMALY_SCORE_THRESHOLD: float = 0.7
 
 # Confidence score below which agent outputs must be disclosed as uncertain
@@ -145,61 +64,13 @@ _CONFIDENCE_THRESHOLD: float = 0.6
 
 
 # ---------------------------------------------------------------------------
-# Layer 1 — ASI01 Goal Hijack + ASI04 Data Poisoning
+# Layer 1 — ASI01 Goal Hijack + ASI06 Memory & Context Poisoning
 # ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class OWASPAgenticInjectionFilter:
-    """
-    Layer 1: OWASP Agentic Top 10 2026 — ASI01 Agent Goal Hijack and
-    ASI04 Data Poisoning.
-
-    ASI01 (Agent Goal Hijack) addresses indirect prompt injection: adversarial
-    instructions embedded in external content (retrieved documents, tool
-    outputs, web pages, memory entries) that redirect the agent's goal state
-    when processed.  Unlike direct prompt injection (which targets system or
-    user prompts), indirect injection operates on the agent's context through
-    channels the agent trusts.
-
-    ASI04 (Data Poisoning) addresses the persistent compromise of retrieval
-    infrastructure: an attacker who can write to a vector store, document
-    repository, or web-accessible data source inserts adversarial content that
-    will eventually appear in the agent's context.  This is distinct from
-    ASI01 in that ASI04 focuses on the retrieval source integrity, not the
-    injection moment.
-
-    Four controls apply:
-
-    (a) ASI01 Injection Detection — external input routed into agent context
-        without injection detection enabled is denied; every document, tool
-        output, or environmental input must pass through an injection
-        detection check before it influences the agent's goal state;
-    (b) ASI04 Document Integrity — retrieved documents without cryptographic
-        integrity or checksum verification are denied; document integrity
-        verification ensures the retrieved content has not been modified
-        since it was indexed by a trusted source;
-    (c) ASI01 Tool Output Sanitisation — tool outputs routed back into agent
-        context without sanitisation are denied; raw tool output may contain
-        embedded adversarial instructions and must be sanitised before
-        re-injection into the agent's context window;
-    (d) ASI04 Anomaly Scoring — retrieved content with a semantic anomaly
-        score above 0.7 (indicating statistically unusual content relative
-        to known-good documents) triggers REQUIRES_HUMAN_REVIEW; anomaly
-        scoring provides a probabilistic early-warning layer complementing
-        cryptographic integrity checks.
-
-    References
-    ----------
-    OWASP Top 10 for Agentic Applications 2026 (December 2025)
-        ASI01: Agent Goal Hijack — Indirect Prompt Injection
-        ASI04: Data Poisoning — Corrupted Retrieval Sources
-    MITRE ATLAS v5.1 (November 2025)
-        AML.T0051.000 — Indirect Prompt Injection
-        AML.T0069 — RAG Database Prompting
-    CSA Agentic Trust Framework v1.0 (February 2026)
-        Level 2 Controlled Production — injection detection required
-    """
+    """OWASPAgenticInjectionFilter: illustrative metadata policy; see module limitations."""
 
     FILTER_NAME: str = "OWASP_AGENTIC_INJECTION_FILTER"
 
@@ -214,40 +85,21 @@ class OWASPAgenticInjectionFilter:
                     "routed into agent context"
                 ),
                 reason=(
-                    "External input routed into agent context without injection "
-                    "detection violates OWASP Agentic Top 10 2026 ASI01 (Agent Goal "
-                    "Hijack) — indirect prompt injection embeds adversarial instructions "
-                    "in retrieved documents, tool outputs, web pages, or memory entries "
-                    "that redirect the agent's goal state when processed; every external "
-                    "input channel must pass through an injection detection layer "
-                    "(pattern matching, semantic outlier detection, or sandboxed "
-                    "pre-processing) before influencing the agent's context window; "
-                    "processing unvalidated external input is the primary attack vector "
-                    "for agent goal hijack and is unconditionally denied under the "
-                    "OWASP Agentic Top 10 2026 baseline"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
 
-        # ASI04 — retrieved document without integrity/checksum verification
+        # ASI06 — retrieved document without integrity/checksum verification
         if doc.get("retrieved_document") and not doc.get("document_integrity_verified"):
             return FilterResult(
                 decision="DENIED",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI04 — Data Poisoning: "
+                    "OWASP Agentic Top 10 2026 ASI06 — Memory & Context Poisoning: "
                     "document_integrity_verified required for all retrieved documents"
                 ),
                 reason=(
-                    "Retrieved document without integrity/checksum verification "
-                    "violates OWASP Agentic Top 10 2026 ASI04 (Data Poisoning) — an "
-                    "attacker who can write to a vector store, document repository, or "
-                    "web-accessible retrieval source can insert adversarial content that "
-                    "will appear in the agent's context when retrieved; cryptographic "
-                    "integrity verification (hash comparison, digital signature, or "
-                    "content-addressed storage) ensures the retrieved document has not "
-                    "been modified since it was indexed by a trusted source; documents "
-                    "without integrity verification must not be routed to an agent's "
-                    "context under the OWASP Agentic Top 10 2026 ASI04 control"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
@@ -262,112 +114,42 @@ class OWASPAgenticInjectionFilter:
                     "agent context"
                 ),
                 reason=(
-                    "Tool output routed back into agent context without sanitisation "
-                    "violates OWASP Agentic Top 10 2026 ASI01 (Agent Goal Hijack — "
-                    "indirect injection via tool outputs) — tool return values may "
-                    "contain attacker-controlled content if the tool accessed external "
-                    "data sources, executed shell commands, or fetched web content; "
-                    "raw tool output must be sanitised (malicious instruction pattern "
-                    "stripping, encoding normalisation, and semantic intent check) "
-                    "before re-injection into the agent's context window; unsanitised "
-                    "tool output is a confirmed attack vector per MITRE ATLAS v5.1 "
-                    "AML.T0067 and is unconditionally denied under ASI01"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
 
-        # ASI04 anomaly — retrieved content with anomaly score above threshold
+        # ASI06 anomaly — retrieved content with anomaly score above threshold
         anomaly_score = doc.get("anomaly_score", 0)
         if isinstance(anomaly_score, (int, float)) and anomaly_score > _ANOMALY_SCORE_THRESHOLD:
             return FilterResult(
                 decision="REQUIRES_HUMAN_REVIEW",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI04 — Data Poisoning: retrieved "
+                    "OWASP Agentic Top 10 2026 ASI06 — Memory & Context Poisoning: retrieved "
                     f"content anomaly score {anomaly_score:.2f} exceeds threshold "
                     f"{_ANOMALY_SCORE_THRESHOLD:.1f}; human review required before "
                     "routing to agent context"
                 ),
-                reason=(
-                    f"Retrieved content with anomaly score {anomaly_score:.2f} exceeds "
-                    f"the {_ANOMALY_SCORE_THRESHOLD:.1f} threshold and requires human "
-                    "review under OWASP Agentic Top 10 2026 ASI04 (Data Poisoning) — "
-                    "semantic anomaly scoring measures the statistical distance of "
-                    "retrieved content from known-good document distributions; a score "
-                    "above the threshold indicates content that is unusually dissimilar "
-                    "to the indexed baseline, which may indicate adversarial content "
-                    "injection, corruption of the retrieval source, or content that was "
-                    "not present during the last integrity audit; human review is "
-                    "required to determine whether the anomalous content is legitimate "
-                    "before it is routed to the agent's context window"
-                ),
+                reason=("Local review threshold reached in caller-supplied metadata; not an OWASP-mandated threshold."),
                 filter_name=self.FILTER_NAME,
             )
 
         return FilterResult(
             decision="PERMITTED",
-            regulation=("OWASP Agentic Top 10 2026 ASI01 (Agent Goal Hijack) + ASI04 (Data Poisoning)"),
-            reason="OWASP Agentic injection and data poisoning controls — compliant",
+            regulation=("OWASP Agentic Top 10 2026 ASI01 (Agent Goal Hijack) + ASI06 (Memory & Context Poisoning)"),
+            reason="Local demonstration policy evaluated from caller-supplied metadata; not independent verification.",
             filter_name=self.FILTER_NAME,
         )
 
 
 # ---------------------------------------------------------------------------
-# Layer 2 — ASI02 Unsafe Tool Use + ASI05 Privilege Misuse + ASI06 Supply Chain
+# Layer 2 — ASI02 Tool Misuse + ASI03 Identity & Privilege Abuse + ASI04 Supply Chain
 # ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class OWASPAgenticToolSafetyFilter:
-    """
-    Layer 2: OWASP Agentic Top 10 2026 — ASI02 Unsafe Tool Use,
-    ASI05 Privilege Misuse, and ASI06 Supply Chain Risks.
-
-    ASI02 (Unsafe Tool Use) addresses typosquatting attacks on tool names
-    and over-privileged tool access.  An attacker registers a tool with a
-    name visually similar to a legitimate tool; the agent selects it based
-    on name matching.  The correct mitigation is an explicit allowlist — not
-    a blocklist — so that only cryptographically verified, pre-approved tools
-    can be invoked.
-
-    ASI05 (Privilege Misuse) addresses inherited and retained privileges.
-    Agents that inherit user credentials or retain cross-session privileges
-    become persistent high-privilege entities.  JIT (just-in-time) access —
-    credentials issued at session start and revoked at session end — is the
-    required mitigation.
-
-    ASI06 (Supply Chain Risks) addresses compromised plugins and MCP packages.
-    The first malicious MCP package (September 2025) remained undetected for
-    two weeks; CVE-2025-6514 documented command injection via malicious MCP
-    server tool definitions.  Cryptographic signature verification of all
-    tool definitions is required.
-
-    Four controls apply:
-
-    (a) ASI02 Tool Allowlist — tool invocation without allowlist verification
-        is denied; allowlist enforcement (not blocklisting) is the baseline
-        control for ASI02;
-    (b) ASI05 Cross-Session Privileges — agent operating with persistent
-        cross-session privileges is denied; credentials must be session-scoped
-        and JIT-issued;
-    (c) ASI06 Tool Signature — tool/plugin without cryptographic signature
-        verification is denied; MCP server identity and tool definition
-        integrity must be verified;
-    (d) ASI02 Approval Gate — tool requiring approval invoked without human
-        confirmation triggers REQUIRES_HUMAN_REVIEW.
-
-    References
-    ----------
-    OWASP Top 10 for Agentic Applications 2026 (December 2025)
-        ASI02: Unsafe Tool Use — Typosquatting, Over-Privilege
-        ASI05: Privilege Misuse — Inherited/Retained Privileges
-        ASI06: Supply Chain Risks — Compromised Plugins, Malicious MCP
-    CVE-2025-6514 — Command injection in malicious MCP servers
-    NIST AI Agent Standards Initiative (February 2026)
-        AI Agent Interoperability Profile (Q4 2026) — JIT access requirement
-    CSA Agentic Trust Framework v1.0 (February 2026)
-        Level 2 Controlled Production — tool allowlist required
-        Level 3 Trusted Production — cryptographic verification required
-    """
+    """OWASPAgenticToolSafetyFilter: illustrative metadata policy; see module limitations."""
 
     FILTER_NAME: str = "OWASP_AGENTIC_TOOL_SAFETY_FILTER"
 
@@ -377,73 +159,40 @@ class OWASPAgenticToolSafetyFilter:
             return FilterResult(
                 decision="DENIED",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI02 — Unsafe Tool Use: "
+                    "OWASP Agentic Top 10 2026 ASI02 — Tool Misuse: "
                     "tool_allowlist_verified required for all tool invocations"
                 ),
                 reason=(
-                    "Tool invocation without allowlist verification violates OWASP "
-                    "Agentic Top 10 2026 ASI02 (Unsafe Tool Use) — typosquatting "
-                    "attacks register tools with names visually similar to legitimate "
-                    "tools (e.g. 'searh_web' for 'search_web'); agents selecting tools "
-                    "by name similarity without an explicit allowlist will select the "
-                    "malicious tool; the correct control is an explicit allowlist of "
-                    "approved tools identified by exact name and cryptographic "
-                    "signature, not a blocklist of known-bad names which can never be "
-                    "complete; tool invocations against tools not present in the "
-                    "verified allowlist are unconditionally denied under ASI02 as "
-                    "confirmed by the CSA Agentic Trust Framework Level 2 requirement"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
 
-        # ASI05 — agent operating with persistent cross-session privileges
+        # ASI03 — agent operating with persistent cross-session privileges
         if doc.get("cross_session_privileges"):
             return FilterResult(
                 decision="DENIED",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI05 — Privilege Misuse: "
+                    "OWASP Agentic Top 10 2026 ASI03 — Identity & Privilege Abuse: "
                     "cross_session_privileges must be False; agent credentials must "
                     "be session-scoped and JIT-issued"
                 ),
                 reason=(
-                    "Agent operating with persistent cross-session privileges violates "
-                    "OWASP Agentic Top 10 2026 ASI05 (Privilege Misuse) — agents that "
-                    "retain credentials, tokens, or capability grants from previous "
-                    "sessions become persistent high-privilege entities; a compromised "
-                    "or injected agent with cross-session privileges can access "
-                    "resources far beyond the scope of any single legitimate request; "
-                    "the required mitigation is JIT (just-in-time) access: agent "
-                    "credentials issued at session start, scoped to the authenticated "
-                    "session, and revoked at session end; this requirement is "
-                    "formalised in the NIST AI Agent Interoperability Profile (Q4 2026) "
-                    "and the CSA ATF Level 2 Controlled Production baseline"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
 
-        # ASI06 — tool/plugin without cryptographic signature verification
+        # ASI04 — tool/plugin without cryptographic signature verification
         if doc.get("tool_plugin_loaded") and not doc.get("tool_signature_verified"):
             return FilterResult(
                 decision="DENIED",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI06 — Supply Chain Risks: "
+                    "OWASP Agentic Top 10 2026 ASI04 — Agentic Supply Chain Vulnerabilities: "
                     "tool_signature_verified required for all loaded tools and plugins "
-                    "(see also CVE-2025-6514)"
                 ),
                 reason=(
-                    "Tool or plugin loaded without cryptographic signature verification "
-                    "violates OWASP Agentic Top 10 2026 ASI06 (Supply Chain Risks) — "
-                    "the first confirmed malicious MCP package (September 2025) remained "
-                    "undetected for approximately two weeks; CVE-2025-6514 documented "
-                    "command injection in malicious MCP server tool definitions; any "
-                    "unverified dependency in the tool supply chain is a potential "
-                    "lateral movement vector; all MCP server identities and tool "
-                    "definition schemas must be verified against cryptographic "
-                    "signatures from a trusted, internal tool registry before the tool "
-                    "is registered for agent use; loading tools from public registries "
-                    "without signature verification is unconditionally denied under "
-                    "ASI06 as confirmed by the CSA ATF Level 3 Trusted Production "
-                    "requirement"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
@@ -453,20 +202,11 @@ class OWASPAgenticToolSafetyFilter:
             return FilterResult(
                 decision="REQUIRES_HUMAN_REVIEW",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI02 — Unsafe Tool Use (approval gate): "
+                    "OWASP Agentic Top 10 2026 ASI02 — Tool Misuse (approval gate): "
                     "human_approved required before invoking tools marked requires_approval"
                 ),
                 reason=(
-                    "Tool requiring human approval invoked without confirmation triggers "
-                    "REQUIRES_HUMAN_REVIEW under OWASP Agentic Top 10 2026 ASI02 "
-                    "(Unsafe Tool Use — approval gate) — tools with significant side "
-                    "effects (send email, execute shell, modify database, purchase "
-                    "resources) must be designated as requiring approval; when an agent "
-                    "selects such a tool, execution must pause and route to a human "
-                    "operator for confirmation before the tool call is executed; "
-                    "this gate is distinct from the tool allowlist control: the tool "
-                    "may be on the allowlist and signature-verified, but still require "
-                    "per-invocation human approval based on its effect class"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
@@ -474,139 +214,70 @@ class OWASPAgenticToolSafetyFilter:
         return FilterResult(
             decision="PERMITTED",
             regulation=(
-                "OWASP Agentic Top 10 2026 ASI02 (Unsafe Tool Use) + "
-                "ASI05 (Privilege Misuse) + ASI06 (Supply Chain Risks)"
+                "OWASP Agentic Top 10 2026 ASI02 (Tool Misuse) + "
+                "ASI03 (Identity & Privilege Abuse) + ASI04 (Agentic Supply Chain Vulnerabilities)"
             ),
-            reason="OWASP Agentic tool safety and supply chain controls — compliant",
+            reason="Local demonstration policy evaluated from caller-supplied metadata; not independent verification.",
             filter_name=self.FILTER_NAME,
         )
 
 
 # ---------------------------------------------------------------------------
-# Layer 3 — ASI03 Data Leakage + ASI07 Human-Agent Trust Exploitation
+# Layer 3 — LOCAL-DLP Data Leakage + ASI09 Human-Agent Trust Exploitation
 # ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class OWASPAgenticDataLeakageFilter:
-    """
-    Layer 3: OWASP Agentic Top 10 2026 — ASI03 Data Leakage and
-    ASI07 Human-Agent Trust Exploitation.
-
-    ASI03 (Data Leakage) addresses PII and sensitive data in agent responses
-    and cross-session memory contamination.  Agents retrieve documents and
-    synthesise responses; without DLP scanning of outputs, sensitive data can
-    appear in responses to users not authorised to receive it.  Memory systems
-    persisting across sessions create a second vector: data from one session
-    contaminating another user's context.
-
-    ASI07 (Human-Agent Trust Exploitation) addresses the trust asymmetry
-    between users and AI agents.  Users anthropomorphize agents — attributing
-    intent, trustworthiness, and authority beyond the agent's actual scope.
-    An adversary who hijacks an agent via ASI01 or ASI06 can exploit this
-    trust to extract sensitive information, manipulate decisions, or perform
-    social engineering that would be immediately suspicious from a human.
-
-    Four controls apply:
-
-    (a) ASI03 DLP — agent output containing PII or sensitive data without
-        DLP scan is denied; DLP scanning must occur before output delivery;
-    (b) ASI03 Memory Scope — agent memory not session-scoped is denied;
-        cross-session memory creates cross-user contamination risk that
-        cannot be addressed by output scanning alone;
-    (c) ASI07 Capability Scope — agent claiming capabilities beyond its
-        documented actual scope is denied; capability scope verification
-        detects when a hijacked agent misrepresents its authority;
-    (d) ASI07 Confidence — agent output below the 0.6 confidence threshold
-        without confidence disclosure triggers REQUIRES_HUMAN_REVIEW.
-
-    References
-    ----------
-    OWASP Top 10 for Agentic Applications 2026 (December 2025)
-        ASI03: Data Leakage — PII in Outputs, Memory Contamination
-        ASI07: Human-Agent Trust Exploitation — Anthropomorphization
-    CSA Agentic Trust Framework v1.0 (February 2026)
-        Level 2 Controlled Production — DLP on outputs, session-scoped memory
-    NIST AI 600-1 GenAI Profile (July 2024) — output validation requirements
-    """
+    """OWASPAgenticDataLeakageFilter: illustrative metadata policy; see module limitations."""
 
     FILTER_NAME: str = "OWASP_AGENTIC_DATA_LEAKAGE_FILTER"
 
     def filter(self, doc: dict[str, Any]) -> FilterResult:
-        # ASI03 — agent output containing PII/sensitive data without DLP scan
+        # LOCAL-DLP — agent output containing PII/sensitive data without DLP scan
         if doc.get("agent_output") and not doc.get("dlp_scan_passed"):
             return FilterResult(
                 decision="DENIED",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI03 — Data Leakage: "
+                    "Supplemental local control LOCAL-DLP — Data Leakage: "
                     "dlp_scan_passed required for all agent outputs before delivery"
                 ),
                 reason=(
-                    "Agent output containing PII or sensitive data without DLP scan "
-                    "violates OWASP Agentic Top 10 2026 ASI03 (Data Leakage) — agents "
-                    "retrieve documents and synthesise responses; without DLP (Data Loss "
-                    "Prevention) scanning of agent outputs, sensitive data including PII, "
-                    "authentication credentials, health records, financial data, and "
-                    "proprietary information can appear in responses to users who are not "
-                    "authorised to receive it; DLP scanning must occur as the final gate "
-                    "before agent output is delivered to any user or downstream system; "
-                    "outputs that fail or have not been scanned are unconditionally denied "
-                    "under OWASP Agentic Top 10 2026 ASI03"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
 
-        # ASI03 — agent memory not session-scoped (cross-user contamination)
+        # ASI06 — agent memory not session-scoped (cross-user contamination)
         if doc.get("agent_memory_access") and not doc.get("session_scoped_memory"):
             return FilterResult(
                 decision="DENIED",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI03 — Data Leakage (memory): "
+                    "OWASP Agentic Top 10 2026 ASI06 — Memory & Context Poisoning (memory): "
                     "session_scoped_memory required; cross-session memory creates "
                     "cross-user data contamination risk"
                 ),
                 reason=(
-                    "Agent memory access not session-scoped violates OWASP Agentic "
-                    "Top 10 2026 ASI03 (Data Leakage — memory contamination) — memory "
-                    "systems that persist across sessions (episodic memory, semantic "
-                    "memory, and working memory caches) create cross-user contamination "
-                    "risk: data from User A's session can appear in User B's context "
-                    "when retrieved from the shared memory store; this is a data "
-                    "leakage vulnerability that cannot be addressed by output DLP "
-                    "scanning alone because the leakage occurs at the memory retrieval "
-                    "layer, before the output is generated; all memory must be scoped "
-                    "to the authenticated session and user, purged or encrypted with "
-                    "session-specific keys on session end, per CSA ATF Level 2"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
 
-        # ASI07 — agent claiming capabilities beyond its actual scope
+        # ASI09 — agent claiming capabilities beyond its actual scope
         if doc.get("claimed_capabilities_exceed_actual"):
             return FilterResult(
                 decision="DENIED",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI07 — Human-Agent Trust Exploitation: "
+                    "OWASP Agentic Top 10 2026 ASI09 — Human-Agent Trust Exploitation: "
                     "agent must not claim capabilities beyond its documented actual scope"
                 ),
                 reason=(
-                    "Agent claiming capabilities beyond its actual documented scope "
-                    "violates OWASP Agentic Top 10 2026 ASI07 (Human-Agent Trust "
-                    "Exploitation) — users anthropomorphize AI agents, attributing "
-                    "intent, authority, and trustworthiness beyond the agent's actual "
-                    "capability scope; an adversary who hijacks an agent via indirect "
-                    "injection (ASI01) or supply chain compromise (ASI06) can exploit "
-                    "this trust asymmetry by causing the agent to claim capabilities or "
-                    "authority it does not have, manipulating users into sharing "
-                    "sensitive information or taking actions they would not otherwise "
-                    "take; capability scope verification detects when an agent output "
-                    "asserts capabilities inconsistent with the agent's documented "
-                    "specification; such outputs are unconditionally denied under ASI07"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
 
-        # ASI07 — agent output below confidence threshold without disclosure
+        # ASI09 — agent output below confidence threshold without disclosure
         confidence_score = doc.get("confidence_score", 1.0)
         if (
             isinstance(confidence_score, (int, float))
@@ -616,94 +287,31 @@ class OWASPAgenticDataLeakageFilter:
             return FilterResult(
                 decision="REQUIRES_HUMAN_REVIEW",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI07 — Human-Agent Trust Exploitation: "
+                    "OWASP Agentic Top 10 2026 ASI09 — Human-Agent Trust Exploitation: "
                     f"confidence_score {confidence_score:.2f} below threshold "
                     f"{_CONFIDENCE_THRESHOLD:.1f}; confidence_disclosed required or "
                     "human review must be triggered"
                 ),
-                reason=(
-                    f"Agent output with confidence score {confidence_score:.2f} below "
-                    f"threshold {_CONFIDENCE_THRESHOLD:.1f} without confidence "
-                    "disclosure requires human review under OWASP Agentic Top 10 2026 "
-                    "ASI07 (Human-Agent Trust Exploitation — confidence misrepresentation) "
-                    "— users trust agent outputs as authoritative; an agent that delivers "
-                    "low-confidence outputs without disclosing uncertainty exploits the "
-                    "user's tendency to over-trust AI systems; low-confidence outputs "
-                    "must either include an explicit confidence disclosure in the response "
-                    "metadata or be escalated to human review before delivery; this "
-                    "aligns with NIST AI 600-1 GenAI Profile output validation requirements "
-                    "and the CSA ATF Level 2 transparency controls"
-                ),
+                reason=("Local review threshold reached in caller-supplied metadata; not an OWASP-mandated threshold."),
                 filter_name=self.FILTER_NAME,
             )
 
         return FilterResult(
             decision="PERMITTED",
-            regulation=("OWASP Agentic Top 10 2026 ASI03 (Data Leakage) + ASI07 (Human-Agent Trust Exploitation)"),
-            reason="OWASP Agentic data leakage and trust exploitation controls — compliant",
+            regulation=("Supplemental local control LOCAL-DLP (Data Leakage) + ASI09 (Human-Agent Trust Exploitation)"),
+            reason="Local demonstration policy evaluated from caller-supplied metadata; not independent verification.",
             filter_name=self.FILTER_NAME,
         )
 
 
 # ---------------------------------------------------------------------------
-# Layer 4 — ASI08 Cascading Failures + ASI09 Monitoring + ASI10 Composition
+# Layer 4 — ASI08 Cascading Failures + LOCAL-AUDIT Monitoring + ASI07 Composition
 # ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class OWASPAgenticGovernanceFilter:
-    """
-    Layer 4: OWASP Agentic Top 10 2026 — ASI08 Cascading Failures,
-    ASI09 Inadequate Monitoring & Audit, and ASI10 Unvalidated Agent
-    Composition.
-
-    ASI08 (Cascading Failures) addresses irreversible actions executed before
-    human oversight can detect anomalies.  Agents execute irreversible actions
-    (emails sent, files deleted, APIs called, purchases made) as readily as
-    reversible ones unless explicitly constrained.  In multi-step workflows,
-    a single compromised early step can trigger a cascade of irreversible
-    downstream actions.
-
-    ASI09 (Inadequate Monitoring & Audit) addresses the observability gap
-    in agentic systems.  A single user interaction may trigger dozens of tool
-    calls, memory reads, and sub-agent invocations.  Without per-step audit
-    trails, it is impossible to reconstruct what the agent did, why it did it,
-    and what data it accessed.
-
-    ASI10 (Unvalidated Agent Composition) addresses multi-agent trust
-    boundaries.  In multi-agent systems, messages from subagents carry no
-    inherent authority and may have been generated by a compromised agent,
-    injected by an adversary, or fabricated entirely.  Cryptographic sender
-    identity verification is required.
-
-    Four controls apply:
-
-    (a) ASI08 Rollback — irreversible action without rollback capability
-        is denied; compensation transactions must be defined for every
-        write operation;
-    (b) ASI09 Audit Trail — agent action without audit trail enabled is
-        denied; structured audit records must be emitted for every tool
-        invocation, memory access, and decision step;
-    (c) ASI10 Sender Verification — multi-agent message without sender
-        identity verification is denied; agent-specific cryptographic
-        credentials must be used for A2A communication;
-    (d) ASI08 Human-in-the-Loop — high-impact action without human-in-the-
-        loop gate triggers REQUIRES_HUMAN_REVIEW.
-
-    References
-    ----------
-    OWASP Top 10 for Agentic Applications 2026 (December 2025)
-        ASI08: Cascading Failures — Irreversible Actions, Runaway Execution
-        ASI09: Inadequate Monitoring & Audit — No Observability
-        ASI10: Unvalidated Agent Composition — Multi-Agent Trust Boundaries
-    NIST AI Agent Standards Initiative (February 2026)
-        AI Agent Interoperability Profile (Q4 2026) — audit record schema,
-        A2A sender identity requirements
-    CSA Agentic Trust Framework v1.0 (February 2026)
-        Level 3 Trusted Production — full audit trail, formal capability
-        attestation
-        Level 4 Autonomous — continuous monitoring, quarterly red team
-    """
+    """OWASPAgenticGovernanceFilter: illustrative metadata policy; see module limitations."""
 
     FILTER_NAME: str = "OWASP_AGENTIC_GOVERNANCE_FILTER"
 
@@ -717,71 +325,35 @@ class OWASPAgenticGovernanceFilter:
                     "rollback_available required before executing any irreversible action"
                 ),
                 reason=(
-                    "Irreversible action without rollback capability violates OWASP "
-                    "Agentic Top 10 2026 ASI08 (Cascading Failures) — agents execute "
-                    "irreversible actions (email sends, file deletes, API state changes, "
-                    "purchases, database writes) as readily as reversible ones unless "
-                    "explicitly constrained; in a multi-step workflow, a single "
-                    "compromised or erroneously-directed early step can trigger a "
-                    "cascade of irreversible downstream actions before any human "
-                    "oversight mechanism detects the anomaly; rollback capability "
-                    "(compensation transactions, undo APIs, soft-delete patterns) must "
-                    "be verified as available before any irreversible action executes; "
-                    "if rollback is not available, the action must be redesigned to be "
-                    "reversible or must be gated on explicit human approval per ASI08"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
 
-        # ASI09 — agent action without audit trail
+        # LOCAL-AUDIT — agent action without audit trail
         if doc.get("agent_action") and not doc.get("audit_trail_enabled"):
             return FilterResult(
                 decision="DENIED",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI09 — Inadequate Monitoring & Audit: "
+                    "Supplemental local control LOCAL-AUDIT — Inadequate Monitoring & Audit: "
                     "audit_trail_enabled required for all agent actions"
                 ),
                 reason=(
-                    "Agent action without audit trail violates OWASP Agentic Top 10 "
-                    "2026 ASI09 (Inadequate Monitoring & Audit) — agentic systems are "
-                    "fundamentally harder to audit than request-response systems; a "
-                    "single user interaction may trigger dozens of tool calls, memory "
-                    "reads, and sub-agent invocations; without per-step audit trails "
-                    "it is impossible to reconstruct what the agent did, why it did it, "
-                    "and what data it accessed during an incident investigation; "
-                    "structured audit records must be emitted for every tool invocation, "
-                    "memory access, and agent decision step, including: actor identity, "
-                    "session ID, tool name, input hash, output hash, timestamp, and "
-                    "reasoning trace where available; records must be stored in an "
-                    "append-only, tamper-evident log per the NIST AI Agent "
-                    "Interoperability Profile audit record schema"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
 
-        # ASI10 — multi-agent message without sender identity verification
+        # ASI07 — multi-agent message without sender identity verification
         if doc.get("multi_agent_message") and not doc.get("sender_verified"):
             return FilterResult(
                 decision="DENIED",
                 regulation=(
-                    "OWASP Agentic Top 10 2026 ASI10 — Unvalidated Agent Composition: "
+                    "OWASP Agentic Top 10 2026 ASI07 — Insecure Inter-Agent Communication: "
                     "sender_verified required for all multi-agent messages"
                 ),
                 reason=(
-                    "Multi-agent message without sender identity verification violates "
-                    "OWASP Agentic Top 10 2026 ASI10 (Unvalidated Agent Composition) — "
-                    "in multi-agent systems (orchestrator-subagent delegation, peer "
-                    "agent coordination, human-agent-agent pipelines) messages from "
-                    "other agents carry no inherent authority; a message claiming to "
-                    "be from a trusted subagent may have been generated by a compromised "
-                    "agent, injected by an adversary into the message channel, or "
-                    "fabricated entirely; without cryptographic sender verification "
-                    "using agent-specific credentials (not inherited user credentials), "
-                    "any agent in the pipeline can be impersonated; the NIST AI Agent "
-                    "Interoperability Profile (Q4 2026) and the A2A protocol both "
-                    "require verified sender identity fields in all agent-to-agent "
-                    "messages; unverified multi-agent messages are unconditionally "
-                    "denied under ASI10"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
@@ -795,17 +367,7 @@ class OWASPAgenticGovernanceFilter:
                     "human_in_loop required for all high-impact agent actions"
                 ),
                 reason=(
-                    "High-impact agent action without human-in-the-loop gate requires "
-                    "human review under OWASP Agentic Top 10 2026 ASI08 (Cascading "
-                    "Failures — human oversight) — actions classified as high-impact "
-                    "(significant financial cost, data deletion, public communications, "
-                    "security configuration changes, external API state modifications) "
-                    "must pause execution and route to a human operator for confirmation "
-                    "before proceeding; this gate is distinct from the rollback control: "
-                    "the action may have rollback capability and still require per-"
-                    "invocation human approval based on its impact class; the CSA ATF "
-                    "Level 3 Trusted Production requirement mandates HITL checkpoints "
-                    "for all high-impact operations regardless of rollback availability"
+                    "Local demonstration policy evaluated from caller-supplied metadata; not independent verification."
                 ),
                 filter_name=self.FILTER_NAME,
             )
@@ -814,10 +376,10 @@ class OWASPAgenticGovernanceFilter:
             decision="PERMITTED",
             regulation=(
                 "OWASP Agentic Top 10 2026 ASI08 (Cascading Failures) + "
-                "ASI09 (Inadequate Monitoring & Audit) + "
-                "ASI10 (Unvalidated Agent Composition)"
+                "LOCAL-AUDIT (Inadequate Monitoring & Audit) + "
+                "ASI07 (Insecure Inter-Agent Communication)"
             ),
-            reason="OWASP Agentic governance, monitoring, and composition controls — compliant",
+            reason="Local demonstration policy evaluated from caller-supplied metadata; not independent verification.",
             filter_name=self.FILTER_NAME,
         )
 
@@ -828,15 +390,7 @@ class OWASPAgenticGovernanceFilter:
 
 
 class OWASPLangChainPolicyGuard:
-    """
-    LangChain integration — wraps the four OWASP Agentic governance filters
-    as a LangChain-compatible ``Runnable``-style tool guard.
-
-    Implements ``invoke(doc)`` and ``ainvoke(doc)`` so the guard can be
-    inserted into a LangChain chain or used as a tool callback.  Raises
-    ``PermissionError`` with the regulation citation when any filter returns
-    DENIED.
-    """
+    """OWASPLangChainPolicyGuard: illustrative metadata policy; see module limitations."""
 
     def __init__(self, filter_instance: Any | None = None) -> None:
         if filter_instance is not None:
@@ -876,18 +430,11 @@ class OWASPLangChainPolicyGuard:
 
 
 class OWASPCrewAIGovernanceGuard:
-    """
-    CrewAI integration — wraps an OWASP Agentic governance filter as a
-    CrewAI ``BaseTool``-compatible guard.
-
-    Implements ``_run(doc)`` so this class can be used as a drop-in CrewAI
-    tool wrapper.  Raises ``PermissionError`` with the regulation citation
-    when the filter returns DENIED.
-    """
+    """OWASPCrewAIGovernanceGuard: illustrative metadata policy; see module limitations."""
 
     name: str = "OWASPAgenticGovernanceGuard"
     description: str = (
-        "Enforces OWASP Agentic Top 10 2026 governance policies (Injection, "
+        "Evaluates local OWASP-related demonstration policies (Injection, "
         "Tool Safety, Data Leakage, Governance) on documents processed by a "
         "CrewAI agent."
     )
@@ -903,15 +450,7 @@ class OWASPCrewAIGovernanceGuard:
 
 
 class OWASPAutoGenGovernedAgent:
-    """
-    AutoGen integration — duck-typed ``ConversableAgent`` wrapper enforcing
-    OWASP Agentic governance on each ``generate_reply`` call.
-
-    NOTE: AutoGen (``pyautogen``) is in maintenance mode as of 2026.  New
-    projects should use ``OWASPMAFPolicyMiddleware`` for the Microsoft Agent
-    Framework.  Raises ``PermissionError`` with the regulation citation when
-    the filter returns DENIED.
-    """
+    """OWASPAutoGenGovernedAgent: illustrative metadata policy; see module limitations."""
 
     def __init__(self, filter_instance: Any) -> None:
         self._filter = filter_instance
@@ -929,15 +468,7 @@ class OWASPAutoGenGovernedAgent:
 
 
 class OWASPSemanticKernelPlugin:
-    """
-    Semantic Kernel integration — wraps an OWASP Agentic governance filter
-    as an SK ``Plugin``-compatible function provider.
-
-    NOTE: Semantic Kernel is in maintenance mode as of 2026.  New projects
-    should use ``OWASPMAFPolicyMiddleware`` for the Microsoft Agent Framework.
-    Raises ``PermissionError`` with the regulation citation when the filter
-    returns DENIED.
-    """
+    """OWASPSemanticKernelPlugin: illustrative metadata policy; see module limitations."""
 
     def __init__(self, filter_instance: Any) -> None:
         self._filter = filter_instance
@@ -950,14 +481,7 @@ class OWASPSemanticKernelPlugin:
 
 
 class OWASPLlamaIndexWorkflowGuard:
-    """
-    LlamaIndex integration — workflow guard step enforcing OWASP Agentic
-    governance between retrieval and synthesis steps.
-
-    Implements ``process_event(doc)`` compatible with LlamaIndex
-    ``WorkflowStep`` protocol (LlamaIndex 0.14.x).  Raises ``PermissionError``
-    with the regulation citation when the filter returns DENIED.
-    """
+    """OWASPLlamaIndexWorkflowGuard: illustrative metadata policy; see module limitations."""
 
     def __init__(self, filter_instance: Any) -> None:
         self._filter = filter_instance
@@ -970,14 +494,7 @@ class OWASPLlamaIndexWorkflowGuard:
 
 
 class OWASPHaystackGovernanceComponent:
-    """
-    Haystack integration — ``@component``-compatible governance filter for
-    Haystack 2.x pipelines (current: Haystack 2.27.0).
-
-    Implements ``run(documents)`` following the Haystack component protocol.
-    Filters each document dict individually; denied documents are excluded
-    from the output.  Does not raise; returns only permitted documents.
-    """
+    """OWASPHaystackGovernanceComponent: illustrative metadata policy; see module limitations."""
 
     def __init__(self, filter_instance: Any) -> None:
         self._filter = filter_instance
@@ -988,14 +505,7 @@ class OWASPHaystackGovernanceComponent:
 
 
 class OWASPDSPyGovernanceModule:
-    """
-    DSPy integration — governance-enforcing wrapper for DSPy ``Module``
-    objects (DSPy >= 2.5.0, Pydantic v2).
-
-    Implements ``forward(doc, **kwargs)`` and delegates to the wrapped module
-    only after the filter passes.  Raises ``PermissionError`` with the
-    regulation citation when the filter returns DENIED.
-    """
+    """OWASPDSPyGovernanceModule: illustrative metadata policy; see module limitations."""
 
     def __init__(self, filter_instance: Any, module: Any) -> None:
         self._filter = filter_instance
@@ -1012,15 +522,7 @@ class OWASPDSPyGovernanceModule:
 
 
 class OWASPMAFPolicyMiddleware:
-    """
-    Microsoft Agent Framework (MAF) integration — middleware intercepting
-    agent messages and applying OWASP Agentic governance filters.
-
-    MAF is the enterprise successor to AutoGen and Semantic Kernel (released
-    2025).  Implements ``process(message, next_handler)`` so this middleware
-    can be registered in an MAF agent pipeline.  Raises ``PermissionError``
-    with the regulation citation when the filter returns DENIED.
-    """
+    """OWASPMAFPolicyMiddleware: illustrative metadata policy; see module limitations."""
 
     def __init__(self, filter_instance: Any) -> None:
         self._filter = filter_instance
@@ -1062,10 +564,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 2. Injection — retrieved doc without integrity check → DENIED (ASI04)
+    # 2. Injection — retrieved doc without integrity check → DENIED (ASI06)
     # ------------------------------------------------------------------
     _show(
-        "ASI04 — Retrieved Document Without Integrity Verification",
+        "ASI06 — Retrieved Document Without Integrity Verification",
         OWASPAgenticInjectionFilter().filter(
             {
                 "retrieved_document": True,
@@ -1088,10 +590,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 4. Injection — anomaly score 0.85 → REQUIRES_HUMAN_REVIEW (ASI04)
+    # 4. Injection — anomaly score 0.85 → REQUIRES_HUMAN_REVIEW (ASI06)
     # ------------------------------------------------------------------
     _show(
-        "ASI04 — High Anomaly Score Requires Human Review",
+        "ASI06 — High Anomaly Score Requires Human Review",
         OWASPAgenticInjectionFilter().filter(
             {
                 "anomaly_score": 0.85,
@@ -1113,10 +615,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 6. Tool Safety — cross-session privileges → DENIED (ASI05)
+    # 6. Tool Safety — cross-session privileges → DENIED (ASI03)
     # ------------------------------------------------------------------
     _show(
-        "ASI05 — Agent With Cross-Session Persistent Privileges",
+        "ASI03 — Agent With Cross-Session Persistent Privileges",
         OWASPAgenticToolSafetyFilter().filter(
             {
                 "cross_session_privileges": True,
@@ -1125,10 +627,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 7. Tool Safety — plugin without signature → DENIED (ASI06)
+    # 7. Tool Safety — plugin without signature → DENIED (ASI04)
     # ------------------------------------------------------------------
     _show(
-        "ASI06 — Tool Plugin Without Cryptographic Signature Verification",
+        "ASI04 — Tool Plugin Without Cryptographic Signature Verification",
         OWASPAgenticToolSafetyFilter().filter(
             {
                 "tool_plugin_loaded": True,
@@ -1151,10 +653,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 9. Data Leakage — output without DLP scan → DENIED (ASI03)
+    # 9. Data Leakage — output without DLP scan → DENIED (LOCAL-DLP)
     # ------------------------------------------------------------------
     _show(
-        "ASI03 — Agent Output Without DLP Scan",
+        "LOCAL-DLP — Agent Output Without DLP Scan",
         OWASPAgenticDataLeakageFilter().filter(
             {
                 "agent_output": True,
@@ -1164,10 +666,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 10. Data Leakage — memory not session-scoped → DENIED (ASI03)
+    # 10. Memory isolation — memory not session-scoped → DENIED (ASI06)
     # ------------------------------------------------------------------
     _show(
-        "ASI03 — Agent Memory Not Session-Scoped",
+        "ASI06 — Agent Memory Not Session-Scoped",
         OWASPAgenticDataLeakageFilter().filter(
             {
                 "agent_memory_access": True,
@@ -1177,10 +679,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 11. Data Leakage — capabilities exceed actual → DENIED (ASI07)
+    # 11. Data Leakage — capabilities exceed actual → DENIED (ASI09)
     # ------------------------------------------------------------------
     _show(
-        "ASI07 — Agent Claiming Capabilities Beyond Actual Scope",
+        "ASI09 — Agent Claiming Capabilities Beyond Actual Scope",
         OWASPAgenticDataLeakageFilter().filter(
             {
                 "claimed_capabilities_exceed_actual": True,
@@ -1189,10 +691,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 12. Data Leakage — low confidence without disclosure → RHR (ASI07)
+    # 12. Data Leakage — low confidence without disclosure → RHR (ASI09)
     # ------------------------------------------------------------------
     _show(
-        "ASI07 — Low Confidence Output Without Disclosure",
+        "ASI09 — Low Confidence Output Without Disclosure",
         OWASPAgenticDataLeakageFilter().filter(
             {
                 "confidence_score": 0.45,
@@ -1215,10 +717,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 14. Governance — agent action without audit trail → DENIED (ASI09)
+    # 14. Governance — agent action without audit trail → DENIED (LOCAL-AUDIT)
     # ------------------------------------------------------------------
     _show(
-        "ASI09 — Agent Action Without Audit Trail",
+        "LOCAL-AUDIT — Agent Action Without Audit Trail",
         OWASPAgenticGovernanceFilter().filter(
             {
                 "agent_action": True,
@@ -1228,10 +730,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 15. Governance — multi-agent message unverified sender → DENIED (ASI10)
+    # 15. Governance — multi-agent message unverified sender → DENIED (ASI07)
     # ------------------------------------------------------------------
     _show(
-        "ASI10 — Multi-Agent Message Without Sender Verification",
+        "ASI07 — Multi-Agent Message Without Sender Verification",
         OWASPAgenticGovernanceFilter().filter(
             {
                 "multi_agent_message": True,
@@ -1254,10 +756,10 @@ if __name__ == "__main__":
     )
 
     # ------------------------------------------------------------------
-    # 17. All filters — fully compliant → PERMITTED
+    # 17. All filters — passing demonstration metadata → PERMITTED
     # ------------------------------------------------------------------
     _show(
-        "All Controls — Fully Compliant Document",
+        "All Controls — All Demonstration Metadata Checks Pass Document",
         OWASPAgenticInjectionFilter().filter(
             {
                 "external_input": True,

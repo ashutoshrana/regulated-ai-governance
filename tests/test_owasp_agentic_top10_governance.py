@@ -3,13 +3,13 @@ Tests for 39_owasp_agentic_top10_governance.py — OWASP Top 10 for Agentic
 Applications 2026
 
 Covers:
-  1. OWASPAgenticInjectionFilter    — ASI01 Goal Hijack + ASI04 Data Poisoning
-  2. OWASPAgenticToolSafetyFilter   — ASI02 Unsafe Tool Use + ASI05 Privilege
-                                       Misuse + ASI06 Supply Chain
-  3. OWASPAgenticDataLeakageFilter  — ASI03 Data Leakage + ASI07 Human-Agent
+  1. OWASPAgenticInjectionFilter    — ASI01 Goal Hijack + ASI06 Data Poisoning
+  2. OWASPAgenticToolSafetyFilter   — ASI02 Unsafe Tool Use + ASI03 Privilege
+                                       Misuse + ASI04 Supply Chain
+  3. OWASPAgenticDataLeakageFilter  — LOCAL-DLP Data Leakage + ASI09 Human-Agent
                                        Trust Exploitation
-  4. OWASPAgenticGovernanceFilter   — ASI08 Cascading Failures + ASI09
-                                       Monitoring + ASI10 Composition
+  4. OWASPAgenticGovernanceFilter   — ASI08 Cascading Failures + LOCAL-AUDIT
+                                       Monitoring + ASI07 Composition
   5. FilterResult.is_denied property
   6. OWASP_AGENTIC_TOP10_2026 constant completeness (10 entries)
   7. Eight ecosystem wrappers (LangChain, CrewAI, AutoGen, SK, LlamaIndex,
@@ -95,80 +95,29 @@ class TestFilterResult:
 # ===========================================================================
 
 
-class TestOWASPAgenticTop10Constant:
-    """OWASP_AGENTIC_TOP10_2026 must have exactly 10 entries, ASI01-ASI10."""
-
-    def test_constant_has_ten_entries(self):
-        assert len(mod.OWASP_AGENTIC_TOP10_2026) == 10
-
-    def test_constant_has_asi01(self):
-        assert "ASI01" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_constant_has_asi02(self):
-        assert "ASI02" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_constant_has_asi03(self):
-        assert "ASI03" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_constant_has_asi04(self):
-        assert "ASI04" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_constant_has_asi05(self):
-        assert "ASI05" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_constant_has_asi06(self):
-        assert "ASI06" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_constant_has_asi07(self):
-        assert "ASI07" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_constant_has_asi08(self):
-        assert "ASI08" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_constant_has_asi09(self):
-        assert "ASI09" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_constant_has_asi10(self):
-        assert "ASI10" in mod.OWASP_AGENTIC_TOP10_2026
-
-    def test_asi01_name(self):
-        assert "Goal Hijack" in mod.OWASP_AGENTIC_TOP10_2026["ASI01"]
-
-    def test_asi02_name(self):
-        assert "Tool" in mod.OWASP_AGENTIC_TOP10_2026["ASI02"]
-
-    def test_asi03_name(self):
-        assert "Leakage" in mod.OWASP_AGENTIC_TOP10_2026["ASI03"]
-
-    def test_asi04_name(self):
-        assert "Poisoning" in mod.OWASP_AGENTIC_TOP10_2026["ASI04"]
-
-    def test_asi05_name(self):
-        assert "Privilege" in mod.OWASP_AGENTIC_TOP10_2026["ASI05"]
-
-    def test_asi06_name(self):
-        assert "Supply" in mod.OWASP_AGENTIC_TOP10_2026["ASI06"]
-
-    def test_asi07_name(self):
-        assert "Trust" in mod.OWASP_AGENTIC_TOP10_2026["ASI07"]
-
-    def test_asi08_name(self):
-        assert "Cascading" in mod.OWASP_AGENTIC_TOP10_2026["ASI08"]
-
-    def test_asi09_name(self):
-        assert "Monitor" in mod.OWASP_AGENTIC_TOP10_2026["ASI09"]
-
-    def test_asi10_name(self):
-        assert "Composition" in mod.OWASP_AGENTIC_TOP10_2026["ASI10"]
+class TestOWASPConstants:
+    def test_official_taxonomy(self):
+        assert mod.OWASP_AGENTIC_TOP10_2026 == {
+            "ASI01": "Agent Goal Hijack",
+            "ASI02": "Tool Misuse",
+            "ASI03": "Identity & Privilege Abuse",
+            "ASI04": "Agentic Supply Chain Vulnerabilities",
+            "ASI05": "Unexpected Code Execution",
+            "ASI06": "Memory & Context Poisoning",
+            "ASI07": "Insecure Inter-Agent Communication",
+            "ASI08": "Cascading Failures",
+            "ASI09": "Human-Agent Trust Exploitation",
+            "ASI10": "Rogue Agents",
+        }
 
 
 # ===========================================================================
-# TestOWASPAgenticInjectionFilter — ASI01 + ASI04
+# TestOWASPAgenticInjectionFilter — ASI01 + ASI06
 # ===========================================================================
 
 
 class TestOWASPAgenticInjectionFilter:
-    """ASI01 Goal Hijack and ASI04 Data Poisoning controls."""
+    """ASI01 Goal Hijack and ASI06 Data Poisoning controls."""
 
     def _eval(self, **kwargs):
         return mod.OWASPAgenticInjectionFilter().filter(kwargs)
@@ -200,16 +149,16 @@ class TestOWASPAgenticInjectionFilter:
         r = self._eval(injection_detection_enabled=False)
         assert r.decision == "PERMITTED"
 
-    # --- ASI04 — Retrieved document without integrity verification: DENIED ---
+    # --- ASI06 — Retrieved document without integrity verification: DENIED ---
 
     def test_retrieved_doc_no_integrity_denied(self):
         r = self._eval(retrieved_document=True, document_integrity_verified=False)
         assert r.decision == "DENIED"
         assert r.is_denied
 
-    def test_retrieved_doc_no_integrity_cites_asi04(self):
+    def test_retrieved_doc_no_integrity_cites_asi06(self):
         r = self._eval(retrieved_document=True, document_integrity_verified=False)
-        assert "ASI04" in r.regulation
+        assert "ASI06" in r.regulation
 
     def test_retrieved_doc_no_integrity_filter_name(self):
         r = self._eval(retrieved_document=True, document_integrity_verified=False)
@@ -242,7 +191,7 @@ class TestOWASPAgenticInjectionFilter:
         r = self._eval(tool_output=False, output_sanitized=False)
         assert r.decision == "PERMITTED"
 
-    # --- ASI04 anomaly — score above threshold: REQUIRES_HUMAN_REVIEW ---
+    # --- ASI06 anomaly — score above threshold: REQUIRES_HUMAN_REVIEW ---
 
     def test_high_anomaly_score_requires_human_review(self):
         r = self._eval(anomaly_score=0.85)
@@ -270,9 +219,9 @@ class TestOWASPAgenticInjectionFilter:
         r = self._eval(anomaly_score=1.0)
         assert r.decision == "REQUIRES_HUMAN_REVIEW"
 
-    def test_rhr_cites_asi04(self):
+    def test_rhr_cites_asi06(self):
         r = self._eval(anomaly_score=0.9)
-        assert "ASI04" in r.regulation
+        assert "ASI06" in r.regulation
 
     # --- Empty dict / fully compliant ---
 
@@ -294,12 +243,12 @@ class TestOWASPAgenticInjectionFilter:
 
 
 # ===========================================================================
-# TestOWASPAgenticToolSafetyFilter — ASI02 + ASI05 + ASI06
+# TestOWASPAgenticToolSafetyFilter — ASI02 + ASI03 + ASI04
 # ===========================================================================
 
 
 class TestOWASPAgenticToolSafetyFilter:
-    """ASI02 Unsafe Tool Use, ASI05 Privilege Misuse, ASI06 Supply Chain."""
+    """ASI02 Unsafe Tool Use, ASI03 Privilege Misuse, ASI04 Supply Chain."""
 
     def _eval(self, **kwargs):
         return mod.OWASPAgenticToolSafetyFilter().filter(kwargs)
@@ -327,16 +276,16 @@ class TestOWASPAgenticToolSafetyFilter:
         r = self._eval(tool_invocation=False, tool_allowlist_verified=False)
         assert r.decision == "PERMITTED"
 
-    # --- ASI05 — Cross-session privileges: DENIED ---
+    # --- ASI03 — Cross-session privileges: DENIED ---
 
     def test_cross_session_privileges_denied(self):
         r = self._eval(cross_session_privileges=True)
         assert r.decision == "DENIED"
         assert r.is_denied
 
-    def test_cross_session_privileges_cites_asi05(self):
+    def test_cross_session_privileges_cites_asi03(self):
         r = self._eval(cross_session_privileges=True)
-        assert "ASI05" in r.regulation
+        assert "ASI03" in r.regulation
 
     def test_cross_session_privileges_false_permitted(self):
         r = self._eval(cross_session_privileges=False)
@@ -346,16 +295,16 @@ class TestOWASPAgenticToolSafetyFilter:
         r = self._eval()
         assert r.decision == "PERMITTED"
 
-    # --- ASI06 — Tool plugin without signature verification: DENIED ---
+    # --- ASI04 — Tool plugin without signature verification: DENIED ---
 
     def test_tool_plugin_no_signature_denied(self):
         r = self._eval(tool_plugin_loaded=True, tool_signature_verified=False)
         assert r.decision == "DENIED"
         assert r.is_denied
 
-    def test_tool_plugin_no_signature_cites_asi06(self):
+    def test_tool_plugin_no_signature_cites_asi04(self):
         r = self._eval(tool_plugin_loaded=True, tool_signature_verified=False)
-        assert "ASI06" in r.regulation
+        assert "ASI04" in r.regulation
 
     def test_tool_plugin_with_signature_permitted(self):
         r = self._eval(tool_plugin_loaded=True, tool_signature_verified=True)
@@ -403,26 +352,26 @@ class TestOWASPAgenticToolSafetyFilter:
 
 
 # ===========================================================================
-# TestOWASPAgenticDataLeakageFilter — ASI03 + ASI07
+# TestOWASPAgenticDataLeakageFilter — LOCAL-DLP + ASI09
 # ===========================================================================
 
 
 class TestOWASPAgenticDataLeakageFilter:
-    """ASI03 Data Leakage and ASI07 Human-Agent Trust Exploitation."""
+    """LOCAL-DLP Data Leakage and ASI09 Human-Agent Trust Exploitation."""
 
     def _eval(self, **kwargs):
         return mod.OWASPAgenticDataLeakageFilter().filter(kwargs)
 
-    # --- ASI03 — Agent output without DLP scan: DENIED ---
+    # --- LOCAL-DLP — Agent output without DLP scan: DENIED ---
 
     def test_agent_output_no_dlp_scan_denied(self):
         r = self._eval(agent_output=True, dlp_scan_passed=False)
         assert r.decision == "DENIED"
         assert r.is_denied
 
-    def test_agent_output_no_dlp_scan_cites_asi03(self):
+    def test_agent_output_no_dlp_scan_cites_local_dlp(self):
         r = self._eval(agent_output=True, dlp_scan_passed=False)
-        assert "ASI03" in r.regulation
+        assert "LOCAL-DLP" in r.regulation
 
     def test_agent_output_no_dlp_scan_filter_name(self):
         r = self._eval(agent_output=True, dlp_scan_passed=False)
@@ -436,16 +385,16 @@ class TestOWASPAgenticDataLeakageFilter:
         r = self._eval(agent_output=False, dlp_scan_passed=False)
         assert r.decision == "PERMITTED"
 
-    # --- ASI03 — Memory not session-scoped: DENIED ---
+    # --- ASI06 — Memory not session-scoped: DENIED ---
 
     def test_memory_not_session_scoped_denied(self):
         r = self._eval(agent_memory_access=True, session_scoped_memory=False)
         assert r.decision == "DENIED"
         assert r.is_denied
 
-    def test_memory_not_session_scoped_cites_asi03(self):
+    def test_memory_not_session_scoped_cites_asi06(self):
         r = self._eval(agent_memory_access=True, session_scoped_memory=False)
-        assert "ASI03" in r.regulation
+        assert "ASI06" in r.regulation
 
     def test_memory_session_scoped_permitted(self):
         r = self._eval(agent_memory_access=True, session_scoped_memory=True)
@@ -455,16 +404,16 @@ class TestOWASPAgenticDataLeakageFilter:
         r = self._eval(agent_memory_access=False, session_scoped_memory=False)
         assert r.decision == "PERMITTED"
 
-    # --- ASI07 — Agent claims capabilities beyond actual scope: DENIED ---
+    # --- ASI09 — Agent claims capabilities beyond actual scope: DENIED ---
 
     def test_claimed_capabilities_exceed_actual_denied(self):
         r = self._eval(claimed_capabilities_exceed_actual=True)
         assert r.decision == "DENIED"
         assert r.is_denied
 
-    def test_claimed_capabilities_exceed_actual_cites_asi07(self):
+    def test_claimed_capabilities_exceed_actual_cites_asi09(self):
         r = self._eval(claimed_capabilities_exceed_actual=True)
-        assert "ASI07" in r.regulation
+        assert "ASI09" in r.regulation
 
     def test_claimed_capabilities_within_scope_permitted(self):
         r = self._eval(claimed_capabilities_exceed_actual=False)
@@ -474,16 +423,16 @@ class TestOWASPAgenticDataLeakageFilter:
         r = self._eval()
         assert r.decision == "PERMITTED"
 
-    # --- ASI07 — Low confidence without disclosure: REQUIRES_HUMAN_REVIEW ---
+    # --- ASI09 — Low confidence without disclosure: REQUIRES_HUMAN_REVIEW ---
 
     def test_low_confidence_no_disclosure_rhr(self):
         r = self._eval(confidence_score=0.45, confidence_disclosed=False)
         assert r.decision == "REQUIRES_HUMAN_REVIEW"
         assert not r.is_denied
 
-    def test_low_confidence_rhr_cites_asi07(self):
+    def test_low_confidence_rhr_cites_asi09(self):
         r = self._eval(confidence_score=0.45, confidence_disclosed=False)
-        assert "ASI07" in r.regulation
+        assert "ASI09" in r.regulation
 
     def test_low_confidence_with_disclosure_permitted(self):
         r = self._eval(confidence_score=0.45, confidence_disclosed=True)
@@ -531,12 +480,12 @@ class TestOWASPAgenticDataLeakageFilter:
 
 
 # ===========================================================================
-# TestOWASPAgenticGovernanceFilter — ASI08 + ASI09 + ASI10
+# TestOWASPAgenticGovernanceFilter — ASI08 + LOCAL-AUDIT + ASI07
 # ===========================================================================
 
 
 class TestOWASPAgenticGovernanceFilter:
-    """ASI08 Cascading Failures, ASI09 Monitoring & Audit, ASI10 Composition."""
+    """ASI08 Cascading Failures, LOCAL-AUDIT Monitoring & Audit, ASI07 Composition."""
 
     def _eval(self, **kwargs):
         return mod.OWASPAgenticGovernanceFilter().filter(kwargs)
@@ -568,16 +517,16 @@ class TestOWASPAgenticGovernanceFilter:
         r = self._eval(rollback_available=False)
         assert r.decision == "PERMITTED"
 
-    # --- ASI09 — Agent action without audit trail: DENIED ---
+    # --- LOCAL-AUDIT — Agent action without audit trail: DENIED ---
 
     def test_agent_action_no_audit_trail_denied(self):
         r = self._eval(agent_action=True, audit_trail_enabled=False)
         assert r.decision == "DENIED"
         assert r.is_denied
 
-    def test_agent_action_no_audit_trail_cites_asi09(self):
+    def test_agent_action_no_audit_trail_cites_local_audit(self):
         r = self._eval(agent_action=True, audit_trail_enabled=False)
-        assert "ASI09" in r.regulation
+        assert "LOCAL-AUDIT" in r.regulation
 
     def test_agent_action_with_audit_trail_permitted(self):
         r = self._eval(agent_action=True, audit_trail_enabled=True)
@@ -587,16 +536,16 @@ class TestOWASPAgenticGovernanceFilter:
         r = self._eval(agent_action=False, audit_trail_enabled=False)
         assert r.decision == "PERMITTED"
 
-    # --- ASI10 — Multi-agent message without sender verification: DENIED ---
+    # --- ASI07 — Multi-agent message without sender verification: DENIED ---
 
     def test_multi_agent_message_unverified_sender_denied(self):
         r = self._eval(multi_agent_message=True, sender_verified=False)
         assert r.decision == "DENIED"
         assert r.is_denied
 
-    def test_multi_agent_message_unverified_cites_asi10(self):
+    def test_multi_agent_message_unverified_cites_asi07(self):
         r = self._eval(multi_agent_message=True, sender_verified=False)
-        assert "ASI10" in r.regulation
+        assert "ASI07" in r.regulation
 
     def test_multi_agent_message_verified_sender_permitted(self):
         r = self._eval(multi_agent_message=True, sender_verified=True)
@@ -772,7 +721,7 @@ class TestOWASPAutoGenGovernedAgent:
         agent = mod.OWASPAutoGenGovernedAgent(filter_instance=mod.OWASPAgenticDataLeakageFilter())
         with pytest.raises(PermissionError) as exc:
             agent.generate_reply({"agent_output": True, "dlp_scan_passed": False})
-        assert "ASI03" in str(exc.value)
+        assert "LOCAL-DLP" in str(exc.value)
 
 
 # ===========================================================================
@@ -797,7 +746,7 @@ class TestOWASPSemanticKernelPlugin:
         plugin = mod.OWASPSemanticKernelPlugin(filter_instance=mod.OWASPAgenticGovernanceFilter())
         with pytest.raises(PermissionError) as exc:
             plugin.enforce_governance({"agent_action": True, "audit_trail_enabled": False})
-        assert "ASI09" in str(exc.value)
+        assert "LOCAL-AUDIT" in str(exc.value)
 
 
 # ===========================================================================
@@ -822,7 +771,7 @@ class TestOWASPLlamaIndexWorkflowGuard:
         guard = mod.OWASPLlamaIndexWorkflowGuard(filter_instance=mod.OWASPAgenticInjectionFilter())
         with pytest.raises(PermissionError) as exc:
             guard.process_event({"retrieved_document": True, "document_integrity_verified": False})
-        assert "ASI04" in str(exc.value)
+        assert "ASI06" in str(exc.value)
 
 
 # ===========================================================================
@@ -910,7 +859,7 @@ class TestOWASPDSPyGovernanceModule:
         )
         with pytest.raises(PermissionError) as exc:
             dspy_mod.forward({"agent_output": True, "dlp_scan_passed": False})
-        assert "ASI03" in str(exc.value)
+        assert "LOCAL-DLP" in str(exc.value)
 
 
 # ===========================================================================
@@ -946,7 +895,7 @@ class TestOWASPMAFPolicyMiddleware:
                 {"multi_agent_message": True, "sender_verified": False},
                 self._next,
             )
-        assert "ASI10" in str(exc.value)
+        assert "ASI07" in str(exc.value)
 
 
 # ===========================================================================
